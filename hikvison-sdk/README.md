@@ -36,6 +36,7 @@ After adding this addon as a custom repository, define the options for your hikv
 	"sensor_callstatus" : "hikvision_callstatus"
 ````	
 I make use of a REST API command to update the template sensors, so you need to create also a BEARER token, its a verry long string
+
 Instructions:
 - To Generate Long-lived Access Token, first login into your Home Assistant
 - On the bottom left, in the menu area, click the “Profile” button:
