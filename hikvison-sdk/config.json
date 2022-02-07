@@ -5,6 +5,7 @@
   "description": "Capture events based on SDK Hikvision",
   "arch": ["amd64", "i386"],
   "host_network": "true",
+  "startup": "services",	
   "options":
   {
     "ip": "192.168.0.75",
