@@ -25,6 +25,7 @@ When door is opened by key/badge, or when the doorbell is ringing, the state of 
 ````
 
 After adding this addon as a custom repository, define the options for your hikvision door intercom... Default values are:
+Ip & username & password, are the values from your outdoor station...
 
 ````
     "ip": "192.168.0.75",
