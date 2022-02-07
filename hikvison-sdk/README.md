@@ -30,10 +30,10 @@ After adding this addon as a custom repository, define the options for your hikv
     "ip": "192.168.0.75",
     "username": "admin",
     "password": "password", 
-	"bearer" : "YOURLONGBEARERTOKEN",
+    "bearer" : "YOURLONGBEARERTOKEN",
     "url_states": "http://localhost:8123/api/states/",
-	"sensor_door" : "hikvision_door",
-	"sensor_callstatus" : "hikvision_callstatus"
+    "sensor_door" : "hikvision_door",
+    "sensor_callstatus" : "hikvision_callstatus"
 ````	
 I make use of a REST API command to update the template sensors, so you need to create also a BEARER token, its a verry long string
 
