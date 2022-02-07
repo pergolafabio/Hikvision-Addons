@@ -6,6 +6,7 @@ COPY hik.py /hik.py
 COPY hcnetsdk.py /hcnetsdk.py
 COPY lib /lib
 COPY run.sh /run.sh 
+chmod 755 /run.sh
 
 CMD [ "/run.sh" ]
 
