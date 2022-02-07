@@ -1,0 +1,12 @@
+FROM python:3.7-slim
+RUN pip install requests
+RUN apt-get update && apt-get install -y libffi-dev jq
+
+COPY hik.py /hik.py
+COPY hcnetsdk.py /hcnetsdk.py
+COPY lib /lib
+COPY run.sh /run.sh 
+
+CMD [ "/run.sh" ]
+
+
