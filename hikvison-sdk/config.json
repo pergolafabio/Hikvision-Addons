@@ -3,7 +3,7 @@
   "version": "1.0",
   "slug": "hikvision_sdk",
   "description": "Capture events based on SDK Hikvision",
-  "url": "https://github.com/pergolafabio/Hikvision-SDK-Addon"
+  "url": "https://github.com/pergolafabio/Hikvision-SDK-Addon",
   "arch": ["amd64", "i386"],
   "host_network": "true",
   "startup": "services",	
