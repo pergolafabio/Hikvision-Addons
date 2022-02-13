@@ -22,6 +22,8 @@ When door is opened by key/badge, or when the doorbell is ringing, the state of 
         value_template: "off"
       hikvision_callstatus:
         value_template: "off"
+      hikvision_motion:
+        value_template: "off"          
 ````
 
 After adding this addon as a custom repository, define the options for your hikvision door intercom... 
