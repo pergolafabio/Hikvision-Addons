@@ -23,6 +23,8 @@ When door is opened by key/badge, or when the doorbell is ringing, the state of 
       hikvision_callstatus:
         value_template: "off"
       hikvision_motion:
+        value_template: "off"
+      hikvision_motion:
         value_template: "off"          
 ````
 
