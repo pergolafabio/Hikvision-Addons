@@ -1,0 +1,34 @@
+{
+  "name": "Hikvision-SDK",
+  "version": "1.0",
+  "slug": "hikvision_sdk",
+  "description": "Capture events based on SDK Hikvision",
+  "url": "https://github.com/pergolafabio/Hikvision-SDK-Addon",
+  "arch": ["amd64", "i386"],
+  "host_network": "true",
+  "startup": "services",	
+  "options":
+  {
+    "ip": "192.168.0.75",
+    "username": "admin",
+    "password": "password", 
+	"bearer" : "YOURLONGBEARERTOKEN",
+    "url_states": "http://localhost:8123/api/states/",
+	"sensor_door" : "hikvision_door",
+	"sensor_callstatus" : "hikvision_callstatus",
+	"sensor_motion" : "hikvision_motion"	
+
+  },
+  "schema":
+  {
+    "ip": "str",
+    "username": "str",
+    "password": "str",
+    "bearer" : "str",	
+    "url_states" : "str",	
+	"sensor_door" : "str",
+	"sensor_callstatus" : "str",
+	"sensor_motion" : "str"	
+
+   }
+}
