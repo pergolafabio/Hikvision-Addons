@@ -12,8 +12,8 @@ It also runs on specific OS only, no Alpine, thats why i used: FROM python:3.7-s
 
 Open your Home Assistant instance and add an custom repositoryfor your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon 
 
-First of all, create 2 template sensors in your yaml configuration, like below:
-When door is opened by key/badge, or when the doorbell is ringing, the state of the sensors below are "on" for 2 seconds
+First of all, create the template sensors in your yaml configuration, like below:
+When door is opened by key/badge, or when the doorbell is ringing, or motion detected the state of the sensors below are "on" for 2 seconds
 
 ````
   - platform: template
