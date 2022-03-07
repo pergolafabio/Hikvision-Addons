@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y libffi-dev jq
 
 COPY hik.py /hik.py
 COPY hcnetsdk.py /hcnetsdk.py
+COPY hik_unlock_door.py /hik_unlock_door.py
 COPY lib /lib
 COPY run.sh /run.sh 
 RUN chmod +x /run.sh
