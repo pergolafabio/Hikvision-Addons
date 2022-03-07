@@ -1,6 +1,5 @@
-from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO
-from ctypes import POINTER, cast, c_char_p, c_byte
-from threading import Event
+from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY
+from ctypes import POINTER, cast, c_char_p, c_byte, sizeof, byref
 import requests
 import json
 import time
@@ -71,23 +70,26 @@ def set_attribute(sensor_name, attribute, value):
     payload = json.dumps({'state':  msg['state'], 'attributes': msg['attributes']})
     requests.post(url_states + sensor_name, headers=headers, data=payload)   
 
-os.system("echo Hikvision SDK Add-on started! Listening for events...") 
+print("echo Hikvision SDK Add-on started! Listening for events...") 
 
 # VARIABLES 
+with open("/data/options.json") as fd:
+    config = json.load(fd)
+
 headers = {
-    'Authorization': 'Bearer ' + sys.argv[4],
+    'Authorization': 'Bearer ' + config["bearer"],
     'content-type': 'application/json',
 }
-url_states = sys.argv[5]
-sensor_name_door = "sensor." + sys.argv[6]
-sensor_name_callstatus = "sensor."  + sys.argv[7]
-sensor_name_motion = "sensor."  + sys.argv[8]
+url_states = config["url_states"]
+sensor_name_door = "sensor." + config["sensor_door"]
+sensor_name_callstatus = "sensor."  + config["sensor_callstatus"]
+sensor_name_motion = "sensor."  + config["sensor_motion"]
    
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
 device_info = NET_DVR_DEVICEINFO_V30()
-user_id = HCNetSDK.NET_DVR_Login_V30( sys.argv[1].encode('utf-8'), 8000, sys.argv[2].encode('utf-8'), sys.argv[3].encode('utf-8'), device_info)
+user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"], 8000, config["username"], config["password"], device_info)
 
 
 if (user_id < 0):
@@ -113,9 +115,22 @@ if (alarm_handle < 0):
 message_callback = fMessageCallBack(callback)
 HCNetSDK.NET_DVR_SetDVRMessageCallBack_V50(0, message_callback, user_id)
 
-#input("Press Enter to exit...\n")
+def unlock_door():
+    gw = NET_DVR_CONTROL_GATEWAY()
+    gw.dwSize = sizeof(NET_DVR_CONTROL_GATEWAY)
+    gw.dwGatewayIndex = 1
+    gw.byCommand = 1 # opening command
+    gw.byLockType = 0 # this is normal lock not smart lock
+    gw.wLockID = 0 # door station
+    gw.byControlSrc = (c_byte * 32)(*[97,98,99,100]) # anything will do but can't be empty
+    gw.byControlType = 1
 
-Event().wait()  
+    result = HCNetSDK.NET_DVR_RemoteControl(user_id, 16009, byref(gw), gw.dwSize)
+    print("unlockresult", result)
+
+for line in sys.stdin:
+    if line.strip() == "unlock":
+        unlock_door()
 
 HCNetSDK.NET_DVR_CloseAlarmChan_V30(alarm_handle)
 HCNetSDK.NET_DVR_Logout_V30(user_id)
