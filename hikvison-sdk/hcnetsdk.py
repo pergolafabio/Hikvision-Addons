@@ -429,7 +429,19 @@ class NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON(Union):
         ("struAuthInfo", NET_DVR_AUTH_INFO),
         ("struSendCardInfo", NET_DVR_SEND_CARD_INFO),
     ]
-    
+class NET_DVR_CONTROL_GATEWAY(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("dwGatewayIndex", DWORD),
+        ("byCommand", BYTE),
+        ("byLockType", BYTE),
+        ("wLockID", SHORT),
+        ("byControlSrc", BYTE * NAME_LEN),
+        ("byControlType", BYTE),
+        ("byRes3", BYTE * 3),
+        ("byPassword", BYTE * 16),
+        ("byRes2", BYTE * 108),
+    ]    
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
     _fields_ = [
         ("dwSize", DWORD),
