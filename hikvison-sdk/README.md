@@ -1,6 +1,7 @@
 # Home Assistant Add-on: Hikvision SDK
-
-The Hikvision SDK add-on for Home Assistant... This add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
+## What can it do? 
+It listen for events: callstatus/motion detection/door unlocked
+It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
 
 ## Alert
 
@@ -27,6 +28,14 @@ When door is opened by key/badge, or when the doorbell is ringing, or motion det
       hikvision_motion:
         value_template: "off"          
 ````
+To open a door, we need to send a stdin message to this docker add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
+
+````
+service: hassio.addon_stdin
+data:
+  addon: local_hikvision_sdk
+  input: unlock1
+````
 
 After adding this addon as a custom repository, define the options for your hikvision door intercom... 
 
@@ -52,3 +61,4 @@ Instructions:
 
 PS: My local instance runs on http, so if your doesnt, make sure you change it in the 'url_states'
 
+The Hikvision SDK add-on for Home Assistant... This add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
