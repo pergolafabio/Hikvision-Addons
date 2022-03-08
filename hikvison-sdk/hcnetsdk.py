@@ -442,7 +442,7 @@ class NET_DVR_CONTROL_GATEWAY(Structure):
         ("byPassword", BYTE * 16),
         ("byRes2", BYTE * 108),
     ]
-#class NET_DVR_JPEGPARA(ctypes.Structure):
+#class NET_DVR_JPEGPARA(Structure):
 #    _fields_ = [
 #        ("wPicSize", WORD), 
 #        ("wPicQuality", WORD)
