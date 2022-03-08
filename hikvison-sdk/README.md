@@ -1,7 +1,7 @@
 # Home Assistant Add-on: Hikvision SDK
 ## What can it do? 
-It listen for events: callstatus/motion detection/door unlocked
-It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
+- It listen for events: callstatus/motion detection/door unlocked
+- It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
 
 ## Alert
 
