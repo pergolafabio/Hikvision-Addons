@@ -129,14 +129,13 @@ def unlock_door(lockID):
     os.system("echo Door: " + str(lockID + 1) + " unlocked by SDK!") 
 
 def NET_DVR_CaptureJPEGPicture():
-    sJpegPicFileName = bytes("pytest.jpg", "ascii")
+    sJpegPicFileName = b'test.jpg'
     lpJpegPara = NET_DVR_JPEGPARA()
     lpJpegPara.wPicSize = 2
     lpJpegPara.wPicQuality = 1
-    res = callCpp("NET_DVR_CaptureJPEGPicture", lUserID, lChannel, ctypes.byref(lpJpegPara), sJpegPicFileName)
+    res = HCNetSDK.NET_DVR_CaptureJPEGPicture(user_id, 1, byref(jpJpegPara), sJpegPicFileName)
     if res == False:
-        error_info = callCpp("NET_DVR_GetLastError")
-        os.system("Success：" + str(error_info))
+        os.system("Success")
     else:
         os.system("Grab stream fail")
         
