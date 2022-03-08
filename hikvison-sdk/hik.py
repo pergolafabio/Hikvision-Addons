@@ -48,7 +48,8 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
     
             try:
                 os.system("echo Door unlocked, trying to update: " + sensor_name_door)
-                data = json.dumps({'state': 'on'})
+                #data = json.dumps({'state': 'on'})
+                data = json.dumps({'state': 'on', 'attributes': {'Unlock': str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)) }})
                 response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
                 time.sleep(2)
                 data = json.dumps({'state': 'off'})
