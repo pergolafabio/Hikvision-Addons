@@ -1,6 +1,6 @@
 {
   "name": "Hikvision-SDK",
-  "version": "2.6",
+  "version": "2.7",
   "slug": "hikvision_sdk",
   "description": "Capture events based on SDK Hikvision",
   "url": "https://github.com/pergolafabio/Hikvision-SDK-Addon",
