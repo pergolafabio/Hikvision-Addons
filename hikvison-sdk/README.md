@@ -25,8 +25,6 @@ When door is opened by key/badge, or when the doorbell is ringing, or motion det
         value_template: "off"
       hikvision_motion:
         value_template: "off"
-      hikvision_motion:
-        value_template: "off"          
 ````
 To open a door, we need to send a stdin message to this docker add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
 
