@@ -128,16 +128,16 @@ def unlock_door(lockID):
     result = HCNetSDK.NET_DVR_RemoteControl(user_id, 16009, byref(gw), gw.dwSize)
     os.system("echo Door: " + str(lockID + 1) + " unlocked by SDK!") 
 
-def NET_DVR_CaptureJPEGPicture():
-    sJpegPicFileName = b'test.jpg'
-    lpJpegPara = NET_DVR_JPEGPARA()
-    lpJpegPara.wPicSize = 2
-    lpJpegPara.wPicQuality = 1
-    res = HCNetSDK.NET_DVR_CaptureJPEGPicture(user_id, 1, byref(lpJpegPara), sJpegPicFileName)
-    if res == False:
-        os.system("Success")
-    else:
-        os.system("Grab stream fail")
+#def NET_DVR_CaptureJPEGPicture():
+#    sJpegPicFileName = b'test.jpg'
+#    lpJpegPara = NET_DVR_JPEGPARA()
+#    lpJpegPara.wPicSize = 2
+#    lpJpegPara.wPicQuality = 1
+#    res = HCNetSDK.NET_DVR_CaptureJPEGPicture(user_id, 1, byref(lpJpegPara), sJpegPicFileName)
+#    if res == False:
+#        os.system("Success")
+#    else:
+#        os.system("Grab stream fail")
         
 for line in sys.stdin:
     if "unlock1" in line:
@@ -146,9 +146,9 @@ for line in sys.stdin:
     elif "unlock2" in line:
         os.system("echo Trying to unlock door 2... Stdin message: " + str(line))
         unlock_door(1)
-    elif "image" in line:
-        os.system("echo Trying to grab an image... Stdin message: " + str(line))
-        NET_DVR_CaptureJPEGPicture()        
+ #   elif "image" in line:
+ #       os.system("echo Trying to grab an image... Stdin message: " + str(line))
+ #       NET_DVR_CaptureJPEGPicture()        
     else:
        os.system("echo Use input: unlock1 OR unlock2...  Stdin message: " + str(line))        
 
