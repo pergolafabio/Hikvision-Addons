@@ -33,7 +33,7 @@ To open a door, we need to send a stdin message to this docker add-on, it can be
 ````
 service: hassio.addon_stdin
 data:
-  addon: local_hikvision_sdk
+  addon: a53439b8_hikvision_sdk
   input: unlock1
 ````
 
