@@ -133,7 +133,7 @@ def NET_DVR_CaptureJPEGPicture():
     lpJpegPara = NET_DVR_JPEGPARA()
     lpJpegPara.wPicSize = 2
     lpJpegPara.wPicQuality = 1
-    res = HCNetSDK.NET_DVR_CaptureJPEGPicture(user_id, 1, byref(jpJpegPara), sJpegPicFileName)
+    res = HCNetSDK.NET_DVR_CaptureJPEGPicture(user_id, 1, byref(lpJpegPara), sJpegPicFileName)
     if res == False:
         os.system("Success")
     else:
