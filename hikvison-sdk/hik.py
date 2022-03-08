@@ -128,7 +128,18 @@ def unlock_door(lockID):
     result = HCNetSDK.NET_DVR_RemoteControl(user_id, 16009, byref(gw), gw.dwSize)
     os.system("echo Door: " + str(lockID + 1) + " unlocked by SDK!") 
 
-
+def NET_DVR_CaptureJPEGPicture():
+    sJpegPicFileName = bytes("pytest.jpg", "ascii")
+    lpJpegPara = NET_DVR_JPEGPARA()
+    lpJpegPara.wPicSize = 2
+    lpJpegPara.wPicQuality = 1
+    res = callCpp("NET_DVR_CaptureJPEGPicture", lUserID, lChannel, ctypes.byref(lpJpegPara), sJpegPicFileName)
+    if res == False:
+        error_info = callCpp("NET_DVR_GetLastError")
+        os.system("Success：" + str(error_info))
+    else:
+        os.system("Grab stream fail")
+        
 for line in sys.stdin:
     if "unlock1" in line:
         os.system("echo Trying to unlock door 1... Stdin message: " + str(line))
@@ -136,6 +147,9 @@ for line in sys.stdin:
     elif "unlock2" in line:
         os.system("echo Trying to unlock door 2... Stdin message: " + str(line))
         unlock_door(1)
+    elif "image" in line:
+        os.system("echo Trying to grab an image... Stdin message: " + str(line))
+        NET_DVR_CaptureJPEGPicture()        
     else:
        os.system("echo Use input: unlock1 OR unlock2...  Stdin message: " + str(line))        
 
