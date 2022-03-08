@@ -8,8 +8,7 @@ HCNetSDK.NET_DVR_SetValidIP(0, True)
 
 device_info = NET_DVR_DEVICEINFO_V30()
 
-# user_id = HCNetSDK.NET_DVR_Login_V30( "192.168.0.1".encode('utf-8'), 8000, "admin".encode('utf-8'), "pass12345".encode('utf-8'), device_info)
-user_id = HCNetSDK.NET_DVR_Login_V30( sys.argv[1].encode('utf-8'), 8000, sys.argv[2].encode('utf-8'), sys.argv[3].encode('utf-8'), device_info)
+user_id = HCNetSDK.NET_DVR_Login_V30( "192.168.0.1".encode('utf-8'), 8000, "admin".encode('utf-8'), "pass12345".encode('utf-8'), device_info)
 
 if (user_id < 0):
     print(
