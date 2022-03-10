@@ -1,13 +1,12 @@
-# Home Assistant Add-on: Hikvision SDK
+# Home Assistant Add-on: Hikvision SDK for Door Intercoms
 ## What can it do? 
 - It listen for events: callstatus/motion detection/door unlocked
 - It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
 
 ## Alert
 
-The supplied "lib" from hikvision, only runs on i386 / amd64, so it will not work on Raspberry, this addon is based on amd64 lib, if you need i386, download the lib from the Hikvision SDK website and change it
+The supplied "lib" from hikvision, only runs on i386 / amd64, so it will not work on Raspberry...
 https://www.hikvision.com/nl/support/download/sdk/
-It also runs on specific OS only, no Alpine, thats why i used: FROM python:3.7-slim
 
 ## Get started
 
@@ -60,4 +59,4 @@ Instructions:
 
 PS: My local instance runs on http, so if your doesnt, make sure you change it in the 'url_states'
 
-The Hikvision SDK add-on for Home Assistant... This add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
+The add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
