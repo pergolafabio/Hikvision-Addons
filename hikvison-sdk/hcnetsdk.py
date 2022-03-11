@@ -466,7 +466,27 @@ class NET_DVR_XML_CONFIG_OUTPUT(Structure):
         ("dwStatusSize", DWORD),
         ("byRes", BYTE * 31),
     ]  
+class NET_DVR_CALL_STATUS(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("byCallStatus", BYTE),
+        ("byRes", BYTE * 127),
+    ]     
 
+class NET_DVR_VIDEO_CALL_PARAM(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("dwCmdType", DWORD),
+        ("wPeriod", WORD),
+        ("wBuildingNumber", WORD),
+        ("wUnitNumber", WORD),  
+        ("wFloorNumber", SHORT),   
+        ("wRoomNumber", WORD),  
+        ("wDevIndex", WORD),  
+        ("byUnitType", BYTE),
+        ("byRes", BYTE * 115),        
+    ]  
+    
 class NET_DVR_MIME_UNIT(Structure):
     _fields_ = [
         ("szContentType", char * 32),
