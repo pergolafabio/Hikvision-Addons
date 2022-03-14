@@ -16,6 +16,7 @@ First of all, create the template sensors in your yaml configuration, like below
 When door is opened by key/badge, or when the doorbell is ringing, or motion detected the state of the sensors below are "on" for 2 seconds
 
 ````
+sensor:
   - platform: template
     sensors:
       hikvision_door:
