@@ -63,8 +63,14 @@ Goto system, UAC Registant, add a new one with the correct info, in my example, 
 - Leave the rest blanc
 Add it, do a reload... if al goes well, after several minutes, you should see in IVMS the extension as "Registered" :-)
 
+![uac](uac.PNG)
+
+
 In the Add-on i included an utility called "SNGREP", verry usefull for troubleshooting and inspect the SIP traces, i suggest you launch it, so you can see what its doing on the background.
 You can acces the Add-on with this command in the SSH Add-on: `docker exec -it addon_a53439b8_hikvision_opensips /bin/bash` , when you are in, just launch "sngrep"
+
+![sngrep](sngrep.PNG)
+
 
 Now, goto the section "Domains", add new domain and put in the IP address of your HA instance, after adding the domain, goto the users section, add a new user:
 Username: 10000000005, the password you can choose here...
