@@ -80,7 +80,12 @@ Calling from indoor panels to softphone doesnt work, the softphone does ring, yo
 
 Visit the opensips webpages, you can make rules/dialplans.... add new users... 
 
-Now for the integration in HA, if you want to pickup the call with the HA Compantion app, or if you use tablets with HA on it, and you want to receive calls on it...
+Thats it!!!!
+
+
+Now the FUN part, below is optional, but VERRY nice... 
+
+For the integration in HA, if you want to pickup the call with the HA Compantion app, or if you use tablets with HA on it, and you want to receive calls on it...
 First of all, install the Asterisk-Addon : https://github.com/TECH7Fox/asterisk-hass-addons
 Be carefull, Opensips runs on 5060 , Asterisk also runs on 5060, make sure you change it!!!!! See example below:
 
@@ -150,6 +155,3 @@ https://github.com/TECH7Fox/sip-hass-card
 If you want call sensors and services, use this: https://github.com/TECH7Fox/asterisk-hass-integration
 
 Have fun!
-
-
-	
