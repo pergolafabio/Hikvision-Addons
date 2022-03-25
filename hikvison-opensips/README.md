@@ -74,6 +74,8 @@ You can acces the Add-on with this command in the SSH Add-on: `docker exec -it a
 
 Now, goto the section "Domains", add new domain and put in the IP address of your HA instance, after adding the domain, goto the users section, add a new user:
 Username: 10000000005, the password you can choose here...
+![Domain](domain.PNG)
+![User](user.PNG)
 
 Thats it, this is the basic configuration! You can now install a softphone, try to register it, both TCP and UDP are enabled... when its successfull registered, press the call button, and if all goes well, the softphone should ring too!
 Calling from indoor panels to softphone doesnt work, the softphone does ring, you can also pick up, but the call is terminated after pickup, no idea why, but i dont care...
