@@ -1,0 +1,79 @@
+# Home Assistant Add-on: Register Openips/PBX as extension on your indoor panel
+
+## Background info:
+
+Indoor/Outdoor stations have also the possibility to register on a PBX like Asterisk/FreePBX..., BUT!!!
+
+- When PBX is down => you miss the call :-)
+- When connected to a PBX , Hikconnect cloud doesnt work anymore
+- No video before pickup anymore on the indoor panels, so you dont see who is calling, quite annoying!!
+
+## So why this addon?
+- This addon is based on Opensips PBX, it can register as an extension on your primary indoor station, by modifying the REGISTER header... Opensips has the ability to send custom XML headers, needed to register on the private SIP protoclol present on the hikvision hardware
+
+Advantages:
+
+- Hikconnect cloud, still works!
+- Still video on your indoor panels
+- If this addon is down, the intercom still works as we register it as an extension
+- You dont need access to the outdoor station, usefull for people living in appartment with no access to outdoor station.
+- You dont need to use the Hikconnect app anymore, you can use your own softphone
+- All local
+- Verry nice intergations possible, you can even pickup/answer the call with a Lovelace SIP card!! Freaking nice! :-)  More info below (asterisk)
+- It will provide you call sensors, more info below... (asterisk)
+- Opening door also works by sending '#' during call with a softphone
+
+Issues/Todo list 
+
+- For some reason there is no video yet on the softphone, need to investigate this later, but you can use apps like Bas-IP, divus videophone, vfone, they have the possibility to inject RTSP, or just use the HA SIP card and use the camera entity :-)
+- Hangup/Decline doesnt do its job, only when using Asteriks as a trunk, more info below
+
+## Install guide, read carefully!
+
+For this addon, you need to install first the MariaDB, its used to store the config: https://github.com/home-assistant/addons/tree/master/mariadb
+After installing the MariaDB add-on, create a database and user/pass like below:
+
+```
+databases:
+  - opensips
+logins:
+  - password: opensipsrw
+    username: opensips
+rights:
+  - database: opensips
+    username: opensips
+```
+
+As I told before, this addon registers on the indoor station, you need to add it first manually with the IVMS software, make sure you input the correct data, sice its now hardcoded in this Add-on:
+For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your HA instance... I used 5, because maybe there al already users with 4 indoor stations, so this will be the 5th :-)
+
+
+Now, start this Add-on, ... Whats next not there yet.. :-)  Opensips povides an contro panel, access it it by surfing to : http://homeassistant:5051/cp/ with credentials admin/opensips
+
+Goto system, UAC Registant, add a new one with the correct info, in my example, 192.168.0.17 is HA, while 192.168.0.71 is my indoor panel:
+- Registrar server: sip:192.168.0.71:5065
+- Address of record: sip:10000000005@192.168.0.71:5065
+- Auth username: 10000000005
+- Auth password: the "admin" / "Registration" password of your device
+- Contact URI: sip:10000000005@192.168.0.17
+- Expires: 3600
+- Status: enabled
+- Leave the rest blanc
+Add it, do a reload... if al goes well, after several minutes, you should see in IVMS the extension as "Registered" :-)
+
+In the Add-on i included an utility called "SNGREP", verry usefull for troubleshooting and inspect the SIP traces, i suggest you launch it, so you can see what its doing on the background.
+You can acces the Add-on with this command in the SSH Add-on: `docker exec -it "..." /bin/bash` , when you are in, just launch "sngrep"
+
+Now, goto the section "Domains", add new domain and put in the IP address of your HA instance, after adding the domain, goto the users section, add a new user:
+Username: 10000000005, the password you can choose here...
+
+Thats it, this is the basic configuration! You can now install a softphone, try to register it, both TCP and UDP are enabled... when its successfull registered, press the call button, and if all goes well, the softphone should ring too!
+Calling from indoor panels to softphone doesnt work, the softphone does ring, you can also pick up, but the call is terminated after pickup, no idea why, but i dont care...
+
+Visit the opensips webpages, you can make rules/dialplans.... add new users... 
+
+Now for the integration in HA, if you want to pickup the call with the HA Compantion app, or if you use tablets with HA on it, and you want to receive calls on it...
+First of all, install the Asterisk-Addon : https://github.com/TECH7Fox/asterisk-hass-addons
+
+
+	
