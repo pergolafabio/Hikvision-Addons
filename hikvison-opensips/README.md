@@ -129,8 +129,10 @@ match=192.168.0.17
 
 Now create a dialplan, an easy example below:
 
+```
 exten => s,1,Set(DIALGROUP(mygroup,add)=PJSIP/100)
 exten => s,n,Dial(${DIALGROUP(mygroup)},60)
+```
 
 This will call extension 100 :-)
 
