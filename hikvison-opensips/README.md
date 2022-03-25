@@ -45,10 +45,11 @@ rights:
 ```
 
 As I told before, this addon registers on the indoor station, you need to add it first manually with the IVMS software, make sure you input the correct data, sice its now hardcoded in this Add-on:
+
 For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your HA instance... I used 5, because maybe there al already users with 4 indoor stations, so this will be the 5th :-)
 
 
-Now, start this Add-on, ... Whats next not there yet.. :-)  Opensips povides an contro panel, access it it by surfing to : http://homeassistant:5051/cp/ with credentials admin/opensips
+Now, start this Add-on, ... Whats next not there yet.. :-)  Opensips povides an control panel, access it it by surfing to : http://homeassistant:5051/cp/ with credentials admin/opensips
 
 Goto system, UAC Registant, add a new one with the correct info, in my example, 192.168.0.17 is HA, while 192.168.0.71 is my indoor panel:
 - Registrar server: sip:192.168.0.71:5065
