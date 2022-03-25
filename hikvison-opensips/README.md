@@ -73,6 +73,7 @@ In the Add-on i included an utility called "SNGREP", verry usefull for troublesh
 
 Now, goto the section "Domains", add new domain and put in the IP address of your HA instance, after adding the domain, goto the users section, add a new user:
 Username: 10000000005, the password you can choose here...
+Important! Do a restart of the add-on, that will activate the user...
 ![Domain](domain.PNG)
 ![User](user.PNG)
 
