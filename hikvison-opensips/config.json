@@ -1,0 +1,15 @@
+{
+  "name": "Hikvision-Opensips",
+  "version": "0.3",
+  "slug": "hikvision_opensips",
+  "description": "Register opensips as indoor extension for Hikvivsion door intercoms",
+  "url": "https://github.com/pergolafabio",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "host_network": "true",
+  "startup": "services",
+  "ports": {
+    "5060/tcp": 5060,
+    "5060/udp": 5060,	
+    "5051/tcp": 5051
+  }
+}
