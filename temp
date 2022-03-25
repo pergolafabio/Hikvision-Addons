@@ -74,6 +74,72 @@ Visit the opensips webpages, you can make rules/dialplans.... add new users...
 
 Now for the integration in HA, if you want to pickup the call with the HA Compantion app, or if you use tablets with HA on it, and you want to receive calls on it...
 First of all, install the Asterisk-Addon : https://github.com/TECH7Fox/asterisk-hass-addons
+Be carefull, Opensips runs on 5060 , Asterisk also runs on 5060, make sure you change it!!!!! See example below:
+
+```
+[transport-udp]
+type = transport
+protocol = udp
+bind = 0.0.0.0:5050
+local_net=192.168.0.0/24
+local_net=10.8.0.0/24
+
+[transport-tcp]
+type=transport
+protocol=tcp
+bind=0.0.0.0:5050
+local_net=192.168.0.0/24
+local_net=10.8.0.0/24
+```
+Setup a trunk like below, this trunk with the info below, choose the same password you entered when creating an user on the Opensips, it will use that one...
+
+```
+[mytrunk]
+type=registration
+outbound_auth=mytrunk
+server_uri=sip:192.168.0.17
+client_uri=sip:10000000005@192.168.0.17
+retry_interval=30
+ 
+[mytrunk]
+type=auth
+auth_type=userpass
+password=XXXXXXXXXX
+username=10000000005
+ 
+[mytrunk]
+type=aor
+contact=sip:192.168.0.17:5060
+qualify_frequency=300
+ 
+[mytrunk]
+type=endpoint
+context=default
+disallow=all
+allow=ulaw,alaw
+allow=h264
+outbound_auth=mytrunk
+aors=mytrunk
+ 
+[mytrunk]
+type=identify
+endpoint=mytrunk
+match=192.168.0.17
+```
+
+Now create a dialplan, an easy example below:
+
+exten => s,1,Set(DIALGROUP(mygroup,add)=PJSIP/100)
+exten => s,n,Dial(${DIALGROUP(mygroup)},60)
+
+This will call extension 100 :-)
+
+Install this nice SIP Lovelace card, it will automaticly add persons with users 100, 101, ....
+https://github.com/TECH7Fox/sip-hass-card
+
+If you want call sensors and services, use this: https://github.com/TECH7Fox/asterisk-hass-integration
+
+Have fun!
 
 
 	
