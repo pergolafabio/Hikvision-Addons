@@ -50,6 +50,7 @@ For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your
 
 ![Ivms](ivms.PNG)
 
+Install my addon, use this link as a custom repository for your Addons : https://github.com/pergolafabio/Hikvision-Addons
 Now, start this Add-on, ... Whats next not there yet.. :-)  Opensips povides an control panel, access it it by surfing to : http://homeassistant:5051/cp/ with credentials admin/opensips
 
 Goto system, UAC Registant, add a new one with the correct info, in my example, 192.168.0.17 is HA, while 192.168.0.71 is my indoor panel:
