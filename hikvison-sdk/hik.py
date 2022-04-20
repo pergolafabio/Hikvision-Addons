@@ -100,6 +100,10 @@ HCNetSDK.NET_DVR_SetValidIP(0, True)
 device_info = NET_DVR_DEVICEINFO_V30()
 user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'), device_info)
 
+# fix for segmentation faults, remove device info:
+# #device_info = NET_DVR_DEVICEINFO_V30()
+# user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
+
 
 if (user_id < 0):
     os.system("echo NET_DVR_Login_V30 failed, error code = " + str(HCNetSDK.NET_DVR_GetLastError()))
