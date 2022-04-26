@@ -4,7 +4,7 @@ USER root
 
 # Set Environment Variables
 ENV DEBIAN_FRONTEND=noninteractive
-ARG OPENSIPS_VERSION=3.1
+ARG OPENSIPS_VERSION=3.2
 ARG OPENSIPS_BUILD=releases
 
 #install basic components
