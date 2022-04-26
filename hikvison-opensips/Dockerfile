@@ -24,7 +24,7 @@ RUN echo "deb https://apt.opensips.org buster ${OPENSIPS_VERSION}-${OPENSIPS_BUI
 RUN echo "deb https://apt.opensips.org focal cli-nightly" >/etc/apt/sources.list.d/opensips-cli.list
 
 #install components
-RUN apt-get -y update -qq && apt-get -y install opensips opensips-cli opensips-mysql-module opensips-postgres-module opensips-unixodbc-module opensips-jabber-module opensips-cpl-module opensips-radius-modules opensips-presence-modules opensips-xmlrpc-module opensips-perl-modules opensips-snmpstats-module opensips-xmpp-module opensips-carrierroute-module opensips-berkeley-module opensips-ldap-modules opensips-geoip-module opensips-regex-module opensips-identity-module opensips-b2bua-module opensips-dbhttp-module opensips-dialplan-module opensips-http-modules opensips-tls-module opensips-cgrates-module
+RUN apt-get -y update -qq && apt-get -y install opensips=3.2.5-1 opensips-cli opensips-mysql-module opensips-postgres-module opensips-unixodbc-module opensips-jabber-module opensips-cpl-module opensips-radius-modules opensips-presence-modules opensips-xmlrpc-module opensips-perl-modules opensips-snmpstats-module opensips-xmpp-module opensips-carrierroute-module opensips-berkeley-module opensips-ldap-modules opensips-geoip-module opensips-regex-module opensips-identity-module opensips-b2bua-module opensips-dbhttp-module opensips-dialplan-module opensips-http-modules opensips-tls-module opensips-cgrates-module
 RUN git clone -b 8.3.2 https://github.com/OpenSIPS/opensips-cp.git /var/www/opensips-cp
 
 #RUN service apache2 start \
