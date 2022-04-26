@@ -67,7 +67,7 @@ Add it, do a reload... if al goes well, after several minutes, you should see in
 ![uac](uac.PNG)
 
 
-In the Add-on i included an utility called "SNGREP", verry usefull for troubleshooting and inspect the SIP traces, i suggest you launch it, so you can see what its doing on the background. You can acces the Add-on with this command in the SSH Add-on: `docker exec -it addon_a53439b8_hikvision_opensips /bin/bash` , when you are in, just launch "sngrep"....  OR just use the SSH addon, and install the tool there with this command "apk add sngrep" , then you cant restart opensips, while "sngrep" is still active.
+In the Add-on i included an utility called "SNGREP", verry usefull for troubleshooting and inspect the SIP traces, i suggest you launch it, so you can see what its doing on the background. You can acces the Add-on with this command in the SSH Add-on: `docker exec -it addon_XXXXXXX_hikvision_opensips /bin/bash` , when you are in, just launch "sngrep"....  OR just use the SSH addon, and install the tool there with this command "apk add sngrep" , then you cant restart opensips, while "sngrep" is still active.
 
 ![sngrep](sngrep.PNG)
 
