@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:buster
 
 USER root
 
@@ -20,8 +20,8 @@ RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.3/apache2/p
 
 #add keyserver, repository for opensips
 RUN apt-key adv --fetch-keys https://apt.opensips.org/pubkey.gpg
-RUN echo "deb https://apt.opensips.org bullseye ${OPENSIPS_VERSION}-${OPENSIPS_BUILD}" >/etc/apt/sources.list.d/opensips.list
-RUN echo "deb https://apt.opensips.org bullseye cli-nightly" >/etc/apt/sources.list.d/opensips-cli.list
+RUN echo "deb https://apt.opensips.org buster ${OPENSIPS_VERSION}-${OPENSIPS_BUILD}" >/etc/apt/sources.list.d/opensips.list
+RUN echo "deb https://apt.opensips.org buster cli-nightly" >/etc/apt/sources.list.d/opensips-cli.list
 
 #install components (=3.2.5-1)
 RUN apt-get -y update -qq && apt-get -y install opensips=3.2.5-1 opensips-cli opensips-mysql-module=3.2.5-1 opensips-postgres-module=3.2.5-1 opensips-unixodbc-module=3.2.5-1 opensips-jabber-module=3.2.5-1 opensips-cpl-module=3.2.5-1 opensips-radius-modules=3.2.5-1 opensips-presence-modules=3.2.5-1 opensips-xmlrpc-module=3.2.5-1 opensips-perl-modules=3.2.5-1 opensips-snmpstats-module=3.2.5-1 opensips-xmpp-module=3.2.5-1 opensips-carrierroute-module=3.2.5-1 opensips-berkeley-module=3.2.5-1 opensips-ldap-modules=3.2.5-1 opensips-geoip-module=3.2.5-1 opensips-regex-module=3.2.5-1 opensips-identity-module=3.2.5-1 opensips-b2bua-module=3.2.5-1 opensips-dbhttp-module=3.2.5-1 opensips-dialplan-module=3.2.5-1 opensips-http-modules=3.2.5-1 opensips-tls-module=3.2.5-1 opensips-tlsmgm-module=3.2.5-1 opensips-tls-openssl-module=3.2.5-1 opensips-tls-wolfssl-module=3.2.5-1 opensips-cgrates-module=3.2.5-1
