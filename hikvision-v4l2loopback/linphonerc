@@ -115,7 +115,7 @@ enabled=0
 [video_codec_0]
 mime=VP8
 rate=90000
-enabled=1
+enabled=0
 
 [video_codec_1]
 mime=H264
