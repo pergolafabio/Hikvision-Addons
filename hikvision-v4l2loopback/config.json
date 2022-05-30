@@ -1,7 +1,7 @@
 {
-  "name": "V4L2Loopback1",
+  "name": "V4L2Loopback",
   "version": "1",
-  "slug": "v4l2loopback1",
+  "slug": "v4l2loopback",
   "description": "V4l2Loopback with intergrated LinphoneC terminal client",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-v4l2loopback",	
   "startup": "services",
