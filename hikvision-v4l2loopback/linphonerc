@@ -117,6 +117,12 @@ mime=VP8
 rate=90000
 enabled=16
 
+[video_codec_1]
+mime=H264
+rate=90000
+enabled=1
+recv_fmtp=packetization-mode=1
+
 [proxy_0]
 reg_proxy=sip:192.168.0.17:5050
 reg_identity=sip:1234@192.168.0.17:5050
