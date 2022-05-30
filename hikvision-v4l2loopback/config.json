@@ -1,0 +1,27 @@
+{
+  "name": "V4L2Loopback1",
+  "version": "1",
+  "slug": "v4l2loopback1",
+  "description": "V4l2Loopback with intergrated LinphoneC terminal client",
+  "startup": "services",
+  "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
+  "devices": ["/dev/video0"],
+  "host_network": false,
+  "kernel_modules": true,
+  "options": {
+	"reg_proxy": "sip:192.168.0.17:5050",	  
+	"reg_identity": "sip:1234@192.168.0.17:5050",
+    "username": "1234",
+    "passwd": "4321",
+    "domain": "192.168.0.17",
+	"rtsp": "rtsp://admin:xxx@192.168.0.70:554/Streaming/Channels/102"
+  },
+  "schema": {
+	"reg_proxy": "str",	  
+	"reg_identity": "str",
+    "username": "str",
+    "passwd": "str",
+    "domain": "str",
+    "rtsp": "str"		
+  }
+}
