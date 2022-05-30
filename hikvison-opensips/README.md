@@ -26,6 +26,7 @@ Advantages:
 Issues/Todo list 
 
 - For some reason there is no video yet on the softphone, need to investigate this later, but you can use apps like Bas-IP, divus videophone, vfone, they have the possibility to inject RTSP, or just use the HA SIP card and use the camera entity :-)
+
 WORKAROUND : > https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-v4l2loopback
 - Hangup/Decline doesnt do its job, only when using Asteriks as a trunk, more info below
 
