@@ -3,7 +3,7 @@
   "version": "2.0",
   "slug": "hikvision_opensips",
   "description": "Register opensips as indoor extension for Hikvivsion door intercoms",
-  "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvison-sdk",
+  "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvison-opensips",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "host_network": "true",
   "startup": "services",
