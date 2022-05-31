@@ -9,7 +9,7 @@ You can insert aftewards any RTSP stream with ffmpeg, options are mandatory, i h
 - reg_identity: The AOR format
 - username: Username of the extension on the PBX
 - passwd: Password of the extension
-- ffmpeg: The rtsp string to inject RTSP into "/dev/video0" 
+- rtsp: The ffmpeg string to inject RTSP into "/dev/video0" 
 
 Aftewards, you can call the extension and see the video, because linphonec is staring with auto-answer enabled...
 
