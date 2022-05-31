@@ -112,16 +112,44 @@ rate=44100
 channels=1
 enabled=0
 
+#[video]
+#display_filter_auto_rotate=0
+
 [video_codec_0]
-mime=VP8
+mime=H264
 rate=90000
 enabled=1
+send_fmtp=profile-level-id=42801F; packetization-mode=0
+recv_fmtp=profile-level-id=42801F; packetization-mode=0
 
 [video_codec_1]
 mime=H264
 rate=90000
 enabled=1
-recv_fmtp=profile-level-id=42801d
+send_fmtp=profile-level-id=42801F; packetization-mode=1
+recv_fmtp=profile-level-id=42801F; packetization-mode=1
+
+[video_codec_2]
+mime=H263
+rate=90000
+enabled=0
+send_fmtp=CIF=1;QCIF=1
+recv_fmtp=CIF=1;QCIF=1
+
+[video_codec_3]
+mime=VP8
+rate=90000
+enabled=0
+
+[video_codec_4]
+mime=MP4V-ES
+rate=90000
+enabled=0
+
+[video_codec_5]
+mime=H263-1998
+rate=90000
+enabled=0
 
 [proxy_0]
 reg_proxy=sip:192.168.0.17:5050
