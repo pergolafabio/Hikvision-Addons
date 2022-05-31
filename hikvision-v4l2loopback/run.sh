@@ -22,7 +22,7 @@ echo -e "Check if v4l2loopback modulde is loaded..."
 lsmod
 sleep 1
 echo -e "Injecting RTSP stream into /dev/video0..."
-${RTSP}
+${RTSP} > /dev/null &
 echo -e "Waiting 8 seconds before starting linphone (/dev/video0 must be processed first)..."
 sleep 8
 echo -e "Starting linphone..."
