@@ -30,8 +30,8 @@ RUN apt-get update \
 # cp /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
 
 ## Command to copy files outside container
-# docker cp addon_local_hikvision_v4l2loopback:/usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.a /addons
-# docker cp addon_local_hikvision_v4l2loopback:/usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so /addons
+# docker cp addon_aff2db71_hikvision_v4l2loopback:/usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.a /addons
+# docker cp addon_aff2db71_hikvision_v4l2loopback:/usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so /addons
 
 CMD ["/bin/bash", "/app/run.sh"]
 #ENTRYPOINT ["tail", "-f", "/dev/null"]
