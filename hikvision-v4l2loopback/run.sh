@@ -9,6 +9,7 @@ USERNAME="$(jq --raw-output '.username' $CONFIG_PATH)"
 PASSWD="$(jq --raw-output '.passwd' $CONFIG_PATH)"
 DOMAIN="$(jq --raw-output '.domain' $CONFIG_PATH)"
 RTSP="$(jq --raw-output '.rtsp' $CONFIG_PATH)"
+LINPHONEC="$(jq --raw-output '.linphonec' $CONFIG_PATH)"
 
 sed -i "s/reg_proxy=sip:192.168.0.17:5050*/reg_proxy=${REG_PROXY}/g" /app/linphonerc
 sed -i "s/reg_identity=sip:1234@192.168.0.17:5050*/reg_identity=${REG_IDENTITY}/g" /app/linphonerc
@@ -26,6 +27,7 @@ ${RTSP} > /dev/null &
 echo -e "Waiting 8 seconds before starting linphone (/dev/video0 must be processed first)..."
 sleep 8
 echo -e "Starting linphone..."
-linphonec -a -C -c /app/linphonerc
+# linphonec -a -C -c /app/linphonerc  ###  Usefull Linphonec commands: webcam list // webcam use 0  // proxy add / autoanswer enable
+${LINPHONEC}
 
-# Usefull Linphonec commands: webcam list // webcam use 0  // proxy add / autoanswer enable
+
