@@ -22,12 +22,10 @@ echo -e "Check if v4l2loopback modulde is loaded..."
 lsmod
 sleep 1
 echo -e "Injecting RTSP stream into /dev/video0..."
-#ffmpeg -i ${RTSP} -nostats -hide_banner -nostdin -s 704*480 -r 20 -vf format=yuv420p -f v4l2 /dev/video0 > /dev/null &
-ffmpeg -i ${RTSP} -nostats -hide_banner -nostdin -s 640*480 -r 20 -vf format=yuv420p -f v4l2 /dev/video0 > /dev/null &
+${RTSP}
 echo -e "Waiting 8 seconds before starting linphone (/dev/video0 must be processed first)..."
 sleep 8
 echo -e "Starting linphone..."
 linphonec -a -C -c /app/linphonerc
 
 # Usefull Linphonec commands: webcam list // webcam use 0  // proxy add / autoanswer enable
-
