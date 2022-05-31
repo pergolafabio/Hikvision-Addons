@@ -9,6 +9,9 @@ ref=xxkeCnVDDKzEq4C
 
 [sip]
 use_ipv6=0
+sip_tcp_port=5040
+sip_port=0
+sip_tls_port=0
 root_ca=/usr/share/linphone/rootca.pem
 verify_server_certs=1
 verify_server_cn=1
