@@ -1,6 +1,6 @@
 {
   "name": "Hikvision-V4l2loopback",
-  "version": "3",
+  "version": "1.0",
   "slug": "hikvision_v4l2loopback",
   "description": "V4l2Loopback with intergrated LinphoneC terminal client",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-v4l2loopback",	
@@ -11,11 +11,11 @@
   "kernel_modules": true,
   "options": {
 	"reg_proxy": "sip:192.168.0.17:5050",	  
-	"reg_identity": "sip:1234@192.168.0.17:5050",
-    "username": "1234",
+	"reg_identity": "sip:7000@192.168.0.17:5050",
+    "username": "7000",
     "passwd": "4321",
     "domain": "192.168.0.17",
-	"rtsp": "rtsp://admin:xxx@192.168.0.70:554/Streaming/Channels/102"
+	"rtsp": "ffmpeg -i rtsp://admin:xxx@192.168.0.70:554/Streaming/Channels/102 -nostats -hide_banner -nostdin -s 640*480 -r 20 -vf format=yuv420p -f v4l2 /dev/video0 > /dev/null &"
   },
   "schema": {
 	"reg_proxy": "str",	  
