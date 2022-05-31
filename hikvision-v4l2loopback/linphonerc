@@ -139,7 +139,7 @@ recv_fmtp=CIF=1;QCIF=1
 [video_codec_3]
 mime=VP8
 rate=90000
-enabled=0
+enabled=1
 
 [video_codec_4]
 mime=MP4V-ES
