@@ -12,7 +12,7 @@ COPY libmsopenh264.a /usr/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh2
 COPY libmsopenh264.so /usr/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so
 
 RUN apt-get update \
-    && apt-get install -y git nano ffmpeg libavcodec-dev libswscale-dev libavutil-dev libx264-dev liblinphone-dev jq sed  kmod # linphone-nogtk
+    && apt-get install -y git nano ffmpeg libavcodec-dev libswscale-dev libavutil-dev libx264-dev liblinphone-dev jq sed kmod linphone-nogtk
 
 
 ## Changing versmagic!
