@@ -25,9 +25,9 @@ RUN apt-get update \
 # cd openh264 // make ARCH=x86_64 // make install
 # git clone https://gitlab.linphone.org/BC/public/msopenh264.git
 # cd msopenh264 // cmake . -DCMAKE_PREFIX_PATH=/usr/local/lib/pkgconfig // make // make install
-## Plugin files created in dir below, but needed in: /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
-# /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.a 
-# /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so 
+## Plugin files created in dir below, but needed in plugin dir
+# cp /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.a /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
+# cp /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
 
 ## Command to copy files outside container
 # docker cp addon_local_hikvision_v4l2loopback:/usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.a /addons
