@@ -9,15 +9,17 @@ ARG OPENSIPS_BUILD=releases
 
 #install basic components buster
 # RUN apt-get update && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates
-# RUN apt-get update && apt -y install php7.3 php7.3-gd php7.3-mysql php7.3-xmlrpc php-pear php7.3-cli php-apcu php7.3-curl php7.3-xml libapache2-mod-php7.3
+# RUN apt-get update && apt-get -y install php7.3 php7.3-gd php7.3-mysql php7.3-xmlrpc php-pear php7.3-cli php-apcu php7.3-curl php7.3-xml libapache2-mod-php7.3
 # RUN pear install MDB2#mysql
+# RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.3/apache2/php.ini
 
 #install basic components bulsseye
 RUN apt-get update && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates dialog
-RUN apt-get update && apt -y install php php-gd php-mysql php-xmlrpc php-pear php-cli php-apcu php-curl php-xml libapache2-mod-php
+RUN apt-get update && apt-get -y install php7.4 php7.4-gd php7.4-mysql php7.4-xmlrpc php-pear php7.4-cli php-apcu php7.4-curl php7.4-xml libapache2-mod-php7.4
 RUN pear install MDB2#mysql
+RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.4/apache2/php.ini
 
-RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.3/apache2/php.ini
+
 
 #RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
 #RUN curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
