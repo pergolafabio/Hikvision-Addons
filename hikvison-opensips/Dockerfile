@@ -1,5 +1,5 @@
-FROM debian:buster
-
+#FROM debian:buster
+FROM debian:bullseye
 USER root
 
 # Set Environment Variables
@@ -7,23 +7,33 @@ ENV DEBIAN_FRONTEND=noninteractive
 ARG OPENSIPS_VERSION=3.2
 ARG OPENSIPS_BUILD=releases
 
-#install basic components
-RUN apt-get -y update -qq && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates
+#install basic components buster
+# RUN apt-get update && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates
+# RUN apt-get update && apt -y install php7.3 php7.3-gd php7.3-mysql php7.3-xmlrpc php-pear php7.3-cli php-apcu php7.3-curl php7.3-xml libapache2-mod-php7.3
+# RUN pear install MDB2#mysql
 
-RUN apt update && apt -y install php7.3 php7.3-gd php7.3-mysql php7.3-xmlrpc php-pear php7.3-cli php-apcu php7.3-curl php7.3-xml libapache2-mod-php7.3
+#install basic components bulsseye
+RUN apt-get update && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates dialog
+RUN apt-get update && apt -y install php php-gd php-mysql php-xmlrpc php-pear php-cli php-apcu php-curl php-xml libapache2-mod-php
 RUN pear install MDB2#mysql
+
 RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.3/apache2/php.ini
 
 #RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
 #RUN curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 #RUN apt update && apt -y install mariadb-server
 
-#add keyserver, repository for opensips
-RUN apt-key adv --fetch-keys https://apt.opensips.org/pubkey.gpg
-RUN echo "deb https://apt.opensips.org buster ${OPENSIPS_VERSION}-${OPENSIPS_BUILD}" >/etc/apt/sources.list.d/opensips.list
-RUN echo "deb https://apt.opensips.org buster cli-nightly" >/etc/apt/sources.list.d/opensips-cli.list
+#add keyserver, repository for opensips buster
+# RUN apt-key adv --fetch-keys https://apt.opensips.org/pubkey.gpg
+# RUN echo "deb https://apt.opensips.org buster ${OPENSIPS_VERSION}-${OPENSIPS_BUILD}" >/etc/apt/sources.list.d/opensips.list
+# RUN echo "deb https://apt.opensips.org buster cli-nightly" >/etc/apt/sources.list.d/opensips-cli.list
 
-#install components (=3.2.5-1)
+#add keyserver, repository for opensips bulsseye
+RUN apt-key adv --fetch-keys https://apt.opensips.org/pubkey.gpg
+RUN echo "deb https://apt.opensips.org bullseye ${OPENSIPS_VERSION}-${OPENSIPS_BUILD}" >/etc/apt/sources.list.d/opensips.list
+RUN echo "deb https://apt.opensips.org bullseye cli-nightly" >/etc/apt/sources.list.d/opensips-cli.list
+
+#install components (=3.2.5-1) BUG in 3.2.6  => https://github.com/OpenSIPS/opensips/issues/2823
 RUN apt-get -y update -qq && apt-get -y install opensips=3.2.5-1 opensips-cli opensips-mysql-module=3.2.5-1 opensips-postgres-module=3.2.5-1 opensips-unixodbc-module=3.2.5-1 opensips-jabber-module=3.2.5-1 opensips-cpl-module=3.2.5-1 opensips-radius-modules=3.2.5-1 opensips-presence-modules=3.2.5-1 opensips-xmlrpc-module=3.2.5-1 opensips-perl-modules=3.2.5-1 opensips-snmpstats-module=3.2.5-1 opensips-xmpp-module=3.2.5-1 opensips-carrierroute-module=3.2.5-1 opensips-berkeley-module=3.2.5-1 opensips-ldap-modules=3.2.5-1 opensips-geoip-module=3.2.5-1 opensips-regex-module=3.2.5-1 opensips-identity-module=3.2.5-1 opensips-b2bua-module=3.2.5-1 opensips-dbhttp-module=3.2.5-1 opensips-dialplan-module=3.2.5-1 opensips-http-modules=3.2.5-1 opensips-tls-module=3.2.5-1 opensips-tlsmgm-module=3.2.5-1 opensips-tls-openssl-module=3.2.5-1 opensips-tls-wolfssl-module=3.2.5-1 opensips-cgrates-module=3.2.5-1
 #RUN apt-get -y update -qq && apt-get -y install opensips opensips-cli opensips-mysql-module opensips-postgres-module opensips-unixodbc-module opensips-jabber-module opensips-cpl-module opensips-radius-modules opensips-presence-modules opensips-xmlrpc-module opensips-perl-modules opensips-snmpstats-module opensips-xmpp-module opensips-carrierroute-module opensips-berkeley-module opensips-ldap-modules opensips-geoip-module opensips-regex-module opensips-identity-module opensips-b2bua-module opensips-dbhttp-module opensips-dialplan-module opensips-http-modules opensips-tls-module opensips-cgrates-module
 RUN git clone -b 8.3.2 https://github.com/OpenSIPS/opensips-cp.git /var/www/opensips-cp
