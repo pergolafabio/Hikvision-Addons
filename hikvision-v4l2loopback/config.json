@@ -1,13 +1,13 @@
 {
   "name": "Hikvision-V4l2loopback3",
-  "version": "1",
+  "version": "2",
   "slug": "hikvision_v4l2loopback3",
   "description": "V4l2Loopback with intergrated LinphoneC terminal client",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-v4l2loopback",	
   "startup": "services",
   "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
   "devices": ["/dev/video0"],
-  "host_network": false,
+  "host_network": true,
   "kernel_modules": true,
   "options": {
     "reg_proxy": "sip:192.168.0.17:5050",	  
