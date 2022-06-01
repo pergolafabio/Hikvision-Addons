@@ -14,7 +14,7 @@ ARG OPENSIPS_BUILD=releases
 # RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.3/apache2/php.ini
 
 #install basic components bulsseye
-RUN apt-get update && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates dialog
+RUN apt-get update && apt-get -y install default-mysql-client sngrep gnupg2 m4 git nano sudo curl dbus apache2 lsb-release dirmngr apt-transport-https ca-certificates dialog net-tools
 RUN apt-get update && apt-get -y install php7.4 php7.4-gd php7.4-mysql php7.4-xmlrpc php-pear php7.4-cli php-apcu php7.4-curl php7.4-xml libapache2-mod-php7.4
 RUN pear install MDB2#mysql
 RUN sed -i "s#short_open_tag = Off#short_open_tag = On#g" /etc/php/7.4/apache2/php.ini
