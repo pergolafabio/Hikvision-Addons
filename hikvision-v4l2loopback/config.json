@@ -1,12 +1,13 @@
 {
   "name": "Hikvision-V4l2loopback",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "slug": "hikvision_v4l2loopback",
   "description": "V4l2Loopback with intergrated LinphoneC terminal client",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-v4l2loopback",	
   "startup": "services",
   "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
   "devices": ["/dev/video0"],
+  "map": ["config"],
   "host_network": false,
   "kernel_modules": true,
   "options": {
