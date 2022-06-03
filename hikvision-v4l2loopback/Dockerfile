@@ -26,6 +26,7 @@ RUN git clone https://gitlab.linphone.org/BC/public/msopenh264.git
 WORKDIR /app/msopenh264 
 RUN cmake . -DCMAKE_PREFIX_PATH=/usr/local/lib/pkgconfig && make && make install
 ## Plugin files created in dir below, but needed in plugin dir
+WORKDIR /app
 RUN mkdir -p /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
 RUN cp /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.a /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
 RUN cp /usr/local/lib/x86_64-linux-gnu/mediastreamer/plugins/libmsopenh264.so /usr/lib/x86_64-linux-gnu/mediastreamer/plugins
