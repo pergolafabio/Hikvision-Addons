@@ -13,8 +13,8 @@ RUN apt-get update \
 
 
 ## Changing versmagic!
-# RUN git clone https://github.com/yaxinsn/vermagic
-# RUN /app/vermagic/vermagic -v "5.15.41 SMP mod_unload " /app/v4l2loopback.ko
+RUN git clone https://github.com/yaxinsn/vermagic
+RUN /app/vermagic/vermagic -v "5.15.45 SMP mod_unload " /app/v4l2loopback.ko
 
 ## Creating H264 encoder plugin!
 RUN apt-get install -y build-essential cmake pkg-config nasm yasm libtool
