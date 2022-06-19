@@ -81,6 +81,7 @@ def set_attribute(sensor_name, attribute, value):
     payload = json.dumps({'state':  msg['state'], 'attributes': msg['attributes']})
     requests.post(url_states + sensor_name, headers=headers, data=payload)   
 
+dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")    
 os.system("echo " + dt +  " Hikvision SDK Add-on started! Listening for events...")  
 
 # VARIABLES 
