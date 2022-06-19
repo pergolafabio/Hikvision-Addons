@@ -7,11 +7,12 @@ import sys
 import os
 
 def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):
+    dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     if (command == COMM_ALARM_V30):
         alarminfo_alarm_v30: NET_DVR_ALARMINFO_V30 = cast(
             alarminfo_pointer, POINTER(NET_DVR_ALARMINFO_V30)).contents
         if (alarminfo_alarm_v30.dwAlarmType == ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION):
-            os.system("echo Motion detected, trying to update: " + sensor_name_motion)
+            os.system("echo " + dt +  " Motion detected, trying to update: " + sensor_name_motion)
             data = json.dumps({'state': 'on'})
             response = requests.post(url_states + sensor_name_motion, headers=headers, data=data)
             os.system("echo Response: " + response.text)
@@ -26,7 +27,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents        
         if (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING):
             try:
-                os.system("echo Doorbell ringing, trying to update: " + sensor_name_callstatus)
+                os.system("echo " + dt +  " Doorbell ringing, trying to update: " + sensor_name_callstatus)
                 data = json.dumps({'state': 'on'})
                 response = requests.post(url_states + sensor_name_callstatus, headers=headers, data=data)
                 os.system("echo Response: " + response.text)
@@ -35,24 +36,24 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 response = requests.post(url_states + sensor_name_callstatus, headers=headers, data=data)
                 os.system("echo Response: " + response.text)
             except:
-                os.system("echo Sensor updating failed")
+                os.system("echo " + dt +  " Sensor updating failed")
              
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL):
-            os.system("echo Call dismissed")            
+            os.system("echo " + dt +  " Call dismissed")            
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM):
-            os.system("echo Tampering alarm")
+            os.system("echo " + dt +  " Tampering alarm")
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED):
-            os.system("echo Door not closed")
+            os.system("echo " + dt +  " Door not closed")
         else:
-            os.system("echo COMM_ALARM_VIDEO_INTERCOM, unhandled byAlarmType: "+ str(alarminfo_alarm_video_intercom.byAlarmType))
+            os.system("echo " + dt +  " COMM_ALARM_VIDEO_INTERCOM, unhandled byAlarmType: "+ str(alarminfo_alarm_video_intercom.byAlarmType))
     elif(command == COMM_UPLOAD_VIDEO_INTERCOM_EVENT):
         alarminfo_upload_video_intercom_event: NET_DVR_VIDEO_INTERCOM_EVENT = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_EVENT)).contents
         if (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG):  
     
             try:
-                os.system("echo Door unlocked, trying to update: " + sensor_name_door)
-                os.system("echo Unlocked door LockID : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID))
+                os.system("echo " + dt +  " Door unlocked, trying to update: " + sensor_name_door)
+                os.system("echo " + dt +  " Unlocked door LockID : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID))
                 #os.system("echo Unlocked door Lockname : " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byLockName)))
                 #os.system("echo Unlocked door UnlockType : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byUnlockType))
                 data = json.dumps({'state': 'on', 'attributes': {'Unlock': str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)), 'DoorID' : str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID) }})
@@ -63,14 +64,14 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
                 os.system("echo Response: " + response.text)
             except:
-                os.system("echo Sensor updating failed")        
-            os.system("echo Unlocked by: " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)))
+                os.system("echo " + dt +  " Sensor updating failed")        
+            os.system("echo " + dt +  " Unlocked by: " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)))
         elif (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT):
-            os.system("echo Illegal card swiping")
+            os.system("echo " + dt +  " Illegal card swiping")
         else:
-            os.system("echo COMM_ALARM_VIDEO_INTERCOM, unhandled byEventType: " + str(alarminfo_upload_video_intercom_event.byEventType))
+            oos.system("echo " + dt +  " COMM_ALARM_VIDEO_INTERCOM, unhandled byEventType: " + str(alarminfo_upload_video_intercom_event.byEventType))
     else:
-        os.system("echo Unhandled command: " + str(command))
+        os.system("echo " + dt +  " Unhandled command: " + str(command))
 
 def set_attribute(sensor_name, attribute, value):
     response = requests.get(url_states + sensor_name, headers=headers)
@@ -79,7 +80,7 @@ def set_attribute(sensor_name, attribute, value):
     payload = json.dumps({'state':  msg['state'], 'attributes': msg['attributes']})
     requests.post(url_states + sensor_name, headers=headers, data=payload)   
 
-os.system("echo Hikvision SDK Add-on started! Listening for events...")  
+os.system("echo " + dt +  " Hikvision SDK Add-on started! Listening for events...")  
 
 # VARIABLES 
 with open("/data/options.json") as fd:
