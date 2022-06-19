@@ -14,11 +14,11 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
             os.system("echo Motion detected, trying to update: " + sensor_name_motion)
             data = json.dumps({'state': 'on'})
             response = requests.post(url_states + sensor_name_motion, headers=headers, data=data)
-            #os.system("echo Response: " + response)
+            os.system("echo Response: " + response.text)
             time.sleep(2)
             data = json.dumps({'state': 'off'})
             response = requests.post(url_states + sensor_name_motion, headers=headers, data=data)
-            #os.system("echo Response: " + response)
+            os.system("echo Response: " + response.text)
         else:
             os.system("echo COMM_ALARM_V30, unhandled dwAlarmType: " + str(alarminfo_alarm_v30.dwAlarmType))
     elif(command == COMM_ALARM_VIDEO_INTERCOM):
@@ -29,11 +29,11 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 os.system("echo Doorbell ringing, trying to update: " + sensor_name_callstatus)
                 data = json.dumps({'state': 'on'})
                 response = requests.post(url_states + sensor_name_callstatus, headers=headers, data=data)
-                #os.system("echo Response: " + response)
+                os.system("echo Response: " + response.text)
                 time.sleep(2)
                 data = json.dumps({'state': 'off'})
                 response = requests.post(url_states + sensor_name_callstatus, headers=headers, data=data)
-                #os.system("echo Response: " + response)
+                os.system("echo Response: " + response.text)
             except:
                 os.system("echo Sensor updating failed")
              
@@ -57,11 +57,11 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 #os.system("echo Unlocked door UnlockType : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byUnlockType))
                 data = json.dumps({'state': 'on', 'attributes': {'Unlock': str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)), 'DoorID' : str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID) }})
                 response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
-                #os.system("echo Response: " + response)
+                os.system("echo Response: " + response.text)
                 time.sleep(2)
                 data = json.dumps({'state': 'off', 'attributes': {'Unlock': str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)), 'DoorID' : str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID) }})
                 response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
-                #os.system("echo Response: " + response)
+                os.system("echo Response: " + response.text)
             except:
                 os.system("echo Sensor updating failed")        
             os.system("echo Unlocked by: " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)))
