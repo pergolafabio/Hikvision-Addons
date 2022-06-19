@@ -21,7 +21,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
             response = requests.post(url_states + sensor_name_motion, headers=headers, data=data)
             os.system("echo Response: " + response.text)
         else:
-            os.system("echo COMM_ALARM_V30, unhandled dwAlarmType: " + str(alarminfo_alarm_v30.dwAlarmType))
+            os.system("echo " + dt +  " COMM_ALARM_V30, unhandled dwAlarmType: " + str(alarminfo_alarm_v30.dwAlarmType))
     elif(command == COMM_ALARM_VIDEO_INTERCOM):
         alarminfo_alarm_video_intercom: NET_DVR_VIDEO_INTERCOM_ALARM = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents        
