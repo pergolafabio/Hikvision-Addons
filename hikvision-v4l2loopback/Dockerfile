@@ -17,7 +17,7 @@ RUN git clone https://github.com/yaxinsn/vermagic
 WORKDIR /app/vermagic
 RUN make
 WORKDIR /app
-RUN /app/vermagic/vermagic -v "5.15.45 SMP mod_unload " /app/v4l2loopback.ko
+RUN /app/vermagic/vermagic -v "5.15.55 SMP mod_unload " /app/v4l2loopback.ko
 
 WORKDIR /app
 ## Creating H264 encoder plugin!
