@@ -28,17 +28,17 @@ You can create an diaplan with conference room, lets say the doorbell calls "777
 exten => 777,1,NoOp()
  same => n,Progress()
  same => n,Wait(1) 
- same => n,Originate(PJSIP/1234,exten,default,777,1,,aC(ulaw,alaw,h264)c(1234)n(Doorbell))
- same => n,Originate(PJSIP/6000,exten,default,888,1,,aC(ulaw,alaw,h264)c(6000)n(Fabio)) 
+ same => n,Originate(PJSIP/1234,exten,default,888,1,,aC(ulaw,alaw,h264)c(1234)n(Doorbell))
+ same => n,Originate(PJSIP/6000,exten,default,999,1,,aC(ulaw,alaw,h264)c(6000)n(Fabio)) 
  same => n,ConfBridge(1,myconferenceroom,admin_user)
  
  
-exten => 777,1,NoOp()
+exten => 888,1,NoOp()
  same => n,Progress()
  same => n,Wait(1) 
  same => n,ConfBridge(1,myconferenceroom,admin_user)
 
-exten => 888,1,NoOp()
+exten => 999,1,NoOp()
  same => n,Progress()
  same => n,Wait(1) 
  same => n,ConfBridge(1,myconferenceroom,marked_user)
