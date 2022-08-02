@@ -8,6 +8,7 @@ In asterisk its possible to create an conf call, the idea is to invite this UAC 
 ## Install:
 
 Copy over the file sip2rtsp.cfg to your config folder, change it according to your needs and start the add-on
+https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sip2rtsp/sip2rtsp.cfg
 
 ## Dialplan example
 
