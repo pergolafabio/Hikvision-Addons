@@ -1,5 +1,9 @@
 # Home Assistant Add-on: V4l2Loopback with intergrated LinphoneC terminal client
 
+## DEPRECATED!!
+DONT USE THIS ADDON!!!!! Use the new one instead, less cpu hungry, no need anymore for mmpeg
+https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sip2rtsp
+
 ## Background info:
 
 For people using my OpenSips addon, seems video is not forwarded, so i created this new extra addon, this creates an virtual "/dev/video0" loopback device...
