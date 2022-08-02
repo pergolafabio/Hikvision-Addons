@@ -1,0 +1,15 @@
+name: "Hikvision-Sip2rtsp"
+description: "Inject RTSP in an extension"
+version: "1.0.0"
+slug: "hikvision_sip2rtsp"
+url: "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sip2rtsp"
+init: false
+host_network: true
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+map:
+  - config:ro
