@@ -4,7 +4,7 @@
 DONT USE THIS ADDON!!!!! Its not needed anymore, you can just use Asterisk to register as a TRUNK fo inbound call from the primary indoor
 I thought i needed to send the custom regXML in the register packet, but i was wrong... just add the extension with IVMS like in screenshots below
 Then use this trunk setup in Asterisk: (192.168.0.71 is the primary indoor panel)
-
+```
 [mytrunk-auth]
 type=auth
 auth_type=userpass
@@ -39,7 +39,7 @@ from_domain=mydomain.com
 type=identify
 endpoint=mytrunk
 match=192.168.0.71
-
+```
 -------------------------------------------------
 
 END
