@@ -1,5 +1,49 @@
 # Home Assistant Add-on: Register Openips/PBX as extension on your indoor panel
 
+## DEPRECATED!!
+DONT USE THIS ADDON!!!!! Its not needed anymore, you can just use Asterisk to register as a TRUNK fo inbound call from the primary indoor
+I thought i needed to send the custom regXML in the register packet, but i was wrong... just add the extension with IVMS like in screenshots below
+Then use this trunk setup in Asterisk: (192.168.0.71 is the primary indoor panel)
+
+[mytrunk-auth]
+type=auth
+auth_type=userpass
+password=XXXX
+username=10000000005
+ 
+[mytrunk-aor]
+type=aor
+contact=sip:192.168.0.71:5065
+
+[mytrunk-registration]
+type=registration
+outbound_auth=mytrunk-auth
+server_uri=sip:192.168.0.71:5065
+client_uri=sip:10000000005@192.168.0.71:5065
+retry_interval=10
+contact_user=10000000005
+expiration=600
+ 
+[mytrunk]
+type=endpoint
+context=default
+disallow=all
+allow=ulaw,alaw
+allow=h264,vp8
+outbound_auth=mytrunk-auth
+aors=mytrunk-aor
+rewrite_contact=yes
+from_domain=mydomain.com
+ 
+[mytrunk]
+type=identify
+endpoint=mytrunk
+match=192.168.0.71
+
+-------------------------------------------------
+
+END
+
 ## Background info:
 
 Indoor/Outdoor stations have also the possibility to register on a PBX like Asterisk/FreePBX..., BUT!!!
