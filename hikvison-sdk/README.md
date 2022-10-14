@@ -13,7 +13,7 @@ https://www.hikvision.com/nl/support/download/sdk/
 Open your Home Assistant instance and add an custom repositoryfor your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon 
 
 First of all, create the template sensors in your yaml configuration, like below:
-When door is opened by key/badge, or when the doorbell is ringing, or motion detected the state of the sensors below are "on" for 2 seconds
+When door is opened by key/badge, or when the doorbell is ringing, or motion detected, or tamper alarm... the state of the sensors below are "on" for 2 seconds
 
 ````
 template:
@@ -23,7 +23,9 @@ template:
       - name: hikvision_callstatus
         state: "off"
       - name: hikvision_motion
-        state: "off"  
+        state: "off"
+      - name: hikvision_tamper
+        state: "off"         
 ````
 To open a door, we need to send a stdin message to this docker add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
 
