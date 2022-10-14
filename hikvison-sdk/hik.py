@@ -42,7 +42,17 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL):
             os.system("echo " + dt +  " Call dismissed")            
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM):
-            os.system("echo " + dt +  " Tampering alarm")
+            try:
+                os.system("echo " + dt +  " Tamper Alarm, trying to update: " + sensor_name_tamper)
+                data = json.dumps({'state': 'on'})
+                response = requests.post(url_states + sensor_name_tamper, headers=headers, data=data)
+                os.system("echo Response: " + response.text)
+                time.sleep(2)
+                data = json.dumps({'state': 'off'})
+                response = requests.post(url_states + sensor_name_tamper, headers=headers, data=data)
+                os.system("echo Response: " + response.text)
+            except:
+                os.system("echo " + dt +  " Sensor updating failed")
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED):
             os.system("echo " + dt +  " Door not closed")
         else:
@@ -96,6 +106,7 @@ url_states = config["url_states"]
 sensor_name_door = "sensor." + config["sensor_door"]
 sensor_name_callstatus = "sensor."  + config["sensor_callstatus"]
 sensor_name_motion = "sensor."  + config["sensor_motion"]
+sensor_name_tamper = "sensor."  + config["sensor_tamper"]
    
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
