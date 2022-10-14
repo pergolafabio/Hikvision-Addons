@@ -1,6 +1,6 @@
 {
   "name": "Hikvision-SDK",
-  "version": "4.0",
+  "version": "4.1",
   "slug": "hikvision_sdk",
   "description": "Capture events based on SDK Hikvision",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvison-sdk",
@@ -17,7 +17,8 @@
     "url_states": "http://localhost:8123/api/states/",
 	"sensor_door" : "hikvision_door",
 	"sensor_callstatus" : "hikvision_callstatus",
-	"sensor_motion" : "hikvision_motion"	
+	"sensor_motion" : "hikvision_motion",
+	"sensor_tamper" : "hikvision_tamper"	  
 
   },
   "schema":
@@ -29,7 +30,8 @@
     "url_states" : "str",	
 	"sensor_door" : "str",
 	"sensor_callstatus" : "str",
-	"sensor_motion" : "str"	
+	"sensor_motion" : "str",
+	"sensor_tamper" : "str"		  
 
    }
 }
