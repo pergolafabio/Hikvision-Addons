@@ -21,7 +21,7 @@ Advantages:
 - You dont need to use the Hikconnect app anymore, you can use your own softphone
 - All local
 - Verry nice intergations possible, you can even pickup/answer the call with a Lovelace SIP card!! Freaking nice! :-)  https://github.com/TECH7Fox
-- It will provide you call sensors, more info below... (asterisk)
+- It will provide you call sensors based on sip, using the asterisk integration or use my SDK addon instead
 - Opening door also works by sending '#' during call with a softphone
 
 ## Install:
