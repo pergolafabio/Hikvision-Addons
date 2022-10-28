@@ -1,6 +1,6 @@
-name: "Hikvision-Sip2rtsp"
-description: "Inject RTSP in an extension"
-version: "1.0.0"
+name: "Hikvision-Sip2Rtsp"
+description: "Inject RTSP video feed when you forward the call from an indoor station to Asterisk as a TRUNK setup"
+version: "1.0"
 slug: "hikvision_sip2rtsp"
 url: "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sip2rtsp"
 init: false
