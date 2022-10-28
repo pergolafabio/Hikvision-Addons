@@ -2,13 +2,79 @@
 
 ## Background info:
 
-For people using my OpenSips addon, seems video is not forwarded, so i created this new extra addon, this creates an extension with video...
-In asterisk its possible to create an conf call, the idea is to invite this UAC user in the call to see video
+Hikvision intercom devices have the ability to register on a PBX, but the disadvantage of using the SIP setting on the device:
+
+- When PBX is down => you miss the call :-)
+- When connected to a PBX , Hikconnect cloud doesnt work anymore
+- No video before pickup anymore on the indoor panels, so you dont see who is calling, quite annoying!!
+
+There is another way!!!
+
+In asterisk you can define an TRUNK, to register on the primary indoor station, Asterisk will act as an second indoor extension... so the call comes in, your first indoor stations starts ringing, and will forward the call to Asterisk
+
+Advantages:
+
+- Hikconnect cloud, still works!
+- Still video on your indoor panels!!! Most important one
+- If this addon is down, the intercom still works as we register it as an extension
+- You dont need access to the outdoor station, usefull for people living in appartment with no access to outdoor station.
+- You dont need to use the Hikconnect app anymore, you can use your own softphone
+- All local
+- Verry nice intergations possible, you can even pickup/answer the call with a Lovelace SIP card!! Freaking nice! :-)  More info below (asterisk)
+- It will provide you call sensors, more info below... (asterisk)
+- Opening door also works by sending '#' during call with a softphone
 
 ## Install:
 
 Copy over the file sip2rtsp.cfg to your config folder, change it according to your needs and start the add-on
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sip2rtsp/sip2rtsp.cfg
+
+## Trunk example for Asterisk
+
+
+As I told before, this addon registers on the indoor station, you need to add it first manually with the IVMS software
+For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your HA instance running the addon... I used 5, because maybe there al already users with 4 indoor stations, so this will be the 5th :-)
+
+In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actually the number 5 you entered in IVMS
+
+![Ivms](ivms.PNG)
+
+```
+[mytrunk-auth]
+type=auth
+auth_type=userpass
+password=XXXX
+username=10000000005
+ 
+[mytrunk-aor]
+type=aor
+contact=sip:192.168.0.71:5065
+
+[mytrunk-registration]
+type=registration
+outbound_auth=mytrunk-auth
+server_uri=sip:192.168.0.71:5065
+client_uri=sip:10000000005@192.168.0.71:5065
+retry_interval=10
+contact_user=10000000005
+expiration=600
+ 
+[mytrunk]
+type=endpoint
+context=default
+disallow=all
+allow=ulaw,alaw
+allow=h264,vp8
+outbound_auth=mytrunk-auth
+aors=mytrunk-aor
+rewrite_contact=yes
+from_domain=mydomain.com
+ 
+[mytrunk]
+type=identify
+endpoint=mytrunk
+match=192.168.0.71
+```
 
 ## Dialplan example
 
