@@ -163,8 +163,10 @@ if platform.uname()[0] == "Windows":
 if platform.uname()[0] == "Linux":
     if platform.uname()[4] == "x86_64":
         hcnetsdk_path = os.path.join(current_path, "/lib-linux64/libhcnetsdk.so")
-    else:
+    elif platform.uname()[4] == "aarch64":
         hcnetsdk_path = os.path.join(current_path, "/lib-arm_aarch64-linux/libhcnetsdk.so")
+    else:
+        os.system("echo No supported Linux library found")
 
 HCNetSDK = cdll.LoadLibrary(hcnetsdk_path)
 
