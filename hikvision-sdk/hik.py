@@ -1,5 +1,5 @@
-from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY
-from ctypes import POINTER, cast, c_char_p, c_byte, sizeof, byref
+from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from ctypes import POINTER, cast, c_char_p, c_byte, sizeof, byref, memmove, c_void_p, c_char
 import requests
 import json
 import time
@@ -126,8 +126,10 @@ device_info = NET_DVR_DEVICEINFO_V30()
 user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'), device_info)
 
 # fix for segmentation faults, remove device info:
-# #device_info = NET_DVR_DEVICEINFO_V30()
-# user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
+
+#device_info = NET_DVR_DEVICEINFO_V30()
+#user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
+
 
 
 if (user_id < 0):
@@ -167,6 +169,84 @@ def unlock_door(lockID):
     result = HCNetSDK.NET_DVR_RemoteControl(user_id, 16009, byref(gw), gw.dwSize)
     os.system("echo " + dt +  " Door " + str(lockID + 1) + " unlocked by SDK!")
 
+def callsignal(value): 
+    HCNetSDK.NET_DVR_Init()
+    HCNetSDK.NET_DVR_SetValidIP(0, True)
+    # For 8003 owners, send callsignal to indoor station!!!!
+    
+    user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config["ip_indoor"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
+    if (user_id_indoor < 0):
+        os.system("echo NET_DVR_Login_V30 failed, error code = " + str(HCNetSDK.NET_DVR_GetLastError()))
+            
+        HCNetSDK.NET_DVR_Cleanup()
+        exit(1)
+
+    #inUrl = "GET /ISAPI/VideoIntercom/callSignal/capabilities?format=json"
+    #inPutBuffer = ""
+    # RESULTS :  ["answer", "reject", "bellTimeout", "hangUp", "deviceOnCall"]
+
+    inUrl = "PUT /ISAPI/VideoIntercom/callSignal?format=json"
+    inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"" + value + "\"}}"
+    os.system("echo Inputbuffer: " + json.dumps(inPutBuffer))
+    # "{\"CallSignal\":{\"cmdType\":\"reject\"}}"
+
+    #optional , but not needed??
+    #inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"periodNumber\": 1,\"buildingNumber\": 1,\"unitNumber\": 1,\"floorNumber\": 0,\"roomNumber\": 1,\"unitType\": \"villa\",\"coderType\":\"ezviz\", \"model\": 1}}"
+    #inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"src\":{\"periodNumber\":1,\"buildingNumber\":1,\"unitNumber\":1,\"floorNumber\":0,\"roomNumber\":1}}}"
+
+    #optional , but not needed??
+    #inUrl = "DELETE /ISAPI/VideoIntercom/ring"
+    #inPutBuffer = ""
+                        
+    szUrl = (c_char * 256)()
+    struInput = NET_DVR_XML_CONFIG_INPUT()
+    struOuput = NET_DVR_XML_CONFIG_OUTPUT()
+
+    struInput.dwSize=sizeof(struInput)
+    struOuput.dwSize=sizeof(struOuput)
+    dwBufferLen = 1024 * 1024
+    pBuffer = (c_char * dwBufferLen)()
+
+    szGetOutput = (1024 * 1024)
+    pszGetOutput = (c_char * szGetOutput)()
+
+    csCommand = bytes(inUrl, "ascii")
+    memmove(szUrl, csCommand, len(csCommand))
+    struInput.lpRequestUrl = cast(szUrl,c_void_p)
+    struInput.dwRequestUrlLen = len(szUrl)
+
+
+    m_csInputParam= bytes(inPutBuffer, "ascii")
+    dwInBufferLen = 1024 * 1024
+    pInBuffer=(c_byte * dwInBufferLen)()
+    memmove(pInBuffer, m_csInputParam, len(m_csInputParam))
+
+    struInput.lpInBuffer = cast(pInBuffer,c_void_p)
+    #struInput.lpInBuffer = None
+
+    struInput.dwInBufferSize = len(m_csInputParam)
+    #struInput.dwInBufferSize = 0
+
+    struOuput.lpStatusBuffer = cast(pBuffer,c_void_p)
+    struOuput.dwStatusSize = dwBufferLen
+
+    struOuput.lpOutBuffer = cast(pszGetOutput,c_void_p)
+    struOuput.dwOutBufferSize = szGetOutput
+
+    result = HCNetSDK.NET_DVR_STDXMLConfig(user_id_indoor, byref(struInput), byref(struOuput))
+
+    #print(result)
+    #print(pBuffer.value)
+    #print(pszGetOutput.value.decode("utf-8") )
+    os.system("echo Response: " + json.dumps(pBuffer.value.decode("utf-8")))
+    if result == 0:
+        #print(HCNetSDK.NET_DVR_GetLastError())
+        os.system("echo Result error: " + str(HCNetSDK.NET_DVR_GetLastError()))
+
+    HCNetSDK.NET_DVR_Logout_V30(user_id_indoor)
+    HCNetSDK.NET_DVR_Cleanup()
+   
+
 #def NET_DVR_CaptureJPEGPicture():
 #    sJpegPicFileName = b'test.jpg'
 #    lpJpegPara = NET_DVR_JPEGPARA()
@@ -186,6 +266,28 @@ for line in sys.stdin:
     elif "unlock2" in line:
         os.system("echo Trying to unlock door 2... Stdin message: " + str(line))
         unlock_door(1)
+    # Callsignal keywords : "request,cancle,answer,reject,bellTimeout,hangUp,deviceOnCall"    
+    elif "reject" in line:
+        os.system("echo Trying reject the call... Stdin message: " + str(line))
+        callsignal("reject")
+    elif "answer" in line:
+        os.system("echo Trying answer the call... Stdin message: " + str(line))
+        callsignal("answer")
+    elif "cancle" in line:
+        os.system("echo Trying cancle the call... Stdin message: " + str(line))
+        callsignal("cancle")
+    elif "hangUp" in line:
+        os.system("echo Trying hangUp the call... Stdin message: " + str(line))
+        callsignal("hangUp")
+    elif "request" in line:
+        os.system("echo Trying request the call... Stdin message: " + str(line))
+        callsignal("request")
+    elif "bellTimeout" in line:
+        os.system("echo Trying bellTimeout the call... Stdin message: " + str(line))
+        callsignal("bellTimeout")
+    elif "deviceOnCall" in line:
+        os.system("echo Trying deviceOnCall the call... Stdin message: " + str(line))
+        callsignal("deviceOnCall")        
  #   elif "image" in line:
  #       os.system("echo Trying to grab an image... Stdin message: " + str(line))
  #       NET_DVR_CaptureJPEGPicture()        
