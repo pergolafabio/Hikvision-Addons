@@ -3,7 +3,7 @@
 ## What can it do? 
 - It listen for events: callstatus/motion detection/door unlocked/tamper alarm/dimissed alarm
 - It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
-- It can send a callsignal command, like answer/reject,hangup ... verry usefull if you have for example a zigbee door sensor, if you open the door by hand, you can drop the ring signal on the indoor stations :-)
+- It can send a callsignal command, like answer/reject,hangup ... verry usefull if you have for example a zigbee door sensor, if you open the door by hand, you can drop the ring signal on the indoor stations/or stop hikconnect devices ringing :-)
 
 ## Alert
 ##### TESTING NOW RPI SUPPORT!!!!!
