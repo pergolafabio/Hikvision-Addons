@@ -61,7 +61,15 @@ data:
 
 ## Callsignal
 
-TODO.. coming soon
+The callsignal service is usefull to reject the call, i personally use it with a zigbee sensor at my door... When someone pressed the doorbutton, if i open the door by hand without pickup up, the below service rejects the call, and all indoor stations stop ringing, including the hikconnect devices.
+Available commands are: "request, cancle,answer, reject, bellTimeout, hangUp, deviceOnCall" ... no idea what they do, i only use "reject" . Again, "a53439b8_hikvision_sdk" is an example of the add-on name, it can be different for you...
+
+````
+service: hassio.addon_stdin
+data:
+  addon: a53439b8_hikvision_sdk
+  input: reject
+````
 
 ## Bearer token
 
