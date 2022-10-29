@@ -1,6 +1,6 @@
 {
   "name": "Hikvision-SDK",
-  "version": "1.1",
+  "version": "1.2",
   "slug": "hikvision_sdk",
   "description": "Capture events, open door, send callsignal based on SDK Hikvision",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk",
