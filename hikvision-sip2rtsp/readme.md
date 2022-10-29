@@ -76,13 +76,13 @@ endpoint=mytrunk
 match=192.168.0.71
 ```
 
-## Dialplan example
+## Dialplan example using conference bridge
 
-You can create an diaplan with conference room, lets say the doorbell calls "777" with Originate you can invite the sip2rtsp (7000)  user into the conference!
+You can create an diaplan with conference room, lets say the doorbell calls "10000000005" (the registered trunk/extension) with Originate you can invite the sip2rtsp (7000)  user into the conference! Or whatever random camera using RTSP
 Enjoy the RTSP stream from the camera :-)
 
 ```
-exten => 777,1,NoOp()
+exten => 10000000005,1,NoOp()
  same => n,Progress()
  same => n,Wait(1) 
  same => n,Originate(PJSIP/7000,exten,default,888,1,,aC(ulaw,alaw,h264)c(7000)n(Hikvision))
