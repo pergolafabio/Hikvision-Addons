@@ -5,11 +5,6 @@
 - It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
 - It can send a callsignal command, like answer/reject,hangup ... verry usefull if you have for example a zigbee door sensor, if you open the door by hand, you can drop the ring signal on the indoor stations/or stop hikconnect devices ringing :-)
 
-## Alert
-##### TESTING NOW RPI SUPPORT!!!!!
-The supplied "lib" from hikvision, only runs on i386 / amd64, so it will not work on Raspberry...
-https://www.hikvision.com/nl/support/download/sdk/
-
 ## Get started
 
 Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon
