@@ -50,6 +50,7 @@ template:
 ## Open a door
 
 To open a door, we need to send a stdin message to the add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
+
 In below example, a53439b8_hikvision_sdk is the addon name, its possible that its different for you
 
 ````
@@ -63,7 +64,9 @@ data:
 
 The callsignal service is usefull to reject the call, i personally use it with a zigbee sensor at my door... When someone pressed the doorbutton, if i open the door by hand without pickup up, the below service rejects the call, and all indoor stations stop ringing, including the hikconnect devices.
 Available commands are: "request, cancle, answer, reject, bellTimeout, hangUp, deviceOnCall" ... no idea what they do, i only use "reject".
+
 Again, "a53439b8_hikvision_sdk" is an example of the add-on name, it can be different for you...
+
 The "ip_indoor" in the configuration above is important, i have a DS-KD8003 device, with indoor stations, so i need to send the callsignal command to my indoor station... If you dont have an indoor station, just setup the "ip_indoor" with the same IP as the outdoor station, so the callsignal will be send to the outdoor unit.
 
 ````
