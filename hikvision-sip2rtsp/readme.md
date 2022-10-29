@@ -130,9 +130,48 @@ type=aor
 max_contacts=1
 remove_existing=yes
 remove_unavailable=yes
- 
-```
 
+#### Setup this in confbrifge.conf:
+
+[admin_user]
+type=user
+marked=no
+wait_marked=no
+end_marked=yes
+admin=yes
+music_on_hold_when_empty=no
+quiet=yes
+dtmf_passthrough=yes
+
+[default_user]
+type=user
+marked=no
+wait_marked=yes
+end_marked=yes
+admin=no
+music_on_hold_when_empty=no
+quiet=yes
+dtmf_passthrough=yes
+;answer_channel=no
+
+[marked_user]
+type=user
+marked=yes
+wait_marked=no
+end_marked=yes
+admin=no
+music_on_hold_when_empty=no
+quiet=yes
+dtmf_passthrough=yes
+startmuted=yes
+
+[myconferenceroom]
+type=bridge
+max_members=10
+video_mode=first_marked
+
+
+```
 ## Creds
 
 https://github.com/larkguo/sip2rtsp
