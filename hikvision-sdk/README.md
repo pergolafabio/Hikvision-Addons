@@ -13,6 +13,7 @@ https://www.hikvision.com/nl/support/download/sdk/
 ## Get started
 
 Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon
+
 PS: On first start of the Addon, its possible that your doorstation gets stuck, sometimes a reboot is needed, because this Add-on will download the complete backlog... its only the first time
 
 ## Gonfiguration of the Add-On
@@ -33,6 +34,7 @@ PS: On first start of the Addon, its possible that your doorstation gets stuck, 
 
 First of all, create the template sensors in your yaml configuration, like below:
 When door is opened by key/badge, or when the doorbell is ringing, or motion detected, or tamper alarm, dismiss... the state of the sensors below are "on" for 1 second
+The door sensor will have some attributes also, you will see the door ID that was opened, as well the badge/key
 
 ## Sensors 
 
