@@ -1,6 +1,6 @@
 # Home Assistant Add-on: Hikvision SDK for Door Intercoms
 
-Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvison-sdk
+Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk
 
 # Home Assistant Add-on: Inject RTSP for Asterisk
 
