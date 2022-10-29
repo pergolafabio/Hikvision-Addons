@@ -238,7 +238,8 @@ def callsignal(value):
     #print(result)
     #print(pBuffer.value)
     #print(pszGetOutput.value.decode("utf-8") )
-    os.system("echo Response: " + json.dumps(pBuffer.value.decode("utf-8")))
+    os.system("echo Response buffer: " + json.dumps(pBuffer.value.decode("utf-8")))
+    os.system("echo Response output: " + json.dumps(pszGetOutput.value.decode("utf-8")))
     if result == 0:
         #print(HCNetSDK.NET_DVR_GetLastError())
         os.system("echo Result error: " + str(HCNetSDK.NET_DVR_GetLastError()))
