@@ -292,7 +292,7 @@ for line in sys.stdin:
  #       os.system("echo Trying to grab an image... Stdin message: " + str(line))
  #       NET_DVR_CaptureJPEGPicture()        
     else:
-       os.system("echo Use input: unlock1 OR unlock2...  Stdin message: " + str(line))        
+       os.system("echo Error: Use input: unlock1 OR unlock2 OR one off the callsignal commands...  Stdin message: " + str(line))     
 
 HCNetSDK.NET_DVR_CloseAlarmChan_V30(alarm_handle)
 HCNetSDK.NET_DVR_Logout_V30(user_id)
