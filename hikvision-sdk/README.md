@@ -12,7 +12,8 @@ https://www.hikvision.com/nl/support/download/sdk/
 
 ## Get started
 
-Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon 
+Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon
+PS: On first start of the Addon, its possible that your doorstation gets stuck, sometimes a reboot is needed, because this Add-on will download the complete backlog... its only the first time
 
 ## Gonfiguration of the Add-On
 
