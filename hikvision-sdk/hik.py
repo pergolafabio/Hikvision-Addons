@@ -107,15 +107,16 @@ os.system("echo " + dt +  " Hikvision SDK Add-on started! Listening for events..
 # VARIABLES 
 with open("/data/options.json") as fd:
     config = json.load(fd)
-# token = os.getenv('SUPERVISOR_TOKEN')
-# 'Authorization': 'Bearer {}'.format(token),    
+    
+token = os.getenv('SUPERVISOR_TOKEN')
 headers = {
-    'Authorization': 'Bearer ' + config["bearer"],
+#    'Authorization': 'Bearer ' + config["bearer"],
+    'Authorization': 'Bearer {}'.format(token),    
     'content-type': 'application/json',
 }
 
-url_states = config["url_states"]
-# url_states = http://supervisor/core/api/states/
+# url_states = config["url_states"]
+url_states = "http://supervisor/core/api/states/"
 
 sensor_name_door = "sensor." + config["sensor_door"]
 sensor_name_callstatus = "sensor."  + config["sensor_callstatus"]
