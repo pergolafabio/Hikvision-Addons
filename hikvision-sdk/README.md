@@ -18,8 +18,6 @@ PS: On first start of the Addon, its possible that your doorstation gets stuck, 
     "ip_indoor": "192.168.0.71", # In case you have an indoor Panel, usefull for the callsignal command, more info below
     "username": "admin", # The username of your outdoor station
     "password": "password" # The password of your outdoor station
-    "bearer" : "YOURLONGBEARERTOKEN" # Bearer token, more info below
-    "url_states": "http://localhost:8123/api/states/" # The URL of your HA instance, to update the sensors below
     "sensor_door" : "hikvision_door",
     "sensor_callstatus" : "hikvision_callstatus"
     "sensor_motion" : "hikvision_motion"
@@ -75,19 +73,6 @@ data:
   addon: a53439b8_hikvision_sdk
   input: reject
 ````
-
-## Bearer token
-
-I make use of a REST API command to update the template sensors, so you need to create also a BEARER token, its a verry long string
-
-Instructions:
-- To Generate Long-lived Access Token, first login into your Home Assistant
-- On the bottom left, in the menu area, click the “Profile” button:
-- Scroll down the profile page until the bottom. You will find a section for Long-Lived Access Tokens. Click “Create Token” button.
-- Give your Token a name, so it's easy to manage and understand where and for what it's being used for. Click “OK” button to confirm.
-- The Long-lived access token will be generated. Make sure you copy the token value and past it in your application where you need it. You wont be able to see this value again, in case you lose it you will need to create another token.
-
-PS: My local instance runs on http, so if your doesnt, make sure you change it in the 'url_states'
 
 Creds:
 The add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
