@@ -54,7 +54,8 @@ Example regXML that is needed in the register packet:
 ![Ivms](ivms.PNG)
 
 ```
-###  Use this AUTH TRUNK when you dont need to run the script above!!
+#### Setup this in pjsip_custom.conf:
+####  Use this AUTH TRUNK when you dont need to run the script above!!
 
 [mytrunk-auth]
 type=auth
@@ -91,7 +92,7 @@ type=identify
 endpoint=mytrunk
 match=192.168.0.71
 
-###  Use this IP TRUNK when you need the regsister script, so it gets the invite send to port 5060
+####  Use this IP TRUNK when you need the regsister script, so it gets the invite send to port 5060
 
 [hikvision]
 type=aor
@@ -119,6 +120,8 @@ You can create an diaplan with conference room, lets say the doorbell calls "100
 Enjoy the RTSP stream from the camera :-)
 
 ```
+#### Setup this in extensions.conf:
+
 exten => 10000000005,1,NoOp()
  same => n,Progress()
  same => n,Wait(1) 
@@ -138,7 +141,7 @@ exten => 999,1,NoOp()
  same => n,ConfBridge(1,myconferenceroom,marked_user)
  
  
-#### extension sip2rtsp example:
+#### Setup this in pjsip_custom.conf:
 
 [7000]
 type=endpoint
