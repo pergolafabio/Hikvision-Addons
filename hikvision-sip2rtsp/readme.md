@@ -35,21 +35,21 @@ https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sip2rtsp/si
 As I told before, this addon registers on the indoor station, you need to add it first manually with the IVMS software
 For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your HA instance running the addon... I used 5, because maybe there al already users with 4 indoor stations, so this will be the 5th :-)
 
-In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actually the number 5 you entered in IVMS
+In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actually the number 5 you entered in IVMS, 192.168.0.17 is HA running Asterisk
 
-PS: On some indoor panels, when registering the trunk you get an 404 error... some panels really need to have the regXML body part, therefore you can run the below script in background, it will send the regXML part, runs on port 5061, but the invite on indoor panel is always hardcoded, so it goes back to port 5060 , where yo u have asterisk running
+PS: On some indoor panels, when registering the trunk you get an 404 error... some panels really need to have the regXML body part, therefore you can run the below script in background, it will send the regXML part, runs on port 5061, but the invite on indoor panel is always hardcoded, so it goes back to port 5060, where yo u have asterisk running
 https://gist.github.com/pergolafabio/9964ff2c2750fba447c5ca63382f4600
-Example:
 
-'''
+Example regXML that is needed in the register packet:
+
+```
 <regXML>
 <version>V2.0.0</version>
 <regDevName>Asterisk</regDevName>
 <regDevSerial>Q12345678</regDevSerial>
 <regDevMacAddr>00:0c:29:12:12:12</regDevMacAddr>
 </regXML>
-
-'''
+```
 
 ![Ivms](ivms.PNG)
 
