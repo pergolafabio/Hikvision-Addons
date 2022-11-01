@@ -37,9 +37,25 @@ For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your
 
 In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actually the number 5 you entered in IVMS
 
+PS: On some indoor panels, when registering the trunk you get an 404 error... some panels really need to have the regXML body part, therefore you can run the below script in background, it will send the regXML part, runs on port 5061, but the invite on indoor panel is always hardcoded, so it goes back to port 5060 , where yo u have asterisk running
+https://gist.github.com/pergolafabio/9964ff2c2750fba447c5ca63382f4600
+Example:
+
+'''
+<regXML>
+<version>V2.0.0</version>
+<regDevName>Asterisk</regDevName>
+<regDevSerial>Q12345678</regDevSerial>
+<regDevMacAddr>00:0c:29:12:12:12</regDevMacAddr>
+</regXML>
+
+'''
+
 ![Ivms](ivms.PNG)
 
 ```
+###  Use this AUTH TRUNK when you dont need to run the script above!!
+
 [mytrunk-auth]
 type=auth
 auth_type=userpass
@@ -74,6 +90,27 @@ from_domain=mydomain.com
 type=identify
 endpoint=mytrunk
 match=192.168.0.71
+
+###  Use this IP TRUNK when you need the regsister script, so it gets the invite send to port 5060
+
+[hikvision]
+type=aor
+contact=sip:10000000005@192.168.0.71:5060
+
+[hikvision]
+type=endpoint
+context=default
+disallow=all
+allow=ulaw,alaw
+allow=h264,vp8
+aors=hikvision
+direct_media=no
+
+[hikvision]
+type=identify
+endpoint=hikvision
+match=192.168.0.71
+
 ```
 
 ## Dialplan example using conference bridge
