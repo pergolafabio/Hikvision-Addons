@@ -209,6 +209,3 @@ video_mode=first_marked
 
 
 ```
-## Creds
-
-https://github.com/larkguo/sip2rtsp
