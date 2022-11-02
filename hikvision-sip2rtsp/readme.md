@@ -1,4 +1,4 @@
-# Home Assistant Add-on: SIP2RTSP
+# Home Assistant Add-on: Hikvision SIP2RTSP
 
 ## Background info:
 
