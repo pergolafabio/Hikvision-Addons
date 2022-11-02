@@ -1,5 +1,8 @@
 # Home Assistant Add-on: Hikvision SIP2RTSP for Asterisk
 
+IMORTANT: To use this add-on, you need to have a working Asterisk server, or any PBX of your choise... This add-on is nothing more then an extension thay you can call with auto-answer enabled, to display the RTSP feed, below i have added some info about how to setup Asterisk... 
+Here is a nice addon for Asterisk to play with: https://github.com/TECH7Fox/asterisk-hass-addons
+
 ## Background info:
 
 Hikvision intercom devices have the ability to register on a PBX, but the disadvantage of using the SIP setting on the device:
@@ -12,6 +15,7 @@ There is another way!!!
 
 In asterisk you can define an TRUNK, to register on the primary indoor station, Asterisk will act as an second indoor extension... so the call comes in, your first indoor stations starts ringing, and will forward the call to Asterisk
 One problem tough, for some reason the video is not visible on the softphones, that's why I created this addon... , just to have video in the call on the softphones...
+
 Advantages:
 
 - Hikconnect cloud, still works!
@@ -30,7 +34,6 @@ Copy over the file sip2rtsp.cfg to your config folder, change it according to yo
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sip2rtsp/sip2rtsp.cfg
 
 ## Trunk example for Asterisk
-
 
 As I told before, this addon registers on the indoor station, you need to add it first manually with the IVMS software
 For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your HA instance running the addon... I used 5, because maybe there al already users with 4 indoor stations, so this will be the 5th :-)
