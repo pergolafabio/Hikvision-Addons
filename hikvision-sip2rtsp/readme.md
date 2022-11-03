@@ -33,7 +33,7 @@ Advantages:
 Copy over the file sip2rtsp.cfg to your config folder, change it according to your needs and start the add-on
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sip2rtsp/sip2rtsp.cfg
 
-## Trunk example for Asterisk
+## How to register an extension
 
 As I told before, this addon registers on the indoor station, you need to add it first manually with the IVMS software
 For serial use: Q12345678, for No: 5, enter "Admin" password, the the IP is your HA instance running the addon... I used 5, because maybe there al already users with 4 indoor stations, so this will be the 5th :-)
@@ -69,10 +69,10 @@ Example regXML that is needed in the register packet:
 <regDevMacAddr>00:0c:29:12:12:12</regDevMacAddr>
 </regXML>
 ```
-
+## Asterisk trunk setup
 ```
-#### Setup this in pjsip_custom.conf:
 ####  Use this AUTH TRUNK when you dont need to run the script above!!
+#### Setup this in pjsip_custom.conf:
 
 [mytrunk-auth]
 type=auth
