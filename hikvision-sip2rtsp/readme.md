@@ -42,6 +42,8 @@ In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actual
 
 PS: On some indoor panels, when registering the trunk you get an 404 error... some panels really need to have the regXML body part, therefore you can run the below script in background, it will send the regXML part, runs on port 5061, but the invite on indoor panel is always hardcoded, so it goes back to port 5060, where yo u have asterisk running
 https://gist.github.com/pergolafabio/9964ff2c2750fba447c5ca63382f4600
+The script needs to be running the whole time, so start it with an automation upon boot HA, and use this shell_command below, so the script runs the whole time in background... its doing an reregister every 900 sec
+`hikvision_sip: nohup python3 /config/python_scripts/hikvision_register.py --ip 192.168.0.17 --domain 192.168.0.71 --username 10000000005 --extension 10000000005 --name Asterisk --password XXX $1 > /dev/null 2>&1 &`
 
 Example regXML that is needed in the register packet:
 
