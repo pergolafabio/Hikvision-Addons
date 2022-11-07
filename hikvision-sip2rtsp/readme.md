@@ -149,7 +149,9 @@ exten => 10000000005,1,NoOp()
  same => n,Hangup()
  ```
  
-#### Example 2: When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered of you close HA... this way you can join the call to pickup the doorbell... You also see i have a while loop, the conference only starts when 6000 accepts the call... If i dont do that, the user 7000 (RTSP extension) will already join/pickup the call.. that means, the other indoor stations stop ringing, because the call is accepted... This way 6000 needs to answer first, and the the RTSP feed will join the call too to see video...
+#### Example 2: 
+When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered if you close HA... 
+You also see i have created a while loop, the conference only starts when 6000 accepts the call after the call is accepted, 7000 joins too.. If i dont do that, the user 7000 (RTSP extension) will already join/pickup the call.. that means, the other indoor stations stop ringing, because the call is accepted... 
 
 ```
 #### Setup this in extensions.conf:
@@ -179,7 +181,7 @@ exten => 700,1,NoOp()
  same => n,ConfBridge(1,myconferenceroom,marked_user)
  
  
-#### Setup this in pjsip_custom.conf:
+#### Setup this in pjsip_custom.conf, this is for the sip2rtsp extensions, create other extensions like 6000 the same way
 
 [7000]
 type=endpoint
