@@ -158,7 +158,6 @@ exten => 10000000005,1,NoOp()
  same => n,Progress()
  same => n,Wait(0) 
  same => n,Originate(PJSIP/6000,exten,default,600,1,,aC(ulaw,alaw,h264)c(Fabio)n(6000))
- same => n,Originate(PJSIP/7000,exten,default,700,1,,aC(ulaw,alaw,h264)c(Hikvision)n(7000))  
  same => n,Set(i=1)
  same => n,While($[${i} < 60])
  same => n,NoOp(Confbridge number of participants : ${CONFBRIDGE_INFO(parties,1)})
@@ -171,7 +170,7 @@ exten => 10000000005,1,NoOp()
  
 exten => 600,1,NoOp()
  same => n,Progress()
- same => n,Originate(PJSIP/7000,exten,default,710,1,,aC(ulaw,alaw,h264)c(64668)n(Deurbel))
+ same => n,Originate(PJSIP/7000,exten,default,700,1,,aC(ulaw,alaw,h264)c(64668)n(Deurbel))
  same => n,ConfBridge(1,myconferenceroom,admin_user)
 
 
