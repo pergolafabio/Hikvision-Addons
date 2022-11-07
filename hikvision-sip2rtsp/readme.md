@@ -170,7 +170,7 @@ exten => 10000000005,1,NoOp()
  
 exten => 600,1,NoOp()
  same => n,Progress()
- same => n,Originate(PJSIP/7000,exten,default,700,1,,aC(ulaw,alaw,h264)c(64668)n(Deurbel))
+ same => n,Originate(PJSIP/7000,exten,default,700,1,,aC(ulaw,alaw,h264)c(7000)n(Hikvision))
  same => n,ConfBridge(1,myconferenceroom,admin_user)
 
 
