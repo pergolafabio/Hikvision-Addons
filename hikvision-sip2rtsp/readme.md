@@ -132,9 +132,23 @@ match=192.168.0.71
 ```
 
 ## Dialplan example using conference bridge
+# Example 1: With use of regular softphones: make for example 2 extensions, on incoming call of the trunk, the group will be called with members 6000 and 6001, but no video injected with this example
 
-You can create an diaplan with conference room, lets say the doorbell calls "10000000005" (the registered trunk/extension) with Originate you can invite the sip2rtsp (7000)  user into the conference! Or whatever random camera using RTSP
-Enjoy the RTSP stream from the camera :-)
+```
+
+#### Setup this in extensions.conf:
+
+exten => 10000000005,1,NoOp() 
+ same => n,Progress()
+ same => n,Set(CALLERID(num)=10000000005)
+ same => n,Set(CALLERID(name)=DS-KD8003) 
+ same => n,Set(__DYNAMIC_FEATURES=door)
+ same => n,Set(DIALGROUP(mygroup,add)=PJSIP/6000)
+ same => n,Set(DIALGROUP(mygroup,add)=PJSIP/6001)  
+ same => n,Dial(${DIALGROUP(mygroup)},40)
+ ```
+ 
+# Example 2: When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered of you close HA... this way you can join the call to pickup the doorbell
 
 ```
 #### Setup this in extensions.conf:
