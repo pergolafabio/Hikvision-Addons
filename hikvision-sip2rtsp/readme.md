@@ -132,7 +132,7 @@ match=192.168.0.71
 ```
 
 ## Dialplan example using conference bridge
-# Example 1: With use of regular softphones: make for example 2 extensions, on incoming call of the trunk, the group will be called with members 6000 and 6001, but no video injected with this example
+### Example 1: With use of regular softphones: make for example 2 extensions, on incoming call of the trunk, the group will be called with members 6000 and 6001, but no video injected with this example
 
 ```
 
@@ -148,7 +148,7 @@ exten => 10000000005,1,NoOp()
  same => n,Dial(${DIALGROUP(mygroup)},40)
  ```
  
-# Example 2: When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered of you close HA... this way you can join the call to pickup the doorbell
+### Example 2: When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered of you close HA... this way you can join the call to pickup the doorbell
 
 ```
 #### Setup this in extensions.conf:
