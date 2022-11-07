@@ -149,27 +149,34 @@ exten => 10000000005,1,NoOp()
  same => n,Hangup()
  ```
  
-#### Example 2: When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered of you close HA... this way you can join the call to pickup the doorbell
+#### Example 2: When using a conference, you can inject the the RTSP extension to the call, in example below its user 7000, so the doorbell starts a conference, with the originate you can invite 7000 and 6000 to the call... this is also verry usefull when using the SIP Lovelace card, because this card gets unregistered of you close HA... this way you can join the call to pickup the doorbell... You also see i have a while loop, the conference only starts when 6000 accepts the call... If i dont do that, the user 7000 (RTSP extension) will already join/pickup the call.. that means, the other indoor stations stop ringing, because the call is accepted... This way 6000 needs to answer first, and the the RTSP feed will join the call too to see video...
 
 ```
 #### Setup this in extensions.conf:
 
 exten => 10000000005,1,NoOp()
  same => n,Progress()
+ same => n,Wait(0) 
+ same => n,Originate(PJSIP/6000,exten,default,600,1,,aC(ulaw,alaw,h264)c(Fabio)n(6000))
+ same => n,Originate(PJSIP/7000,exten,default,700,1,,aC(ulaw,alaw,h264)c(Hikvision)n(7000))  
+ same => n,Set(i=1)
+ same => n,While($[${i} < 60])
+ same => n,NoOp(Confbridge number of participants : ${CONFBRIDGE_INFO(parties,1)})
+ same => n,GotoIf($["${CONFBRIDGE_INFO(parties,1)}" >= "1"]?startconf) 
  same => n,Wait(1) 
- same => n,Originate(PJSIP/7000,exten,default,888,1,,aC(ulaw,alaw,h264)c(7000)n(Hikvision))
- same => n,Originate(PJSIP/6000,exten,default,999,1,,aC(ulaw,alaw,h264)c(6000)n(Fabio)) 
- same => n,ConfBridge(1,myconferenceroom,admin_user)
+ same => n,Set(i=$[${i} + 1]
+ same => n,EndWhile()
+ same => n,Hangup() 
+ same => n(startconf),ConfBridge(1,myconferenceroom,default_user) 
  
- 
-exten => 888,1,NoOp()
+exten => 600,1,NoOp()
  same => n,Progress()
- same => n,Wait(1) 
+ same => n,Originate(PJSIP/7000,exten,default,710,1,,aC(ulaw,alaw,h264)c(64668)n(Deurbel))
  same => n,ConfBridge(1,myconferenceroom,admin_user)
 
-exten => 999,1,NoOp()
+
+exten => 700,1,NoOp()
  same => n,Progress()
- same => n,Wait(1) 
  same => n,ConfBridge(1,myconferenceroom,marked_user)
  
  
