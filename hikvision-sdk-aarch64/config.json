@@ -2,7 +2,7 @@
   "name": "Hikvision-SDK-Aarch64",
   "version": "1.5",
   "slug": "hikvision_sdk_aarch64",
-  "description": "TEST FOR RPI Owners!!!!  Capture events, open door, send callsignal based on SDK Hikvision",
+  "description": "Capture events, open door, send callsignal based on SDK Hikvision",
   "url": "https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk-aarch64",
   "arch": ["aarch64"],
   "host_network": true,
