@@ -29,7 +29,7 @@ Advantages:
 Create a directory "baresip" in your "config" folder, copy over the files below "config" and "account" to "/config/baresip" , then start the addon, it will probably tell you that the extension 7000 is unable to register.. quite normal because you dont have a PBX yet...
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/config  
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/accounts
-In file "config" change line 52, thats the url for your RTSP stream
+In file "config" change line 52, thats the url for your RTSP stream...
 In file "account" change line 1, if you want to change the extension username/password...
 
 Setup Asterisk or a PBX of your choise, i use this one: https://github.com/TECH7Fox/asterisk-hass-addons, create 2 extensions, one for this addon and one for testing. Below is an example how to create extension 7000, use the same template for your second one
@@ -74,7 +74,7 @@ As I told before, you can use Asterisk to register as a trunk on your primary in
 #### Option 1 based on newer indoor panels
 On same indoor panels you can already the extension with a SN.. for serial use: Q12345678, for No: 5, enter a password, the the IP is your Asterisk  instance running the addon... 
 In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actually the number 5 you entered in IVMS, 192.168.0.17 is HA running Asterisk
-Some indoor panels dont have the option to add extensions, then try without it, just use the trunk setup below... if you receive an 404 or 401 error when debugging sip, proceed to option 2, and skip this trunk setup... I always use the tool "sngrep", you can install it in the SSD addon with the command "apk add sngrep"
+Some indoor panels dont have the option to add extensions, then try without it, just use the trunk setup below... if you receive an 404 or 401 error when debugging sip, proceed to option 2, and skip this trunk setup... I always use the tool "sngrep", you can install it in the SSH addon with the command "apk add sngrep"
 
 
 ![Ivms](ivms.PNG)
