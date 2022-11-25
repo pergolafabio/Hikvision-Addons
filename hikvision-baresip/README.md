@@ -11,7 +11,7 @@ Hikvision intercom devices have the ability to register on a PBX, but the disadv
 There is another way!!!
 
 In asterisk you can define an TRUNK, to register on the primary indoor station, Asterisk will act then as an indoor extension just like a real indoor device... so the call comes in, your first indoor stations starts ringing, and will forward the call to Asterisk.
-For some reason the video is not forwarded... no idea why ... that's why I created this addon... , just to have video in the call on the softphones...
+For some reason the video is not forwarded... no idea why ... that's why I created this addon to have video in the call on the softphones...
 
 Advantages:
 
@@ -29,6 +29,7 @@ Advantages:
 Create a directory "baresip" in your "config" folder, copy over the files below "config" and "account" to "/config/baresip" , then start the addon, it will probably tell you that the extension 7000 is unable to register.. quite normal because you dont have a PBX yet...
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/config  
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/accounts
+
 In file "config" change line 52, thats the url for your RTSP stream...
 In file "account" change line 1, if you want to change the extension username/password...
 
