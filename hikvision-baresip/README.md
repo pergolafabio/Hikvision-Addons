@@ -28,7 +28,7 @@ Advantages:
 
 Create a directory "baresip" in your "config" folder, copy over the files below "config" and "account" to "/config/baresip" , then start the addon, it will probably tell you that the extension 7000 is unable to register.. quite normal because you dont have a PBX yet...
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/config  
-https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/account
+https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/accounts
 In file "config" change line 52, thats the url for your RTSP stream
 In file "account" change line 1, if you want to change the extension username/password...
 
