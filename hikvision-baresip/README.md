@@ -10,7 +10,7 @@ Hikvision intercom devices have the ability to register on a PBX, but the disadv
 
 There is another way!!!
 
-In asterisk you can define an TRUNK, to register on the primary indoor station, Asterisk will act then as an indoor extension just like a real indoor device... so the call comes in, your first indoor stations starts ringing, and will forward the call to Asterisk
+In asterisk you can define an TRUNK, to register on the primary indoor station, Asterisk will act then as an indoor extension just like a real indoor device... so the call comes in, your first indoor stations starts ringing, and will forward the call to Asterisk.
 For some reason the video is not forwarded... no idea why ... that's why I created this addon... , just to have video in the call on the softphones...
 
 Advantages:
