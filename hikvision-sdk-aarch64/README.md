@@ -1,3 +1,5 @@
+Like my work? You can always send me a donation: https://paypal.me/pergolafabio
+
 # Home Assistant Add-on: Hikvision SDK for Door Intercoms
 
 ## What can it do? 
