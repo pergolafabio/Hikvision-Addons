@@ -6,9 +6,9 @@ Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvisio
 
 Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk-aarch64
 
-# Home Assistant Add-on: Hikvision SIP2RTSP for Asterisk
+# Home Assistant Add-on: Hikvision Baresip client for injecting RTSP video feed into an Asterisk conference
 
-Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sip2rtsp
+Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-baresip
 
 
 ## Like my work? You can always send me a donation: https://paypal.me/pergolafabio
