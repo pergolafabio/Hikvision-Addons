@@ -30,8 +30,7 @@ Create a directory "baresip" in your "config" folder, copy over the files below 
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/config  
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/accounts
 
-In file "config" change line 52, thats the url for your RTSP stream...
-In file "account" change line 1, if you want to change the extension username/password...
+In the file "config" change line 52, thats the url for your RTSP stream...  In the file "account" change line 1, if you want to change the extension username/password...
 
 Setup Asterisk or a PBX of your choise, i use this one: https://github.com/TECH7Fox/asterisk-hass-addons, create 2 extensions, one for this addon and one for testing. Below is an example how to create extension 7000, use the same template for your second one, use a softphone like linphone desktop for testing
 
@@ -160,7 +159,7 @@ Example regXML that is needed in the register packet, its part of the script in 
 </regXML>
 ```
 
-Use the trunk below, based on IP auth, this one is different, there is no need for user/pass authentication now, since the script is doint the auth
+Use the trunk below, based on IP auth, this one is different, there is no need for user/pass authentication now, since the script is doing the auth
 
 ```
 #### Setup this in pjsip_custom.conf:
@@ -206,9 +205,9 @@ exten => 10000000005,1,NoOp()
  
 #### Example 2: 
 The problem was no video! Well, i made a workaround, the baresip client is a command line softphone...! So what i do, on an incoming call to 10000000005, i do a CURL command to the baresip client, telling to execute dialplan "7001" 
-In the dialplan below you see i have created a while loop next after i do the curl command, so when i actually pickup with linhome/linphone, there are members in the conference, then 10000000005 will enter the conference too... 
+In the dialplan below you see i have created a while loop next after i do the curl command, the curl command fires the baresip client to callme ...so when i actually pickup with linhome/linphone, the conference is started... Afterwards 10000000005 will enter the conference too... 
 
-I use linhome in example below, you can also use linphone, they both do early media... they also have a free flexisip server, so no need to open ports in your router to Asterisk... Another advantage, flexisip allows multiple contacts on the same account, so you have early video on all of them...!
+I use linhome in example below, you can also use linphone, they both do early media... they also have a free flexisip server, so no need to open ports in your router to Asterisk... Another advantage, flexisip allows multiple contacts on the same account, so you have early video on all of them...! Linhome is easy to setup, everything is preconfigured, if you use linphone, make sure to enable push and early media in the settings...
 
 ```
 #### Setup this in extensions.conf:
