@@ -31,6 +31,7 @@ https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/con
 https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/accounts
 
 In file "config" change line 52, thats the url for your RTSP stream...
+
 In file "account" change line 1, if you want to change the extension username/password...
 
 Setup Asterisk or a PBX of your choise, i use this one: https://github.com/TECH7Fox/asterisk-hass-addons, create 2 extensions, one for this addon and one for testing. Below is an example how to create extension 7000, use the same template for your second one
