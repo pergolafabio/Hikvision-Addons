@@ -1,4 +1,5 @@
-FROM archlinux
+#FROM archlinux
+FROM yantis/archlinux-tiny
 USER root
 COPY run.sh /run.sh
 RUN pacman -Sy
