@@ -1,5 +1,4 @@
-#FROM archlinux
-FROM jeffguorg/archlinux-minimal
+FROM archlinux
 USER root
 COPY run.sh /run.sh
 RUN pacman -Sy
