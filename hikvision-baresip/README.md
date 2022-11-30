@@ -227,19 +227,23 @@ exten => 10000000005,1,NoOp()
  same => n(startconf),ConfBridge(1,myconferenceroom,default_user)  
  
 exten => 7001,1,NoOp()
+ same => n,Set(GLOBAL(CHANNEL7001)=${CHANNEL}) 
  same => n,Dial(Local/7002@default,,G(join_caller))
  same => n(join_caller),ConfBridge(1,myconferenceroom,marked_user)
  same => n(join_callee),ConfBridge(1,myconferenceroom,admin_user) 
  
 exten => 7002,1,NoOp() 
  same => n,Set(CHANNEL(hangup_handler_push)=finish_call,k,1(args))
+ same => n,Set(GLOBAL(CHANNEL7002)=${CHANNEL}) 
  same => n,Set(CALLERID(num)=8003)
  same => n,Set(CALLERID(name)=DS-KD8003) 
  same => n,Dial(PJSIP/outgoing/sip:USER1@sip.linhome.org) 
  
 [finish_call]
-exten => k,1,NoOp() 
- same => n,System(/usr/sbin/asterisk -rx "hangup request all")
+exten => k,1,NoOp()
+ same => n,System(/usr/sbin/asterisk -rx "confbridge kick 1 all")
+ same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL7001}")  
+ same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL7002}") 
  same => n,Return()  
  
 ``` 
