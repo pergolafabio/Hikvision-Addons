@@ -166,7 +166,7 @@ Use the trunk below, based on IP auth, this one is different, there is no need f
 
 [hikvision]
 type=aor
-contact=sip:10010100000@192.168.0.71:5060
+contact=sip:10000000005@192.168.0.71:5060
 
 [hikvision]
 type=endpoint
