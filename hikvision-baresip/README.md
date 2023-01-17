@@ -131,7 +131,7 @@ Try it fist from a console, to see it it works, afterwards you can use below she
 
 ```
 ## Test first this command:
-python3 /config/hikvision_register.py --ip 192.168.0.17 --domain 192.168.0.71 --username 10000000005 --extension 10000000005 --name Asterisk --password XXX $1
+python3 /config/hikvision_register.py --ip 192.168.0.17 --domain 192.168.0.71 --username 10000000005 --extension 10000000005 --name Asterisk --password XXX
 ```
 Use this below in HA
 ```
