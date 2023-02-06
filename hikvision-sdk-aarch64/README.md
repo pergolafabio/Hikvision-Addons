@@ -53,6 +53,8 @@ To open a door, we need to send a stdin message to the add-on, it can be used wi
 
 In below example, a53439b8_hikvision_sdk is the addon name, its possible that its different for you
 
+PS: Use underscore! Dont copy/paste from the addon name itself, there its "-" instead of "_"!
+
 ````
 service: hassio.addon_stdin
 data:
