@@ -1,8 +1,11 @@
 import platform
 import sys
 import os
+import logging
 import os.path
 from ctypes import cdll, CFUNCTYPE, Structure, POINTER, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_char_p, c_void_p, c_short, Union, sizeof, c_uint
+
+logger = logging.getLogger(__name__)
 
 BOOL = c_bool
 WORD = c_ushort
@@ -155,21 +158,27 @@ VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT = 5
 VIDEO_INTERCOM_EVENT_EVENTTYPE_DOOR_STATION_ISSUED_CARD_LOG = 6
 
 
-os.system("echo " + " Using OS: " + platform.uname()[0] + " with architecture: " + platform.uname()[4])
+def setupSDK():
+    """Load the Hikvision SDK library and return it
 
-current_path = os.path.abspath(os.path.dirname(__file__))
-if platform.uname()[0] == "Windows":
-    hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
-if platform.uname()[0] == "Linux":
-    if platform.uname()[4] == "x86_64":
-        hcnetsdk_path = os.path.join(current_path, "/lib-linux64/libhcnetsdk.so")
-    elif platform.uname()[4] == "aarch64":
-        hcnetsdk_path = os.path.join(current_path, "/lib-arm_aarch64-linux/libhcnetsdk.so")
-    else:
-        os.system("echo No supported Linux library found")
+    Returns:
+       CDLL : The loaded library
+    """
+    logger.info(f"Using OS: {platform.uname()[0]} with architecture: {platform.uname()[4]}")
 
-HCNetSDK = cdll.LoadLibrary(hcnetsdk_path)
+    if platform.uname()[0] == "Windows":
+        hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
+    if platform.uname()[0] == "Linux":
+        current_path = os.path.dirname(__file__)
+        if platform.uname()[4] == "x86_64":
+            hcnetsdk_path = os.path.join(current_path, "lib-amd64", "libhcnetsdk.so")
+        elif platform.uname()[4] == "aarch64":
+            hcnetsdk_path = os.path.join(current_path, "lib-aarch64", "libhcnetsdk.so")
+        else:
+            logger.error("No supported Linux library found!")
 
+    logger.debug(f"Loading library from {hcnetsdk_path}")
+    return cdll.LoadLibrary(hcnetsdk_path)
 
 class LPNET_DVR_DEVICE_INFO(Structure):
     _fields_ = [
@@ -362,7 +371,7 @@ class NET_DVR_ALARMINFO_V30(Structure):
         ("byChannel", BYTE * MAX_CHANNUM_V30),
         ("byDiskNumber", BYTE * MAX_DISKNUM_V30)
     ]
-    
+
 class NET_DVR_TIME_EX(Structure):
     _fields_ = [
         ("wYear", WORD),
@@ -378,7 +387,7 @@ class NET_DVR_VIDEO_INTERCOM_ALARM_INFO_UNION(Structure):
     _fields_ = [
         ("byLen", BYTE * 256)
     ]
-    
+
 class NET_DVR_VIDEO_INTERCOM_ALARM(Structure):
     _fields_ = [
         ("dwSize", DWORD),
@@ -390,7 +399,7 @@ class NET_DVR_VIDEO_INTERCOM_ALARM(Structure):
         ("wLockID", BYTE),
         ("byRes2", BYTE)
     ]
-    
+
 class NET_DVR_UNLOCK_RECORD_INFO(Structure):
     _fields_ = [
         ("byUnlockType", BYTE),
@@ -406,19 +415,19 @@ class NET_DVR_UNLOCK_RECORD_INFO(Structure):
         ("byLockName", BYTE * LOCK_NAME_LEN),
         ("byRes", BYTE * 168),
     ]
-    
+
 class NET_DVR_NOTICEDATA_RECEIPT_INFO(Structure):
     _fields_ = [
         ("byNoticeNumber", BYTE * MAX_NOTICE_NUMBER_LEN),
         ("byRes", BYTE * 224)
     ]
-    
+
 class NET_DVR_SEND_CARD_INFO(Structure):
     _fields_ = [
         ("byCardNo", BYTE * ACS_CARD_NO_LEN),
         ("byRes", BYTE * 224)
     ]
-        
+
 class NET_DVR_AUTH_INFO(Structure):
     _fields_ = [
         ("byAuthResult", BYTE),
@@ -429,7 +438,7 @@ class NET_DVR_AUTH_INFO(Structure):
         ("pImage", POINTER(BYTE)),
         ("byRes", BYTE * 212),
     ]
-    
+
 class NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON(Union):
     _fields_ = [
         ("byLen", BYTE),
@@ -451,7 +460,7 @@ class NET_DVR_CONTROL_GATEWAY(Structure):
         ("byPassword", BYTE * 16),
         ("byRes2", BYTE * 108),
     ]
-    
+
 class NET_DVR_XML_CONFIG_INPUT(Structure):
     _fields_ = [
         ("dwSize", DWORD),
@@ -459,27 +468,27 @@ class NET_DVR_XML_CONFIG_INPUT(Structure):
         ("dwRequestUrlLen", DWORD),
         ("lpInBuffer", c_void_p),
         ("dwInBufferSize", DWORD),
-        ("dwRecvTimeOut", DWORD),        
+        ("dwRecvTimeOut", DWORD),
         ("byForceEncrpt", BYTE),
         ("byRes", BYTE * 31),
-    ]    
-    
+    ]
+
 class NET_DVR_XML_CONFIG_OUTPUT(Structure):
     _fields_ = [
         ("dwSize", DWORD),
         ("lpOutBuffer", c_void_p),
         ("dwOutBufferSize", DWORD),
-        ("dwReturnedXMLSize", DWORD),        
+        ("dwReturnedXMLSize", DWORD),
         ("lpStatusBuffer", c_void_p),
         ("dwStatusSize", DWORD),
         ("byRes", BYTE * 31),
-    ]  
+    ]
 class NET_DVR_CALL_STATUS(Structure):
     _fields_ = [
         ("dwSize", DWORD),
         ("byCallStatus", BYTE),
         ("byRes", BYTE * 127),
-    ]     
+    ]
 
 class NET_DVR_VIDEO_CALL_PARAM(Structure):
     _fields_ = [
@@ -487,40 +496,40 @@ class NET_DVR_VIDEO_CALL_PARAM(Structure):
         ("dwCmdType", DWORD),
         ("wPeriod", WORD),
         ("wBuildingNumber", WORD),
-        ("wUnitNumber", WORD),  
-        ("wFloorNumber", SHORT),   
-        ("wRoomNumber", WORD),  
-        ("wDevIndex", WORD),  
+        ("wUnitNumber", WORD),
+        ("wFloorNumber", SHORT),
+        ("wRoomNumber", WORD),
+        ("wDevIndex", WORD),
         ("byUnitType", BYTE),
-        ("byRes", BYTE * 115),        
-    ]  
-    
+        ("byRes", BYTE * 115),
+    ]
+
 class NET_DVR_MIME_UNIT(Structure):
     _fields_ = [
         ("szContentType", char * 32),
         ("szName", char * MAX_FILE_PATH_LEN),
         ("szFilename", char * MAX_FILE_PATH_LEN),
-        ("dwContentLen", DWORD),        
+        ("dwContentLen", DWORD),
         ("pContent", char),
         ("byRes", BYTE * 16),
-    ]        
-    
+    ]
+
 #class NET_DVR_JPEGPARA(Structure):
 #    _fields_ = [
-#        ("wPicSize", WORD), 
+#        ("wPicSize", WORD),
 #        ("wPicQuality", WORD)
-#    ]    
+#    ]
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
     _fields_ = [
         ("dwSize", DWORD),
         ("struTime", NET_DVR_TIME_EX),
         ("byDevNumber", BYTE * MAX_DEV_NUMBER_LEN),
-        ("byEventType", BYTE),      
+        ("byEventType", BYTE),
         ("byRes1", BYTE * 3),
         ("uEventInfo", NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON),
         ("byRes2", BYTE * 256),
     ]
-    
+
 class MessageCallbackAlarmInfoUnion(Union):
     _fields_ = [
         ("NET_DVR_ALARMINFO_V30", NET_DVR_ALARMINFO_V30),
