@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10.8-slim
 RUN pip install requests
 RUN apt-get update && apt-get install -y libffi-dev
 
