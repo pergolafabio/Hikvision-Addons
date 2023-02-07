@@ -3,8 +3,12 @@ FROM openeuler/openeuler
 RUN yum -y install python-pip
 RUN pip install requests
 
-COPY hik.py /hik.py
-COPY hcnetsdk.py /hcnetsdk.py
-COPY lib-arm_aarch64-linux /lib-arm_aarch64-linux
+WORKDIR /app
 
-CMD [ "python3", "hik.py" ]
+# Hikvision SDK
+COPY lib-arm_aarch64-linux /app/lib-arm_aarch64-linux
+
+# Main application
+COPY *.py /app/
+
+ENTRYPOINT [ "python3", "/app/hik.py" ]
