@@ -11,6 +11,7 @@
   "stdin": true,
   "homeassistant_api": true,
   "hassio_api": true, 	
+  "stage": "deprecated",
   "options":
   {
     "ip": "192.168.0.70",
