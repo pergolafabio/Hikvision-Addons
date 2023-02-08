@@ -1,10 +1,9 @@
-# Home Assistant Add-on: Hikvision SDK for Door Intercoms (x86-x64 owners)
+# Home Assistant Add-on: Hikvision Doorbell
 
-Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk
+## Get started
 
-# Home Assistant Add-on: Hikvision SDK for Door Intercoms (RPI-Aarch64 owners)
+See the documentation [here](hikvision-sdk/README.md).
 
-Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk-aarch64
 
 # Home Assistant Add-on: Hikvision Baresip client for injecting RTSP video feed into an Asterisk conference
 
@@ -12,3 +11,11 @@ Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvisio
 
 
 ## Like my work? You can always send me a donation: https://paypal.me/pergolafabio
+
+![Supports aarch64 Architecture][aarch64-shield]
+![Supports amd64 Architecture][amd64-shield]
+![Supports i386 Architecture][i386-shield]
+
+[aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
+[amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
+[i386-shield]: https://img.shields.io/badge/i386-yes-green.svg
