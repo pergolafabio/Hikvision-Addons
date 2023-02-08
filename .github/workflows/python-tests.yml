@@ -60,6 +60,8 @@ jobs:
             BUILD_FROM=library/python:3.10.8-slim
             BUILD_ARCH=amd64
           push: false
+          outputs: |
+            type=image
           platforms: linux/amd64
   
   docker-image_aarch64:
@@ -80,4 +82,6 @@ jobs:
             BUILD_FROM=openeuler/openeuler:22.03-lts-sp1
             BUILD_ARCH=aarch64
           push: false
+          outputs: |
+            type=image
           platforms: linux/arm64
