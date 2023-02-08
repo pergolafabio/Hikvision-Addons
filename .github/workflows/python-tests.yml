@@ -34,19 +34,19 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       working-directory: ./hikvision-sdk
-    # For now there are no tests
-    # - name: Test with pytest
-    #   run: |
-    #     pytest
-    #   working-directory: ./hikvision-sdk
-    - name: Start application
+    - name: Test with pytest
       run: |
-        python hik.py
+        pytest
       working-directory: ./hikvision-sdk
+    
+    # - name: Start application
+    #   run: |
+    #     python hik.py
+    #   working-directory: ./hikvision-sdk
   
   docker-image_amd64:
     needs: test
-    name: docker-image (amd64)
+    name: Docker image (amd64)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

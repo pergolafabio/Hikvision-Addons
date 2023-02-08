@@ -6,13 +6,16 @@ import time
 from datetime import datetime
 import sys
 import os
-from config import config, supervisor_token
+from config import loadConfig, supervisor_token, validateConfig
 import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
+    config = loadConfig()
+    validateConfig(config)
+
     logger.debug('Importing HIKVISION SDK')
     HCNetSDK = setupSDK()
 
