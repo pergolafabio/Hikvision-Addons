@@ -1,3 +1,6 @@
 # Avoid ignoring Hikvision library files
 !lib-amd64/*.so*
 !lib-aarch64/*.so*
+
+# environment file for local development
+development.env
