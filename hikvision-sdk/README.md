@@ -9,7 +9,7 @@ Like my work? You can always send me a donation: https://paypal.me/pergolafabio
 
 ## Get started
 
-Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-SDK-Addon
+Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-Addons
 
 PS: On first start of the Addon, its possible that your doorstation gets stuck, sometimes a reboot is needed, because this Add-on will download the complete backlog... its only the first time
 
