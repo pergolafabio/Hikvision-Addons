@@ -23,6 +23,7 @@ class Config(TypedDict):
     sensor_tamper: str
     sensor_dismiss: str
 
+    system: dict
 
 # Try to load the configuration file provided by HA supervisor. If not found, fallback to env variables
 if os.path.isfile(CONFIGURATION_FILE_PATH):
@@ -41,7 +42,11 @@ else:
         "sensor_callstatus": os.getenv("SENSOR_CALLSTATUS", "hikvision_callstatus"),
         "sensor_motion": os.getenv("SENSOR_MOTION", "hikvision_motion"),
         "sensor_tamper": os.getenv("SENSOR_TAMPER", "hikvision_tamper"),
-        "sensor_dismiss": os.getenv("SENSOR_DISMISS", "hikvision_dismiss")
+        "sensor_dismiss": os.getenv("SENSOR_DISMISS", "hikvision_dismiss"),
+
+        "system": {
+            "log_level": os.getenv("LOG_LEVEL", "WARNING")
+        }
     }
 
 

@@ -23,6 +23,8 @@ options:
   sensor_motion: hikvision_motion
   sensor_tamper: hikvision_tamper
   sensor_dismiss: hikvision_dismiss
+  system:
+    log_level: WARNING
 schema:
   ip: str
   ip_indoor: str
@@ -33,3 +35,5 @@ schema:
   sensor_motion: str
   sensor_tamper: str
   sensor_dismiss: str
+  system:
+    log_level: match(^ERROR|WARNING|INFO|DEBUG$)

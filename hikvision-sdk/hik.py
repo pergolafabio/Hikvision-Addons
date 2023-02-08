@@ -13,7 +13,7 @@ from loguru import logger
 if __name__ == '__main__':
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
-    logger.add(sys.stdout, colorize=True, level="DEBUG")
+    logger.add(sys.stdout, colorize=True, level=config['system']['log_level'])
     logger.debug('Importing HIKVISION SDK')
     HCNetSDK = setupSDK()
     logger.debug("Hikvision SDK loaded")
@@ -25,7 +25,7 @@ sensor_name_tamper = "sensor."  + config["sensor_tamper"]
 sensor_name_dismiss = "sensor."  + config["sensor_dismiss"]
 
 
-def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):   
+def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):
     if (command == COMM_ALARM_V30):
         alarminfo_alarm_v30: NET_DVR_ALARMINFO_V30 = cast(
             alarminfo_pointer, POINTER(NET_DVR_ALARMINFO_V30)).contents
@@ -36,7 +36,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
             update_sensor(sensor_name_motion, 'off')
         else:
             logger.warning("COMM_ALARM_V30, unhandled dwAlarmType: {}", alarminfo_alarm_v30.dwAlarmType)
-    
+
     elif(command == COMM_ALARM_VIDEO_INTERCOM):
         alarminfo_alarm_video_intercom: NET_DVR_VIDEO_INTERCOM_ALARM = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents
@@ -59,7 +59,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
             logger.info("Door not closed alarm")
         else:
             logger.warning("COMM_ALARM_VIDEO_INTERCOM, unhandled byAlarmType: {}", alarminfo_alarm_video_intercom.byAlarmType)
-    
+
     elif(command == COMM_UPLOAD_VIDEO_INTERCOM_EVENT):
         alarminfo_upload_video_intercom_event: NET_DVR_VIDEO_INTERCOM_EVENT = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_EVENT)).contents
