@@ -1,4 +1,8 @@
 # Changelog
+## 2.0
+
+- Multi-architecture build! 
+- Improve logging
 
 ## 1.6
 
