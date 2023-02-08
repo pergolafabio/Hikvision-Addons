@@ -1,4 +1,8 @@
 # Changelog
+## 2.0
+
+- Multi-architecture build! 
+- Make it usable as standalone docker
 
 ## 1.6
 
