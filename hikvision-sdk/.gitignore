@@ -3,3 +3,6 @@
 !lib-amd64/**/*.so*
 !lib-aarch64/*.so*
 !lib-aarch64/**/*.so*
+
+# Environment variables for local development
+development.env
