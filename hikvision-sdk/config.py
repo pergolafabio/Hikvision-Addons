@@ -1,15 +1,16 @@
 import json
 import os
-import logging
 import sys
 from typing import TypedDict
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 CONFIGURATION_FILE_PATH = "/data/options.json"
 
-# Used only for static type checking
+
 class Config(TypedDict):
+    ''' Used only for static type checking
+    '''
+
     # To connect to the doorbell
     ip: str
     ip_indoor: str
@@ -21,6 +22,7 @@ class Config(TypedDict):
     sensor_motion: str
     sensor_tamper: str
     sensor_dismiss: str
+
 
 # Try to load the configuration file provided by HA supervisor. If not found, fallback to env variables
 if os.path.isfile(CONFIGURATION_FILE_PATH):
@@ -54,7 +56,8 @@ def validateConfig(config: Config):
         logger.error("Please configure a valid password for the doorbell!")
         sys.exit(1)
 
-supervisor_token = os.getenv('SUPERVISOR_TOKEN')
+
+SUPERVISOR_TOKEN = os.getenv('SUPERVISOR_TOKEN')
 
 # Validate configuration after loading it
 validateConfig(config)

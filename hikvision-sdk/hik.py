@@ -1,3 +1,4 @@
+from unittest import expectedFailure
 from hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT, setupSDK
 from ctypes import POINTER, cast, c_char_p, c_byte, sizeof, byref, memmove, c_void_p, c_char
 import requests
@@ -6,103 +7,99 @@ import time
 from datetime import datetime
 import sys
 import os
-from config import config, supervisor_token
-import logging
-
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+from config import config, SUPERVISOR_TOKEN
+from loguru import logger
 
 if __name__ == '__main__':
+    # Remove the default handler installed by loguru (it redirects to stderr)
+    logger.remove()
+    logger.add(sys.stdout, colorize=True, level="DEBUG")
     logger.debug('Importing HIKVISION SDK')
     HCNetSDK = setupSDK()
+    logger.debug("Hikvision SDK loaded")
 
-def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):
-    dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+sensor_name_door = "sensor." + config["sensor_door"]
+sensor_name_callstatus = "sensor."  + config["sensor_callstatus"]
+sensor_name_motion = "sensor."  + config["sensor_motion"]
+sensor_name_tamper = "sensor."  + config["sensor_tamper"]
+sensor_name_dismiss = "sensor."  + config["sensor_dismiss"]
+
+
+def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):   
     if (command == COMM_ALARM_V30):
         alarminfo_alarm_v30: NET_DVR_ALARMINFO_V30 = cast(
             alarminfo_pointer, POINTER(NET_DVR_ALARMINFO_V30)).contents
         if (alarminfo_alarm_v30.dwAlarmType == ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION):
-            os.system("echo " + dt +  " Motion detected, trying to update: " + sensor_name_motion)
-            data = json.dumps({'state': 'on'})
-            response = requests.post(url_states + sensor_name_motion, headers=headers, data=data)
-            os.system("echo Response: " + response.text)
+            logger.info("Motion detected, updating sensor {}", sensor_name_motion)
+            update_sensor(sensor_name_motion, 'on')
             time.sleep(1)
-            data = json.dumps({'state': 'off'})
-            response = requests.post(url_states + sensor_name_motion, headers=headers, data=data)
-            os.system("echo Response: " + response.text)
+            update_sensor(sensor_name_motion, 'off')
         else:
-            os.system("echo " + dt +  " COMM_ALARM_V30, unhandled dwAlarmType: " + str(alarminfo_alarm_v30.dwAlarmType))
+            logger.warning("COMM_ALARM_V30, unhandled dwAlarmType: {}", alarminfo_alarm_v30.dwAlarmType)
+    
     elif(command == COMM_ALARM_VIDEO_INTERCOM):
         alarminfo_alarm_video_intercom: NET_DVR_VIDEO_INTERCOM_ALARM = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents
         if (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING):
-            try:
-                os.system("echo " + dt +  " Doorbell ringing, trying to update: " + sensor_name_callstatus)
-                data = json.dumps({'state': 'on'})
-                response = requests.post(url_states + sensor_name_callstatus, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-                time.sleep(1)
-                data = json.dumps({'state': 'off'})
-                response = requests.post(url_states + sensor_name_callstatus, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-            except:
-                os.system("echo " + dt +  " Sensor updating failed")
-
+            logger.info("Doorbell ringing, updating sensor {}", sensor_name_callstatus)
+            update_sensor(sensor_name_callstatus, 'on')
+            time.sleep(1)
+            update_sensor(sensor_name_callstatus, 'off')
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL):
-            try:
-                os.system("echo " + dt +  " Call dimissed, trying to update: " + sensor_name_dimiss)
-                data = json.dumps({'state': 'on'})
-                response = requests.post(url_states + sensor_name_dimiss, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-                time.sleep(1)
-                data = json.dumps({'state': 'off'})
-                response = requests.post(url_states + sensor_name_dimiss, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-            except:
-                os.system("echo " + dt +  " Sensor updating failed")
+            logger.info("Call dismissed, updating sensor {}", sensor_name_dismiss)
+            update_sensor(sensor_name_dismiss, 'on')
+            time.sleep(1)
+            update_sensor(sensor_name_dismiss, 'off')
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM):
-            try:
-                os.system("echo " + dt +  " Tamper Alarm, trying to update: " + sensor_name_tamper)
-                data = json.dumps({'state': 'on'})
-                response = requests.post(url_states + sensor_name_tamper, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-                time.sleep(1)
-                data = json.dumps({'state': 'off'})
-                response = requests.post(url_states + sensor_name_tamper, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-            except:
-                os.system("echo " + dt +  " Sensor updating failed")
+            logger.info("Tampering alarm, updating sensor {}", sensor_name_tamper)
+            update_sensor(sensor_name_tamper, 'on')
+            time.sleep(1)
+            update_sensor(sensor_name_tamper, 'off')
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED):
-            os.system("echo " + dt +  " Door not closed")
+            logger.info("Door not closed alarm")
         else:
-            os.system("echo " + dt +  " COMM_ALARM_VIDEO_INTERCOM, unhandled byAlarmType: "+ str(alarminfo_alarm_video_intercom.byAlarmType))
+            logger.warning("COMM_ALARM_VIDEO_INTERCOM, unhandled byAlarmType: {}", alarminfo_alarm_video_intercom.byAlarmType)
+    
     elif(command == COMM_UPLOAD_VIDEO_INTERCOM_EVENT):
         alarminfo_upload_video_intercom_event: NET_DVR_VIDEO_INTERCOM_EVENT = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_EVENT)).contents
         if (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG):
+            logger.info("Door {} unlocked by {}, updating sensor {}",
+                        alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID,
+                        list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc),
+                        sensor_name_door)
+            attributes = {
+                'Unlock': list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc),
+                'DoorID': alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID
+            }
+            update_sensor(sensor_name_door, 'on', attributes)
+            time.sleep(1)
+            update_sensor(sensor_name_door, 'off', attributes)
 
-            try:
-                os.system("echo " + dt +  " Door unlocked, trying to update: " + sensor_name_door)
-                os.system("echo " + dt +  " Unlocked door LockID : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID))
-                #os.system("echo Unlocked door Lockname : " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byLockName)))
-                #os.system("echo Unlocked door UnlockType : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byUnlockType))
-                data = json.dumps({'state': 'on', 'attributes': {'Unlock': str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)), 'DoorID' : str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID) }})
-                response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-                time.sleep(1)
-                data = json.dumps({'state': 'off', 'attributes': {'Unlock': str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)), 'DoorID' : str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID) }})
-                response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
-                os.system("echo Response: " + response.text)
-            except:
-                os.system("echo " + dt +  " Sensor updating failed")
-            os.system("echo " + dt +  " Unlocked by: " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)))
         elif (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT):
-            os.system("echo " + dt +  " Illegal card swiping")
+            logger.info("Illegal card swiping")
         else:
-            os.system("echo " + dt +  " COMM_ALARM_VIDEO_INTERCOM, unhandled byEventType: " + str(alarminfo_upload_video_intercom_event.byEventType))
+            logger.warning("COMM_ALARM_VIDEO_INTERCOM, unhandled byEventType: {}", alarminfo_upload_video_intercom_event.byEventType)
     else:
-        os.system("echo " + dt +  " Unhandled command: " + str(command))
+        logger.warning("Unhandled command: {}", command)
 
+headers = {
+    'Authorization': f'Bearer {SUPERVISOR_TOKEN}'
+}
+
+def update_sensor(sensor_name: str, state: str, attr: dict = None):
+    """ Update the sensor by invoking the Home Assistant HTTP API
+    """
+    data = {'state': state, 'attributes': attr}
+    try:
+        response = requests.post(url_states + sensor_name, headers=headers, json=data)
+        # Check that the server returned a successful HTTP response code
+        response.raise_for_status()
+        logger.debug("Response {} {}", response.text, response.json())
+    except:
+        logger.exception("Cannot update sensor")
+
+## Unused function
 def set_attribute(sensor_name, attribute, value):
     response = requests.get(url_states + sensor_name, headers=headers)
     msg = json.loads(response.text)
@@ -110,23 +107,9 @@ def set_attribute(sensor_name, attribute, value):
     payload = json.dumps({'state':  msg['state'], 'attributes': msg['attributes']})
     requests.post(url_states + sensor_name, headers=headers, data=payload)
 
-dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-logger.info("Hikvision SDK Add-on started! Listening for events...")
-
-headers = {
-#    'Authorization': 'Bearer ' + config["bearer"],
-    'Authorization': 'Bearer {}'.format(supervisor_token),
-    'content-type': 'application/json',
-}
 
 # url_states = config["url_states"]
 url_states = "http://supervisor/core/api/states/"
-
-sensor_name_door = "sensor." + config["sensor_door"]
-sensor_name_callstatus = "sensor."  + config["sensor_callstatus"]
-sensor_name_motion = "sensor."  + config["sensor_motion"]
-sensor_name_tamper = "sensor."  + config["sensor_tamper"]
-sensor_name_dimiss = "sensor."  + config["sensor_dismiss"]
 
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
@@ -139,10 +122,9 @@ user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config[
 #device_info = NET_DVR_DEVICEINFO_V30()
 #user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
 
-
-
+# Check that we have successfully logged in the doorbell
 if (user_id < 0):
-    os.system("echo NET_DVR_Login_V30 failed, error code = " + str(HCNetSDK.NET_DVR_GetLastError()))
+    logger.error("NET_DVR_Login_V30 failed, error code = {}", HCNetSDK.NET_DVR_GetLastError())
     HCNetSDK.NET_DVR_Cleanup()
     exit(1)
 
@@ -155,17 +137,15 @@ alarm_param.byFaceAlarmDetection = 1
 alarm_handle = HCNetSDK.NET_DVR_SetupAlarmChan_V41(user_id, alarm_param)
 
 if (alarm_handle < 0):
-    os.system("echo NET_DVR_SetupAlarmChan_V41 failed, error code = " + str(HCNetSDK.NET_DVR_GetLastError()))
+    logger.error("NET_DVR_SetupAlarmChan_V41 failed, error code {}", HCNetSDK.NET_DVR_GetLastError())
     HCNetSDK.NET_DVR_Logout_V30(user_id)
     HCNetSDK.NET_DVR_Cleanup()
     exit(2)
-
 
 message_callback = fMessageCallBack(callback)
 HCNetSDK.NET_DVR_SetDVRMessageCallBack_V50(0, message_callback, user_id)
 
 def unlock_door(lockID):
-    dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     gw = NET_DVR_CONTROL_GATEWAY()
     gw.dwSize = sizeof(NET_DVR_CONTROL_GATEWAY)
     gw.dwGatewayIndex = 1
@@ -175,8 +155,9 @@ def unlock_door(lockID):
     gw.byControlSrc = (c_byte * 32)(*[97,98,99,100]) # anything will do but can't be empty
     gw.byControlType = 1
 
+    # TODO: check result
     result = HCNetSDK.NET_DVR_RemoteControl(user_id, 16009, byref(gw), gw.dwSize)
-    os.system("echo " + dt +  " Door " + str(lockID + 1) + " unlocked by SDK!")
+    logger.info(" Door {} unlocked by SDK", lockID + 1)
 
 def callsignal(value):
     HCNetSDK.NET_DVR_Init()
@@ -185,7 +166,7 @@ def callsignal(value):
 
     user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config["ip_indoor"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
     if (user_id_indoor < 0):
-        os.system("echo NET_DVR_Login_V30 failed, error code = " + str(HCNetSDK.NET_DVR_GetLastError()))
+        logger.error("NET_DVR_Login_V30 failed, error code = {}", HCNetSDK.NET_DVR_GetLastError())
 
         HCNetSDK.NET_DVR_Cleanup()
         exit(1)
@@ -195,8 +176,9 @@ def callsignal(value):
     # RESULTS :  ["answer", "reject", "bellTimeout", "hangUp", "deviceOnCall"]
 
     inUrl = "PUT /ISAPI/VideoIntercom/callSignal?format=json"
+    # TODO: is manual serialization to JSON required here?
     inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"" + value + "\"}}"
-    os.system("echo Inputbuffer: " + json.dumps(inPutBuffer))
+    logger.debug("Inputbuffer: {}" + json.dumps(inPutBuffer))
     # "{\"CallSignal\":{\"cmdType\":\"reject\"}}"
 
     #optional , but not needed??
@@ -247,11 +229,11 @@ def callsignal(value):
     #print(result)
     #print(pBuffer.value)
     #print(pszGetOutput.value.decode("utf-8") )
-    os.system("echo Response buffer: " + json.dumps(pBuffer.value.decode("utf-8")))
-    os.system("echo Response output: " + json.dumps(pszGetOutput.value.decode("utf-8")))
+    logger.debug("Response buffer: {}", json.dumps(pBuffer.value.decode("utf-8")))
+    logger.debug("Response output: {}", json.dumps(pszGetOutput.value.decode("utf-8")))
     if result == 0:
         #print(HCNetSDK.NET_DVR_GetLastError())
-        os.system("echo Result error: " + str(HCNetSDK.NET_DVR_GetLastError()))
+        logger.error("Result error: {}", HCNetSDK.NET_DVR_GetLastError())
 
     HCNetSDK.NET_DVR_Logout_V30(user_id_indoor)
     HCNetSDK.NET_DVR_Cleanup()
@@ -268,42 +250,50 @@ def callsignal(value):
 #    else:
 #        os.system("Grab stream fail")
 
-for line in sys.stdin:
+loop = True
+while loop:
+    try:
+        line = input()
+        logger.debug("Received input: `{}`", line)
+        if "unlock1" in line:
+            logger.info("Unlocking door 1")
+            unlock_door(0)
+        elif "unlock2" in line:
+            logger.info("Unlocking door 2")
+            unlock_door(1)
+        # Callsignal keywords : "request,cancle,answer,reject,bellTimeout,hangUp,deviceOnCall"
+        elif "reject" in line:
+            logger.info("Rejecting the call")
+            callsignal("reject")
+        elif "answer" in line:
+            logger.info("Answering the call")
+            callsignal("answer")
+        elif "cancle" in line:
+            # TODO: fix typo
+            logger.info("Cancelling the call")
+            callsignal("cancle")
+        elif "hangUp" in line:
+            logger.info("Hanging up the call")
+            callsignal("hangUp")
+        elif "request" in line:
+            logger.info("Requesting call")
+            callsignal("request")
+        elif "bellTimeout" in line:
+            logger.info("Bell timeout")
+            callsignal("bellTimeout")
+        elif "deviceOnCall" in line:
+            logger.info("Device on call")
+            callsignal("deviceOnCall")
+    #   elif "image" in line:
+    #       os.system("echo Trying to grab an image... Stdin message: " + str(line))
+    #       NET_DVR_CaptureJPEGPicture()
+        else:
+            logger.error("Command not recognized: {}. Please see the documentation for the list of supported commands.", line)
+    except EOFError:
+        loop = False
+        logger.debug("Shutting down addon, cleaning up SDK")
 
-    if "unlock1" in line:
-        os.system("echo Trying to unlock door 1... Stdin message: " + str(line))
-        unlock_door(0)
-    elif "unlock2" in line:
-        os.system("echo Trying to unlock door 2... Stdin message: " + str(line))
-        unlock_door(1)
-    # Callsignal keywords : "request,cancle,answer,reject,bellTimeout,hangUp,deviceOnCall"
-    elif "reject" in line:
-        os.system("echo Trying reject the call... Stdin message: " + str(line))
-        callsignal("reject")
-    elif "answer" in line:
-        os.system("echo Trying answer the call... Stdin message: " + str(line))
-        callsignal("answer")
-    elif "cancle" in line:
-        os.system("echo Trying cancle the call... Stdin message: " + str(line))
-        callsignal("cancle")
-    elif "hangUp" in line:
-        os.system("echo Trying hangUp the call... Stdin message: " + str(line))
-        callsignal("hangUp")
-    elif "request" in line:
-        os.system("echo Trying request the call... Stdin message: " + str(line))
-        callsignal("request")
-    elif "bellTimeout" in line:
-        os.system("echo Trying bellTimeout the call... Stdin message: " + str(line))
-        callsignal("bellTimeout")
-    elif "deviceOnCall" in line:
-        os.system("echo Trying deviceOnCall the call... Stdin message: " + str(line))
-        callsignal("deviceOnCall")
- #   elif "image" in line:
- #       os.system("echo Trying to grab an image... Stdin message: " + str(line))
- #       NET_DVR_CaptureJPEGPicture()
-    else:
-       os.system("echo Error: Use input: unlock1 OR unlock2 OR one off the callsignal commands...  Stdin message: " + str(line))
-
+# Shutdown HikVision SDK
 HCNetSDK.NET_DVR_CloseAlarmChan_V30(alarm_handle)
 HCNetSDK.NET_DVR_Logout_V30(user_id)
 HCNetSDK.NET_DVR_Cleanup()
