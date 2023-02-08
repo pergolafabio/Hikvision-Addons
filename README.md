@@ -7,7 +7,7 @@ See the documentation [here](hikvision-sdk/README.md).
 
 # Home Assistant Add-on: Hikvision Baresip client for injecting RTSP video feed into an Asterisk conference
 
-Readme here: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-baresip
+See the documentation [here](hikvision-baresip/README.md).
 
 
 ## Like my work? You can always send me a donation: https://paypal.me/pergolafabio
