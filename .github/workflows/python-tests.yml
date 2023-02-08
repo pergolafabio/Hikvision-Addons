@@ -38,12 +38,7 @@ jobs:
       run: |
         pytest
       working-directory: ./hikvision-sdk
-    
-    # - name: Start application
-    #   run: |
-    #     python hik.py
-    #   working-directory: ./hikvision-sdk
-  
+
   docker-image_amd64:
     needs: test
     name: Docker image (amd64)
@@ -66,6 +61,7 @@ jobs:
           outputs: |
             type=image
           platforms: linux/amd64
+          tags: ${{github.repository}}:latest
   
   docker-image_aarch64:
     needs: test
@@ -89,3 +85,4 @@ jobs:
           outputs: |
             type=image
           platforms: linux/arm64
+          tags: ${{github.repository}}:latest
