@@ -12,6 +12,7 @@ CONFIGURATION_FILE_PATH = "/data/options.json"
 class Config(TypedDict):
     # To connect to the doorbell
     ip: str
+    ip_indoor: str
     username: str
     password: str
     # Name of the sensors in HA
@@ -30,6 +31,7 @@ else:
     logger.debug("Loading config from env variables")
     config: Config = {
         "ip": os.getenv("IP"),
+        "ip_indoor": os.getenv("IP_INDOOR"),    # Optional
         "username": os.getenv("USERNAME"),
         "password": os.getenv("PASSWORD"),
 
