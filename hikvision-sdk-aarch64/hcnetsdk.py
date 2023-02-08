@@ -1,8 +1,11 @@
 import platform
 import sys
 import os
+import logging
 import os.path
 from ctypes import cdll, CFUNCTYPE, Structure, POINTER, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_char_p, c_void_p, c_short, Union, sizeof, c_uint
+
+logger = logging.getLogger(__name__)
 
 BOOL = c_bool
 WORD = c_ushort
@@ -155,21 +158,27 @@ VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT = 5
 VIDEO_INTERCOM_EVENT_EVENTTYPE_DOOR_STATION_ISSUED_CARD_LOG = 6
 
 
-os.system("echo " + " Using OS: " + platform.uname()[0] + " with architecture: " + platform.uname()[4])
+def setupSDK():
+    """Load the Hikvision SDK library and return it
 
-current_path = os.path.abspath(os.path.dirname(__file__))
-if platform.uname()[0] == "Windows":
-    hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
-if platform.uname()[0] == "Linux":
-    if platform.uname()[4] == "x86_64":
-        hcnetsdk_path = os.path.join(current_path, "/lib-linux64/libhcnetsdk.so")
-    elif platform.uname()[4] == "aarch64":
-        hcnetsdk_path = os.path.join(current_path, "/lib-arm_aarch64-linux/libhcnetsdk.so")
-    else:
-        os.system("echo No supported Linux library found")
+    Returns:
+       CDLL : The loaded library
+    """
+    logger.info(f"Using OS: {platform.uname()[0]} with architecture: {platform.uname()[4]}")
 
-HCNetSDK = cdll.LoadLibrary(hcnetsdk_path)
-
+    if platform.uname()[0] == "Windows":
+        hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
+    if platform.uname()[0] == "Linux":
+        current_path = os.path.dirname(__file__)
+        if platform.uname()[4] == "x86_64":
+            hcnetsdk_path = os.path.join(current_path, "lib-linux64", "libhcnetsdk.so")
+        elif platform.uname()[4] == "aarch64":
+            hcnetsdk_path = os.path.join(current_path, "lib-arm_aarch64-linux", "libhcnetsdk.so")
+        else:
+            logger.error("No supported Linux library found!")
+    
+    logger.debug(f"Loading library from {hcnetsdk_path}")
+    return cdll.LoadLibrary(hcnetsdk_path)
 
 class LPNET_DVR_DEVICE_INFO(Structure):
     _fields_ = [

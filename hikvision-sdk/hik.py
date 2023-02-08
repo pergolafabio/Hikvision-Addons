@@ -1,4 +1,4 @@
-from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT, setupSDK
 from ctypes import POINTER, cast, c_char_p, c_byte, sizeof, byref, memmove, c_void_p, c_char
 import requests
 import json
@@ -6,6 +6,15 @@ import time
 from datetime import datetime
 import sys
 import os
+from config import config, supervisor_token
+import logging
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+if __name__ == '__main__':
+    logger.debug('Importing HIKVISION SDK')
+    HCNetSDK = setupSDK()
 
 def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):
     dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -25,7 +34,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
             os.system("echo " + dt +  " COMM_ALARM_V30, unhandled dwAlarmType: " + str(alarminfo_alarm_v30.dwAlarmType))
     elif(command == COMM_ALARM_VIDEO_INTERCOM):
         alarminfo_alarm_video_intercom: NET_DVR_VIDEO_INTERCOM_ALARM = cast(
-            alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents        
+            alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents
         if (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING):
             try:
                 os.system("echo " + dt +  " Doorbell ringing, trying to update: " + sensor_name_callstatus)
@@ -38,7 +47,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 os.system("echo Response: " + response.text)
             except:
                 os.system("echo " + dt +  " Sensor updating failed")
-             
+
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL):
             try:
                 os.system("echo " + dt +  " Call dimissed, trying to update: " + sensor_name_dimiss)
@@ -50,7 +59,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 response = requests.post(url_states + sensor_name_dimiss, headers=headers, data=data)
                 os.system("echo Response: " + response.text)
             except:
-                os.system("echo " + dt +  " Sensor updating failed")           
+                os.system("echo " + dt +  " Sensor updating failed")
         elif (alarminfo_alarm_video_intercom.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM):
             try:
                 os.system("echo " + dt +  " Tamper Alarm, trying to update: " + sensor_name_tamper)
@@ -70,8 +79,8 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
     elif(command == COMM_UPLOAD_VIDEO_INTERCOM_EVENT):
         alarminfo_upload_video_intercom_event: NET_DVR_VIDEO_INTERCOM_EVENT = cast(
             alarminfo_pointer, POINTER(NET_DVR_VIDEO_INTERCOM_EVENT)).contents
-        if (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG):  
-    
+        if (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG):
+
             try:
                 os.system("echo " + dt +  " Door unlocked, trying to update: " + sensor_name_door)
                 os.system("echo " + dt +  " Unlocked door LockID : " + str(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.wLockID))
@@ -85,7 +94,7 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
                 response = requests.post(url_states + sensor_name_door, headers=headers, data=data)
                 os.system("echo Response: " + response.text)
             except:
-                os.system("echo " + dt +  " Sensor updating failed")        
+                os.system("echo " + dt +  " Sensor updating failed")
             os.system("echo " + dt +  " Unlocked by: " + str(list(alarminfo_upload_video_intercom_event.uEventInfo.struUnlockRecord.byControlSrc)))
         elif (alarminfo_upload_video_intercom_event.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT):
             os.system("echo " + dt +  " Illegal card swiping")
@@ -99,19 +108,14 @@ def set_attribute(sensor_name, attribute, value):
     msg = json.loads(response.text)
     msg['attributes'][attribute] = value
     payload = json.dumps({'state':  msg['state'], 'attributes': msg['attributes']})
-    requests.post(url_states + sensor_name, headers=headers, data=payload)   
+    requests.post(url_states + sensor_name, headers=headers, data=payload)
 
-dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")    
-os.system("echo " + dt +  " Hikvision SDK Add-on started! Listening for events...")  
+dt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+logger.info("Hikvision SDK Add-on started! Listening for events...")
 
-# VARIABLES 
-with open("/data/options.json") as fd:
-    config = json.load(fd)
-    
-token = os.getenv('SUPERVISOR_TOKEN')
 headers = {
 #    'Authorization': 'Bearer ' + config["bearer"],
-    'Authorization': 'Bearer {}'.format(token),    
+    'Authorization': 'Bearer {}'.format(supervisor_token),
     'content-type': 'application/json',
 }
 
@@ -123,7 +127,7 @@ sensor_name_callstatus = "sensor."  + config["sensor_callstatus"]
 sensor_name_motion = "sensor."  + config["sensor_motion"]
 sensor_name_tamper = "sensor."  + config["sensor_tamper"]
 sensor_name_dimiss = "sensor."  + config["sensor_dismiss"]
-   
+
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
@@ -155,7 +159,7 @@ if (alarm_handle < 0):
     HCNetSDK.NET_DVR_Logout_V30(user_id)
     HCNetSDK.NET_DVR_Cleanup()
     exit(2)
-    
+
 
 message_callback = fMessageCallBack(callback)
 HCNetSDK.NET_DVR_SetDVRMessageCallBack_V50(0, message_callback, user_id)
@@ -174,15 +178,15 @@ def unlock_door(lockID):
     result = HCNetSDK.NET_DVR_RemoteControl(user_id, 16009, byref(gw), gw.dwSize)
     os.system("echo " + dt +  " Door " + str(lockID + 1) + " unlocked by SDK!")
 
-def callsignal(value): 
+def callsignal(value):
     HCNetSDK.NET_DVR_Init()
     HCNetSDK.NET_DVR_SetValidIP(0, True)
     # For 8003 owners, send callsignal to indoor station!!!!
-    
+
     user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config["ip_indoor"].encode('utf-8'), 8000, config["username"].encode('utf-8'), config["password"].encode('utf-8'))
     if (user_id_indoor < 0):
         os.system("echo NET_DVR_Login_V30 failed, error code = " + str(HCNetSDK.NET_DVR_GetLastError()))
-            
+
         HCNetSDK.NET_DVR_Cleanup()
         exit(1)
 
@@ -202,7 +206,7 @@ def callsignal(value):
     #optional , but not needed??
     #inUrl = "DELETE /ISAPI/VideoIntercom/ring"
     #inPutBuffer = ""
-                        
+
     szUrl = (c_char * 256)()
     struInput = NET_DVR_XML_CONFIG_INPUT()
     struOuput = NET_DVR_XML_CONFIG_OUTPUT()
@@ -251,7 +255,7 @@ def callsignal(value):
 
     HCNetSDK.NET_DVR_Logout_V30(user_id_indoor)
     HCNetSDK.NET_DVR_Cleanup()
-   
+
 
 #def NET_DVR_CaptureJPEGPicture():
 #    sJpegPicFileName = b'test.jpg'
@@ -272,7 +276,7 @@ for line in sys.stdin:
     elif "unlock2" in line:
         os.system("echo Trying to unlock door 2... Stdin message: " + str(line))
         unlock_door(1)
-    # Callsignal keywords : "request,cancle,answer,reject,bellTimeout,hangUp,deviceOnCall"    
+    # Callsignal keywords : "request,cancle,answer,reject,bellTimeout,hangUp,deviceOnCall"
     elif "reject" in line:
         os.system("echo Trying reject the call... Stdin message: " + str(line))
         callsignal("reject")
@@ -293,12 +297,12 @@ for line in sys.stdin:
         callsignal("bellTimeout")
     elif "deviceOnCall" in line:
         os.system("echo Trying deviceOnCall the call... Stdin message: " + str(line))
-        callsignal("deviceOnCall")        
+        callsignal("deviceOnCall")
  #   elif "image" in line:
  #       os.system("echo Trying to grab an image... Stdin message: " + str(line))
- #       NET_DVR_CaptureJPEGPicture()        
+ #       NET_DVR_CaptureJPEGPicture()
     else:
-       os.system("echo Error: Use input: unlock1 OR unlock2 OR one off the callsignal commands...  Stdin message: " + str(line))     
+       os.system("echo Error: Use input: unlock1 OR unlock2 OR one off the callsignal commands...  Stdin message: " + str(line))
 
 HCNetSDK.NET_DVR_CloseAlarmChan_V30(alarm_handle)
 HCNetSDK.NET_DVR_Logout_V30(user_id)
