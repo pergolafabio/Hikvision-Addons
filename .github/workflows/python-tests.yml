@@ -61,7 +61,7 @@ jobs:
           outputs: |
             type=image
           platforms: linux/amd64
-          tags: ${{github.repository}}:latest
+          tags: ${{github.repository_owner}}/hikvision-sdk:latest
   
   docker-image_aarch64:
     needs: test
@@ -85,4 +85,4 @@ jobs:
           outputs: |
             type=image
           platforms: linux/arm64
-          tags: ${{github.repository}}:latest
+          tags: ${{github.repository_owner}}/hikvision-sdk:latest
