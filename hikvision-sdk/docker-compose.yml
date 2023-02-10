@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  doorbell:
+    build:
+      args:       
+        # Change this according to your architecture (so the correct native C libraries are used)
+        - BUILD_ARCH=amd64
+        # - BUILD_ARCH=aarch64
+      context: .
+    env_file:
+      # Create a copy of development.env.example and set your variables accordingly
+      - development.env
+    tty: true   # To read stdin commands
+    network_mode: "host"
