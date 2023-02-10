@@ -13,10 +13,12 @@ import time
 from datetime import datetime
 import sys
 import os
-from config import config, SUPERVISOR_TOKEN
+from config import validateConfig, loadConfig, SUPERVISOR_TOKEN
 from loguru import logger
 
 if __name__ == '__main__':
+    config = loadConfig()
+    validateConfig(config)
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
     logger.add(sys.stdout, colorize=True, level=config['system']['log_level'])
