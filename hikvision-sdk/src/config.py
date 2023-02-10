@@ -1,10 +1,11 @@
 import json
 import os
+import pathlib
 import sys
-from typing import TypedDict
+from typing import Optional, TypedDict
 from loguru import logger
 
-CONFIGURATION_FILE_PATH = "/data/options.json"
+ADDON_CONFIG_PATH = "/data/options.json"
 SUPERVISOR_TOKEN = os.getenv('SUPERVISOR_TOKEN')
 
 class Config(TypedDict):
@@ -13,7 +14,7 @@ class Config(TypedDict):
 
     # To connect to the doorbell
     ip: str
-    ip_indoor: str
+    ip_indoor: Optional[str]
     username: str
     password: str
     # Name of the sensors in HA
@@ -25,19 +26,19 @@ class Config(TypedDict):
     
     system: dict
 
-def loadConfig() -> Config:
-    # Try to load the configuration file provided by HA supervisor. If not found, fallback to env variables
-    if os.path.isfile(CONFIGURATION_FILE_PATH):
-        logger.debug("Loading config from file")
-        with open("/data/options.json") as fd:
+def loadConfig(path: Optional[str]=None) -> Config:
+    '''Try to load the configuration file at the given path. If not found, fallback to reading environment variables.'''
+    if path and os.path.isfile(path):
+        logger.debug("Loading config from file {}", path)
+        with open(path) as fd:
             return json.load(fd)
     else:
         logger.debug("Loading config from env variables")
-        return {
-            "ip": os.getenv("IP"),
+        config: Config = {
+            "ip": os.getenv("IP", ""),
             "ip_indoor": os.getenv("IP_INDOOR"),    # Optional
-            "username": os.getenv("USERNAME"),
-            "password": os.getenv("PASSWORD"),
+            "username": os.getenv("USERNAME", ""),
+            "password": os.getenv("PASSWORD", ""),
 
             "sensor_door": os.getenv("SENSOR_DOOR", "hikvision_door"),
             "sensor_callstatus": os.getenv("SENSOR_CALLSTATUS", "hikvision_callstatus"),
@@ -49,6 +50,7 @@ def loadConfig() -> Config:
                 "log_level": os.getenv("LOG_LEVEL", "WARNING")
             }
         }
+        return config
 
 
 def validateConfig(config: Config):

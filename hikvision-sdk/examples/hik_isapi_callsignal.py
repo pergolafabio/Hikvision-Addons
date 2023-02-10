@@ -1,7 +1,9 @@
-from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
-from ctypes import c_byte, sizeof, byref, c_char, memmove, cast, c_void_p, POINTER
-import sys
+from ctypes import byref, c_byte, c_char, c_void_p, cast, memmove, sizeof
 
+from sdk.hcnetsdk import NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from sdk.utils import loadSDK
+
+HCNetSDK = loadSDK()
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
