@@ -1,4 +1,9 @@
 # Changelog
+## 2.1
+
+- Added reboot command as stdin service to restart the outdoor station (some models freeze with use of hikconnect, so you can now automate a restart at night)
+- Added more logging
+
 ## 2.0
 
 - Multi-architecture build! 
