@@ -1,5 +1,3 @@
-Like my work? You can always send me a donation: https://paypal.me/pergolafabio
-
 # Home Assistant Add-on: Hikvision SDK for Door Intercoms
 
 ## What can it do? 
@@ -85,6 +83,7 @@ data:
   addon: a53439b8_hikvision_sdk
   input: reject
 ````
+Like my work? You can always send me a donation: https://paypal.me/pergolafabio
 
 Creds:
 The add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
