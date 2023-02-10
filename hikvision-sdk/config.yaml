@@ -1,5 +1,5 @@
 name: Hikvision-SDK
-version: '2.0'
+version: '2.1'
 slug: hikvision_sdk
 description: Capture events, open door, send callsignal based on SDK Hikvision
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk
