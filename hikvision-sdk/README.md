@@ -1,4 +1,4 @@
-# Home Assistant Add-on: Hikvision SDK for Door Intercoms
+# Home Assistant Add-on: Hikvision Doorbell
 
 ## What can it do? 
 - It listen for events: callstatus/motion detection/door unlocked/tamper alarm/dimissed alarm
