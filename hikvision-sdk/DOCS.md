@@ -6,7 +6,7 @@
 The following configuration options are available to be setup using the **Configuration** tab of this add-on in the Home Assistant interface:
 
 ### Network
-Configure the connection to the doorstation. If not provided, the default value are used.
+Configure the connection to the door station. If not provided, the default value are used.
 
 | Name          | Default       | Description                           |
 | --------      | ----          | ----                                  |
@@ -67,13 +67,13 @@ template:
 
 ## Sending commands
 
-To open a door or reboot the doorstation, send a text message to the add-on via `stdin`. The available commands are:
+To open a door or reboot the door station, send a text message to the add-on via `stdin`. The available commands are:
 
 | Command   | Description                                               |
 | --------  | ----                                                      |
 | unlock1   | Unlock the *first* door, if connected to the doorbell station output relay
 | unlock2   | Unlock the *second* door, if connected to the doorbell station output relay
-| reboot    | Reboot the doorstation
+| reboot    | Reboot the door station
 
 ### Example
 In the following code, `a53439b8_hikvision_sdk` is the unique add-on ID, check your local Home Assistant instance to correctly set it up.
@@ -81,7 +81,7 @@ In the following code, `a53439b8_hikvision_sdk` is the unique add-on ID, check y
 For more details see the [official documentation]((https://www.home-assistant.io/integrations/hassio/#service-hassioaddon_stdin)) about the `hassio.addon_stdin` service.
 
 #### Unlock a door
-This service call unlocks door 1 connected to the output relay of the doorstation.
+This service call unlocks door 1 connected to the output relay of the door station.
 ````yaml
 service: hassio.addon_stdin
 data:
@@ -97,7 +97,7 @@ data:
   input: reboot
 ````
 
-### Callsignal API
+### `callsignal` API
 
 The `callsignal` API is useful to reject the call.
 For example it might come in handy in tandem with a sensor monitoring the status of the front door. When someone presses the ring button on the doorbell, if the door is opened by hand without picking up the call, the below service rejects the call.
@@ -121,8 +121,8 @@ N.B.: `a53439b8_hikvision_sdk` is an example of the add-on name, substitute with
 
 The `ip_indoor` configuration option is important for this to work.
 It has been tested on a `DS-KD8003` outdoor unit with indoor stations.
-The callsignal command must be sent to the indoor station.
-If you dont have an indoor station, just setup `ip_indoor` with the same IP as the outdoor station, so the callsignal will be send to the outdoor unit.
+The `callsignal` commands must be sent to the indoor station.
+If you do not have an indoor station, just setup `ip_indoor` with the same IP as the outdoor station, so the callsignal will be send to the outdoor unit.
 
 ````yaml
 service: hassio.addon_stdin
@@ -133,7 +133,7 @@ data:
 
 ## Support
 If you find a bug or need support [open an issue here][issue] on GitHub.
-If required by the devs, please attach a copy of your logs in the issue to help us better diagnose the problem!
+If required by the developers, please attach a copy of your logs in the issue to help us better diagnose the problem!
 
 ### Troubleshooting
 Have a look at the **Log** tab of the add-on in the Home Assistant UI.
@@ -144,5 +144,5 @@ system:
   log_level: DEBUG
 ```
 
-*N.B.*: When the add-on connects to a doorbell for the first time, it might happen that your doorstation gets stuck, because it is downloading the complete backlog of events. A reboot might be required.
+*N.B.*: When the add-on connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. A reboot might be required.
 

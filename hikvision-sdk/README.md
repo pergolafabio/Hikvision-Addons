@@ -12,15 +12,15 @@
    </a>
 </p>
 
-Connect your Hikvision IP doorstation to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the doorstation relay).
+Connect your Hikvision IP door station to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
 
 
 ## Features
-- Capture doorbell events: callstatus/motion detection/door unlocked/tamper alarm/dimissed alarm
-- Open doors connected to the doorbell (_useful for older devices where ISAPI is not possible, when port 80 is blocked_)
-- Remote actions such as answering/rejecting the call, hanging up, etc using ISAPI API.
-_This can be exploited in HA automations. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopoed. Se the documentation for more details._
-- Reboot the doorstation
+- Capture doorbell events: callstatus/motion detection/door unlocked/tamper alarm/dismissed alarm
+- Open doors connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
+- Remote actions such as answering/rejecting the call, hanging up, etc using the `ISAPI` API.
+_This can be exploited in HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
+- Reboot the door station
 
 ## Getting started
 
@@ -63,4 +63,4 @@ Have a look at the [documentation folder](docs/) for more information.
  Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
 
 ## Credits
-This add-on was initally inspired by [this script](https://github.com/laszlojakab/hikvision-intercom-python-demo).
+This add-on was initially inspired by [this script](https://github.com/laszlojakab/hikvision-intercom-python-demo).
