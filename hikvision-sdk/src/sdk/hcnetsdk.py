@@ -231,6 +231,15 @@ class NET_DVR_ALARMER(Structure):
         ("byRes2", BYTE * 6)
     ]
 
+    def serialNumber(self):
+        return "".join([str(number) for number in self.sSerialNumber[:]])
+
+    def deviceName(self):
+        return "".join(self.sDeviceName[:])
+
+    def deviceIP(self):
+        return self.sDeviceIP[:]
+
 class NET_DVR_DEVICEINFO_V30(Structure):
     _fields_ = [
         ("sSerialNumber", BYTE * SERIALNO_LEN),

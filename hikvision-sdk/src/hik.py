@@ -124,6 +124,7 @@ def set_attribute(sensor_name, attribute, value):
 url_states = "http://supervisor/core/api/states/"
 
 HCNetSDK.NET_DVR_Init()
+HCNetSDK.NET_DVR_SetLogToFile(3, bytes("/tmp/", 'utf8'), False)
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
 device_info = NET_DVR_DEVICEINFO_V30()

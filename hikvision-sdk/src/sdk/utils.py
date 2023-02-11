@@ -1,11 +1,11 @@
 
-from ctypes import CDLL, POINTER, c_char_p, c_int, cdll
+from ctypes import CDLL, POINTER, c_char_p, c_int, c_long, c_void_p, cdll
 from enum import Enum
 import os
 import platform
 from typing import Optional, TypedDict
 from loguru import logger
-from sdk.hcnetsdk import WORD, NET_DVR_DEVICEINFO_V30
+from sdk.hcnetsdk import DWORD, LONG, NET_DVR_SETUPALARM_PARAM_V50, WORD, NET_DVR_DEVICEINFO_V30,fMessageCallBack
 
 class LogLevel(Enum):
     ''' 
@@ -60,8 +60,14 @@ def loadSDK() -> CDLL:
 def setupFunctionTypes(lib: CDLL):
     """Define the argument types so that ctypes can help in avoiding error when calling the C functions."""
 
+    # Arguments
     lib.NET_DVR_Login_V30.argtypes = [ c_char_p, WORD, c_char_p, c_char_p, POINTER(NET_DVR_DEVICEINFO_V30) ]
     lib.NET_DVR_Logout_V30.argtypes = [ c_int ]
+    lib.NET_DVR_SetDVRMessageCallBack_V50.argtypes = [c_int, fMessageCallBack, c_void_p]
+    lib.NET_DVR_SetupAlarmChan_V50.argtypes = [LONG, NET_DVR_SETUPALARM_PARAM_V50, c_char_p, DWORD]
+
+    # Return types
+    lib.NET_DVR_Login_V30.restype = LONG
 
 
 def setupSDK(sdk: CDLL, config: Optional[SDKConfig]=None):

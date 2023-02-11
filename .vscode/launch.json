@@ -13,6 +13,16 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "envFile": "${workspaceFolder}/hikvision-sdk/development.env"
+        },
+        {
+            "name": "Python: doorbell_callback.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/hikvision-sdk/tests/doorbell_callback.py",
+            "cwd": "${workspaceFolder}/hikvision-sdk",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "envFile": "${workspaceFolder}/hikvision-sdk/development.env"
         }
     ]
 }
