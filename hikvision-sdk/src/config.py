@@ -69,7 +69,7 @@ def loadConfig(path: Optional[str] = None) -> Config:
 
         config.system.log_level = os.getenv("LOG_LEVEL", "WARNING")
         config.system.sdk_log_level = os.getenv("SDK_LOG_LEVEL", "NONE")
-    
-    config.validate()
-    return config
 
+        config.validate()
+
+    return config

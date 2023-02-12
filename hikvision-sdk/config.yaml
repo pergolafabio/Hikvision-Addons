@@ -25,6 +25,7 @@ options:
   sensor_dismiss: hikvision_dismiss
   system:
     log_level: WARNING
+    sdk_log_level: NONE
 schema:
   ip: str
   ip_indoor: str
@@ -37,3 +38,4 @@ schema:
   sensor_dismiss: str
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
+    sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?

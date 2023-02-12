@@ -1,3 +1,4 @@
+"""Manage events coming from the Hikvision devices"""
 import asyncio
 from ctypes import CDLL, CFUNCTYPE, POINTER, c_void_p, cast
 from loguru import logger
@@ -6,14 +7,16 @@ from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_AL
 
 
 class EventHandler:
+    """Base class defining the callbacks methods to be invoked when an event is received from a device"""
+
     name: str = 'BaseHandler'
 
     async def motion_detection(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_ALARMINFO_V30, buffer_length, user_pointer: c_void_p):
         raise NotImplementedError
-    
+
     async def video_intercom_event(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT, buffer_length, user_pointer: c_void_p):
         raise NotImplementedError
-    
+
     async def video_intercom_alarm(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM, buffer_length, user_pointer: c_void_p):
         raise NotImplementedError
 
@@ -24,7 +27,33 @@ class EventHandler:
         return self.name
 
 
+class ConsoleHandler(EventHandler):
+    """Useful for debugging: it outputs each event it receives with the configured logger"""
+
+    name = 'ConsoleOutput'
+
+    async def motion_detection(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_ALARMINFO_V30, buffer_length, user_pointer: c_void_p):
+        logger.info("Motion detected from {}", device.deviceIP())
+
+    async def video_intercom_event(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT, buffer_length, user_pointer: c_void_p):
+        logger.info("Video intercom event from {}", device.deviceIP())
+
+    async def video_intercom_alarm(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM, buffer_length, user_pointer: c_void_p):
+        logger.info("Video intercom alarm from {}", device.deviceIP())
+
+    async def unhandled_event(self, command: int, device: NET_DVR_ALARMER, alarm_info_pointer, buffer_length, user_pointer: c_void_p):
+        logger.warning("Unknown event from {}", device.deviceIP())
+
+
+
 class EventManager:
+    """Register callbacks to be invoked when there is some SDK events coming from the devices.
+    The devices need to be put in `alarm mode` for the callbacks to be invoked.
+
+    Use `register_handler` with a subclass of `EventHandler`.
+
+    Call `start`, then put each device in `alarm mode`.
+    """
     _handlers: set[EventHandler] = set()
     _background_tasks = set()
 
@@ -104,6 +133,7 @@ class EventManager:
         return callback
 
     def start(self):
+        """Register the callbacks with the SDK"""
         logger.debug("Registering callback function using SDK")
         self.callback_func = self._get_callback_func()
         result = self._sdk.NET_DVR_SetDVRMessageCallBack_V50(
