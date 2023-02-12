@@ -1,8 +1,9 @@
-from ctypes import CDLL, c_byte, sizeof
+from ctypes import CDLL, byref, c_byte, c_char, c_char_p, c_void_p, cast, memmove, pointer, sizeof
+import json
 from typing import TypedDict
 
 from loguru import logger
-from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50
+from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_MIME_UNIT, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
 
 
 class Config(TypedDict):
@@ -79,13 +80,65 @@ class Doorbell:
             raise RuntimeError(f"SDK returned error {self._sdk.NET_DVR_GetLastError()}")
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
-    
+
+    def call_signal(self, command: str):
+        inUrl = "PUT /ISAPI/VideoIntercom/callSignal?format=json"
+        requestBody = {
+            "CallSignal": {
+                "cmdType": command
+            }
+        }
+        logger.debug("Request body: {}", json.dumps(requestBody))
+
+        # optional , but not needed??
+        # inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"periodNumber\": 1,\"buildingNumber\": 1,\"unitNumber\": 1,\"floorNumber\": 0,\"roomNumber\": 1,\"unitType\": \"villa\",\"coderType\":\"ezviz\", \"model\": 1}}"
+        # inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"src\":{\"periodNumber\":1,\"buildingNumber\":1,\"unitNumber\":1,\"floorNumber\":0,\"roomNumber\":1}}}"
+        
+        # Input information
+        inputStruct = NET_DVR_XML_CONFIG_INPUT()
+
+        szUrl = (c_char * 256)()
+
+        csCommand = bytes(inUrl, "ascii")
+        inputStruct.lpRequestUrl = cast(c_char_p(csCommand), c_void_p)
+        inputStruct.dwRequestUrlLen = len(szUrl)
+
+        m_csInputParam = bytes(json.dumps(requestBody), "ascii")
+        
+        inputStruct.lpInBuffer = cast(c_char_p(m_csInputParam), c_void_p)
+        inputStruct.dwInBufferSize = len(m_csInputParam)
+
+        inputStruct.dwSize = sizeof(inputStruct)
+        
+        # Output information
+        outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
+        outputBufferLength = 1024 * 1024
+        buffer_p = (c_char * outputBufferLength)()
+        outputStruct.lpStatusBuffer = cast(buffer_p, c_void_p)
+        outputStruct.dwStatusSize = outputBufferLength
+
+        szGetOutput = (1024 * 1024)
+        pszGetOutput = (c_char * szGetOutput)()
+
+        outputStruct.lpOutBuffer = cast(pszGetOutput, c_void_p)
+        outputStruct.dwOutBufferSize = szGetOutput
+        outputStruct.dwSize = sizeof(outputStruct)
+
+        # Invoke the device API
+        result = self._sdk.NET_DVR_STDXMLConfig(self.user_id, inputStruct, outputStruct)
+
+        logger.debug("Response buffer: {}", buffer_p.value.decode("utf-8"))
+        logger.debug("Response output: size: {}, value: {}", outputStruct.dwReturnedXMLSize, pszGetOutput.value.decode("utf-8"))
+        if not result:
+            # print(HCNetSDK.NET_DVR_GetLastError())
+            logger.error("Result error: {}", self._sdk.NET_DVR_GetLastError())
+
     def __del__(self):
         self.logout()
 
 
 class Registry(dict[int, Doorbell]):
-    
+
     def getBySerialNumber(self):
         # TODO
         pass

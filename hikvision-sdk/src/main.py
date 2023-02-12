@@ -1,7 +1,6 @@
 import asyncio
 import signal
 import sys
-from typing import Coroutine
 from config import ADDON_CONFIG_PATH, loadConfig
 from doorbell import Doorbell, Config, Registry
 from event import ConsoleHandler, EventManager

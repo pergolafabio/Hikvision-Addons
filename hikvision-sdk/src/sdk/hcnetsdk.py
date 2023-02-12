@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, Structure, POINTER, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
+from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
 
 BOOL = c_bool
 WORD = c_ushort
@@ -477,7 +477,7 @@ class NET_DVR_MIME_UNIT(Structure):
         ("szName", char * MAX_FILE_PATH_LEN),
         ("szFilename", char * MAX_FILE_PATH_LEN),
         ("dwContentLen", DWORD),
-        ("pContent", char),
+        ("pContent", c_char_p),
         ("byRes", BYTE * 16),
     ]
 
