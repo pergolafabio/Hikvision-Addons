@@ -1,5 +1,6 @@
 
 from ctypes import CDLL, POINTER, c_char_p, c_int, c_void_p, cdll
+from ctypes.wintypes import LPVOID
 from enum import Enum
 import os
 import platform
@@ -67,7 +68,8 @@ def setupFunctionTypes(lib: CDLL):
     lib.NET_DVR_Logout_V30.argtypes = [c_int]
     lib.NET_DVR_SetDVRMessageCallBack_V50.argtypes = [c_int, fMessageCallBack, c_void_p]
     lib.NET_DVR_SetupAlarmChan_V50.argtypes = [LONG, NET_DVR_SETUPALARM_PARAM_V50, c_char_p, DWORD]
-
+    lib.NET_DVR_RemoteControl.argtypes = [LONG, DWORD, c_void_p, DWORD]
+    
     # Return types
     # lib.NET_DVR_Login_V30.restype = LONG
 

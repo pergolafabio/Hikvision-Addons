@@ -1,8 +1,8 @@
-from ctypes import CDLL, sizeof
+from ctypes import CDLL, c_byte, sizeof
 from typing import TypedDict
 
 from loguru import logger
-from sdk.hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50
+from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50
 
 
 class Config(TypedDict):
@@ -64,5 +64,28 @@ class Doorbell:
         if not logout_result:
             logger.debug("SDK logout result {}", logout_result)
 
+    def unlock_door(self, lock_id: int):
+        gw = NET_DVR_CONTROL_GATEWAY()
+        gw.dwSize = sizeof(NET_DVR_CONTROL_GATEWAY)
+        gw.dwGatewayIndex = 1
+        gw.byCommand = 1  # opening command
+        gw.byLockType = 0  # this is normal lock not smart lock
+        gw.wLockID = lock_id  # door station
+        gw.byControlSrc = (c_byte * 32)(*[97, 98, 99, 100])  # anything will do but can't be empty
+        gw.byControlType = 1
+
+        result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, gw, gw.dwSize)
+        if not result:
+            raise RuntimeError(f"SDK returned error {self._sdk.NET_DVR_GetLastError()}")
+
+        logger.info(" Door {} unlocked by SDK", lock_id + 1)
+    
     def __del__(self):
         self.logout()
+
+
+class Registry(dict[int, Doorbell]):
+    
+    def getBySerialNumber(self):
+        # TODO
+        pass

@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY lib-${BUILD_ARCH} /app/lib-${BUILD_ARCH}
 
 # Main application
-COPY src/*.py /app/
+COPY src/ /app/
 
 # Enable python module to get stacktraces from C native calls
 ENV PYTHONFAULTHANDLER=true
@@ -29,4 +29,4 @@ ENV LD_LIBRARY_PATH=/app/lib-${BUILD_ARCH}
 
 ENTRYPOINT [ "python3"]
 
-CMD ["/app/hik.py" ]
+CMD ["/app/main.py" ]

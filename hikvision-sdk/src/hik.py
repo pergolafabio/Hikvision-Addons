@@ -180,7 +180,7 @@ def callsignal(value):
     # For 8003 owners, send callsignal to indoor station!!!!
 
     user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config.ip_indoor.encode('utf-8'), 8000,
-                                                config.username.encode('utf-8'), config.password.encode('utf-8'))
+                                                config.username.encode('utf-8'), config.password.encode('utf-8'), NET_DVR_DEVICEINFO_V30())
     if (user_id_indoor < 0):
         logger.error("NET_DVR_Login_V30 failed, error code = {}", HCNetSDK.NET_DVR_GetLastError())
 

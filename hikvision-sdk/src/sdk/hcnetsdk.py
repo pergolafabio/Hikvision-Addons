@@ -235,10 +235,11 @@ class NET_DVR_ALARMER(Structure):
         return "".join([str(number) for number in self.sSerialNumber[:]])
 
     def deviceName(self):
-        return "".join(self.sDeviceName[:])
+        return self.sDeviceName[:].decode('utf-8')
 
     def deviceIP(self):
-        return self.sDeviceIP[:]
+        return self.sDeviceIP[:].decode('utf-8')
+
 
 class NET_DVR_DEVICEINFO_V30(Structure):
     _fields_ = [
