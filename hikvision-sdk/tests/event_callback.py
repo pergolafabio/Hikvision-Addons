@@ -42,7 +42,7 @@ async def event_handler():
     event_handler.register_handler(console_handler)
     event_handler.start()
 
-    a.start_listening()
+    a.setup_alarm()
     
     await asyncio.sleep(1000000)
 

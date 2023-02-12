@@ -22,12 +22,12 @@ config: Config = {
     "password": os.getenv("PASSWORD", ""),
 }
 
-def test_connect(sdk):
-    a = Doorbell(sdk, config)
-    a.authenticate()
-    a.logout()
-
 # Disabled since it requires an Hikvision device
+# def test_connect(sdk):
+#     a = Doorbell(sdk, config)
+#     a.authenticate()
+#     a.logout()
+
 # def test_listening(sdk):
 #     a = Doorbell(sdk, config)
 #     a.authenticate()

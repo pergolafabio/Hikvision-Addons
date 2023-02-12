@@ -23,7 +23,7 @@ def listen():
 
     a = Doorbell(sdk, config)
     a.authenticate()
-    a.start_listening()
+    a.setup_alarm()
 
     while True:
         input()

@@ -10,25 +10,24 @@ import requests
 import json
 import time
 import sys
-from config import ADDON_CONFIG_PATH, validateConfig, loadConfig, SUPERVISOR_TOKEN
+from config import ADDON_CONFIG_PATH, loadConfig, SUPERVISOR_TOKEN
 from sdk.utils import loadSDK
 from loguru import logger
 
+config = loadConfig(ADDON_CONFIG_PATH)
 if __name__ == '__main__':
-    config = loadConfig(ADDON_CONFIG_PATH)
-    validateConfig(config)
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
-    logger.add(sys.stdout, colorize=True, level=config['system']['log_level'])
+    logger.add(sys.stdout, colorize=True, level=config.system.log_level)
     logger.debug('Importing HIKVISION SDK')
     HCNetSDK = loadSDK()
     logger.debug("Hikvision SDK loaded")
 
-sensor_name_door = "sensor." + config["sensor_door"]
-sensor_name_callstatus = "sensor." + config["sensor_callstatus"]
-sensor_name_motion = "sensor." + config["sensor_motion"]
-sensor_name_tamper = "sensor." + config["sensor_tamper"]
-sensor_name_dismiss = "sensor." + config["sensor_dismiss"]
+sensor_name_door = "sensor." + config.sensor_door
+sensor_name_callstatus = "sensor." + config.sensor_callstatus
+sensor_name_motion = "sensor." + config.sensor_motion
+sensor_name_tamper = "sensor." + config.sensor_tamper
+sensor_name_dismiss = "sensor." + config.sensor_dismiss
 
 
 def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):
@@ -128,8 +127,8 @@ HCNetSDK.NET_DVR_SetLogToFile(3, bytes("/tmp/", 'utf8'), False)
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
 device_info = NET_DVR_DEVICEINFO_V30()
-user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'),
-                                     config["password"].encode('utf-8'), device_info)
+user_id = HCNetSDK.NET_DVR_Login_V30(config.ip.encode('utf-8'), 8000, config.username.encode('utf-8'),
+                                     config.password.encode('utf-8'), device_info)
 
 # fix for segmentation faults, remove device info:
 
@@ -180,8 +179,8 @@ def callsignal(value):
     HCNetSDK.NET_DVR_SetValidIP(0, True)
     # For 8003 owners, send callsignal to indoor station!!!!
 
-    user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config["ip_indoor"].encode('utf-8'), 8000,
-                                                config["username"].encode('utf-8'), config["password"].encode('utf-8'))
+    user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config.ip_indoor.encode('utf-8'), 8000,
+                                                config.username.encode('utf-8'), config.password.encode('utf-8'))
     if (user_id_indoor < 0):
         logger.error("NET_DVR_Login_V30 failed, error code = {}", HCNetSDK.NET_DVR_GetLastError())
 

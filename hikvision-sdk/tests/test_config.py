@@ -1,11 +1,19 @@
-from config import loadConfig, validateConfig
+from config import loadConfig
 import pytest
 
+
 def test_loadConfig():
-    config = loadConfig()
-    assert config is not None
+    with pytest.raises(ValueError):
+        config = loadConfig()
+
+
+def test_loadConfig_from_file():
+    config = loadConfig("tests/assets/test_config.json")
+    assert config.ip is not None
+    assert config.system.log_level is not None
+
 
 def test_validateConfig_missing_fields():
-    config = loadConfig()
     with pytest.raises(ValueError):
-        validateConfig(config)
+        config = loadConfig()
+        config.validate()
