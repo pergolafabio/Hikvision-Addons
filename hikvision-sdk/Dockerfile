@@ -11,7 +11,7 @@ RUN echo "Installing dependencies for ${BUILD_ARCH}"
 # Check the architecture for which we are building, and use the appropriate packaging tool to install the dependencies
 RUN if [ ${BUILD_ARCH} = "i386" ] || [ ${BUILD_ARCH} = "amd64" ]; then \
         # Debian based system
-        apt-get update && apt-get install -y python3-pip libffi-dev; \
+        apt-get update && apt-get install -y libffi-dev; \
     else \
         # openeuler OS
         yum -y install python-pip; \
