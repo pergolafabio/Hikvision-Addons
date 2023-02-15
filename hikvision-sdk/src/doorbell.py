@@ -1,8 +1,15 @@
 from ctypes import CDLL, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
+from enum import IntEnum
 import json
+from typing import Optional
 from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+
+
+class DeviceType(IntEnum):
+    OUTDOOR = 603
+    INDOOR = 602
 
 
 class Doorbell():
@@ -15,6 +22,9 @@ class Doorbell():
     """
     user_id: int
     '''Provided by the SDK after login'''
+    _id: int
+    '''Used internally to distinguish between multiple doorbells'''
+    _type: DeviceType
 
     def __init__(self, id: int, config: AppConfig.Doorbell, sdk: CDLL):
         """
@@ -41,9 +51,14 @@ class Doorbell():
             # TODO raise exception
             raise RuntimeError(f"SDK error code {self._sdk.NET_DVR_GetLastError()}")
 
+        try:
+            self._type = DeviceType(self._device_info.wDevType)
+        except KeyError:
+            logger.warning("Unknown device type: {}", self._device_info.wDevType)
+
         logger.debug("Login returned user ID: {}", self.user_id)
         logger.debug("Doorbell serial number: {}, device type: {}",
-                     self._device_info.serialNumber(), self._device_info.wDevType)
+                     self._device_info.serialNumber(), self._type.name)
         logger.info("Connected to doorbell: {}", self._config.name)
 
     def setup_alarm(self):
@@ -93,7 +108,7 @@ class Doorbell():
         # optional , but not needed??
         # inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"periodNumber\": 1,\"buildingNumber\": 1,\"unitNumber\": 1,\"floorNumber\": 0,\"roomNumber\": 1,\"unitType\": \"villa\",\"coderType\":\"ezviz\", \"model\": 1}}"
         # inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"src\":{\"periodNumber\":1,\"buildingNumber\":1,\"unitNumber\":1,\"floorNumber\":0,\"roomNumber\":1}}}"
-        
+
         # Input information
         inputStruct = NET_DVR_XML_CONFIG_INPUT()
 
@@ -104,12 +119,12 @@ class Doorbell():
         inputStruct.dwRequestUrlLen = len(szUrl)
 
         m_csInputParam = bytes(json.dumps(requestBody), "ascii")
-        
+
         inputStruct.lpInBuffer = cast(c_char_p(m_csInputParam), c_void_p)
         inputStruct.dwInBufferSize = len(m_csInputParam)
 
         inputStruct.dwSize = sizeof(inputStruct)
-        
+
         # Output information
         outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
         outputBufferLength = 1024 * 1024
@@ -139,6 +154,12 @@ class Doorbell():
 
 class Registry(dict[int, Doorbell]):
 
-    def getBySerialNumber(self):
+    def getBySerialNumber(self) -> Doorbell:
         # TODO
         pass
+
+    def getFirstIndoor(self) -> Optional[Doorbell]:
+        """Return the first indoor unit, if found in the registry"""
+        for _, doorbell in self.items():
+            if doorbell._type is DeviceType.INDOOR:
+                return doorbell

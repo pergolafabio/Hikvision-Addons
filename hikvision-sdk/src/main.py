@@ -12,7 +12,9 @@ from input import InputReader
 
 
 async def main():
-    # Disable type warning since the object is populated at runtime using goodconfig library
+    """Main entrypoint of the application"""
+
+    # Disable type warnings since the object is populated at runtime using goodconfig library
     config = AppConfig()  # type:ignore
     config.load()
 

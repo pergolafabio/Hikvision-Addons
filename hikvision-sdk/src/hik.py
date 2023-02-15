@@ -113,6 +113,9 @@ def update_sensor(sensor_name: str, state: str, attr: dict = None):
 
 ## Unused function
 def set_attribute(sensor_name, attribute, value):
+    headers = {
+        'Authorization': f'Bearer {config.home_assistant.token}'
+    }
     response = requests.get(url_states + sensor_name, headers=headers)
     msg = json.loads(response.text)
     msg['attributes'][attribute] = value

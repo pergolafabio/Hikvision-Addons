@@ -1,6 +1,6 @@
 from ctypes import byref, c_byte, c_char, c_void_p, cast, memmove, sizeof
 
-from sdk.hcnetsdk import NET_DVR_DEVICEINFO_V30
+from sdk.hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
 from sdk.utils import loadSDK
 
 # NET_DVR_GET_CALL_STATUS                  16034  
