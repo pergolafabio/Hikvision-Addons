@@ -32,8 +32,10 @@ class InputReader():
             if not len(input_bytes):
                 return
             command = input_bytes.decode('utf-8').strip()
-            logger.debug("Received: {}", command)
-            self.execute_command(command)
+            # Remove double quotes if found in the input string
+            command_sanitized = command.replace('"', "")
+            logger.debug("Received: {}", command_sanitized)
+            self.execute_command(command_sanitized)
 
     def execute_command(self, command: str):
         # TODO how to handle multiple doorbells?

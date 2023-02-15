@@ -35,7 +35,7 @@ options:
 
 schema:
   doorbells:
-    - name: str(1,)
+    - name: str
       ip: str
       username: str
       password: str
