@@ -19,7 +19,7 @@ options:
   doorbells:
     - name: null
       ip: null
-      username: ""
+      username: admin
       password: ""
   sensors:
     door: hikvision_door

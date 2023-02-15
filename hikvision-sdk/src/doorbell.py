@@ -1,4 +1,4 @@
-from ctypes import CDLL, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
+from ctypes import CDLL, byref, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
 from enum import IntEnum
 import json
 from typing import Optional
@@ -90,7 +90,7 @@ class Doorbell():
         gw.byControlSrc = (c_byte * 32)(*[97, 98, 99, 100])  # anything will do but can't be empty
         gw.byControlType = 1
 
-        result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, gw, gw.dwSize)
+        result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
         if not result:
             raise RuntimeError(f"SDK returned error {self._sdk.NET_DVR_GetLastError()}")
 

@@ -22,6 +22,9 @@ COPY lib-${BUILD_ARCH} /app/lib-${BUILD_ARCH}
 # Main application
 COPY src/ /app/
 
+# Default configuration file
+COPY default_config.yaml /app/
+
 # Enable python module to get stacktraces from C native calls
 ENV PYTHONFAULTHANDLER=true
 # Required env variable to load Hikvision ssl and crypto libraries instead of system libraries
