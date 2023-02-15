@@ -25,6 +25,6 @@ RUN pip install -r requirements.txt
 COPY lib-${BUILD_ARCH} /app/lib-${BUILD_ARCH}
 
 # Main application
-COPY *.py /app/
+COPY src/*.py /app/
 
 ENTRYPOINT [ "python3", "/app/hik.py" ]

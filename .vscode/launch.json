@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "hikvision-sdk",
+            "name": "Python: hik.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/hikvision-sdk/hik.py",
+            "program": "${workspaceFolder}/hikvision-sdk/src/hik.py",
+            "cwd": "${workspaceFolder}/hikvision-sdk",
             "console": "integratedTerminal",
             "justMyCode": true,
             "envFile": "${workspaceFolder}/hikvision-sdk/development.env"

@@ -1,15 +1,14 @@
-Like my work? You can always send me a donation: https://paypal.me/pergolafabio
-
-# Home Assistant Add-on: Hikvision SDK for Door Intercoms
+# Home Assistant Add-on: Hikvision Doorbell
 
 ## What can it do? 
 - It listen for events: callstatus/motion detection/door unlocked/tamper alarm/dimissed alarm
 - It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
+- It can reboot your doorstation
 - It can send a callsignal command, like answer/reject,hangup ... verry usefull if you have for example a zigbee door sensor, if you open the door by hand, you can drop the ring signal on the indoor stations/or stop hikconnect devices ringing :-)
 
 ## Get started
 
-Open your Home Assistant instance and add an custom repository for your add-ons: https://github.com/pergolafabio/Hikvision-Addons
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
 
 PS: On first start of the Addon, its possible that your doorstation gets stuck, sometimes a reboot is needed, because this Add-on will download the complete backlog... its only the first time
 
@@ -47,9 +46,9 @@ template:
         state: "off"    		
 ````
 
-## Open a door
+## Open a door  or reboot the doorstation
 
-To open a door, we need to send a stdin message to the add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
+To open a door or reboot the doorstation, we need to send a stdin message to the add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
 
 In below example, a53439b8_hikvision_sdk is the addon name, its possible that its different for you
 
@@ -60,6 +59,13 @@ service: hassio.addon_stdin
 data:
   addon: a53439b8_hikvision_sdk
   input: unlock1
+````
+
+````
+service: hassio.addon_stdin
+data:
+  addon: a53439b8_hikvision_sdk
+  input: reboot
 ````
 
 ## Callsignal
@@ -77,6 +83,8 @@ data:
   addon: a53439b8_hikvision_sdk
   input: reject
 ````
+
+Like my work? You can always send me a donation: https://paypal.me/pergolafabio
 
 Creds:
 The add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo

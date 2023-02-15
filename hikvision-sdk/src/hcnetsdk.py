@@ -4,8 +4,8 @@ import os
 import logging
 import os.path
 from ctypes import cdll, CFUNCTYPE, Structure, POINTER, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_char_p, c_void_p, c_short, Union, sizeof, c_uint
+from loguru import logger
 
-logger = logging.getLogger(__name__)
 
 BOOL = c_bool
 WORD = c_ushort
@@ -169,11 +169,10 @@ def setupSDK():
     if platform.uname()[0] == "Windows":
         hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
     if platform.uname()[0] == "Linux":
-        current_path = os.path.dirname(__file__)
         if platform.uname()[4] == "x86_64":
-            hcnetsdk_path = os.path.join(current_path, "lib-amd64", "libhcnetsdk.so")
+            hcnetsdk_path = os.path.join("lib-amd64", "libhcnetsdk.so")
         elif platform.uname()[4] == "aarch64":
-            hcnetsdk_path = os.path.join(current_path, "lib-aarch64", "libhcnetsdk.so")
+            hcnetsdk_path = os.path.join("lib-aarch64", "libhcnetsdk.so")
         else:
             logger.error("No supported Linux library found!")
 

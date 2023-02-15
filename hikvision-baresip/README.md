@@ -24,6 +24,10 @@ Advantages:
 - Verry nice intergations possible, you can even pickup/answer the call with a Lovelace SIP card!! Freaking nice! :-)  https://github.com/TECH7Fox/sip-hass-card
 - Opening door also works by sending '#' during call with a softphone (enable "dtmf sip-info" on your softphone client)
 
+## Get started
+
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
+
 ## Installations notes:
 
 Create a directory "baresip" in your "config" folder, copy over the files below "config" and "account" to "/config/baresip" , then start the addon, it will probably tell you that the extension 7000 is unable to register.. quite normal because you dont have a PBX yet...
@@ -303,3 +307,5 @@ video_mode=first_marked
 
 
 ```
+
+Like my work? You can always send me a donation: https://paypal.me/pergolafabio
