@@ -1,5 +1,0 @@
-build_from:
-  i386: library/python:3.10.8-slim
-  amd64: library/python:3.10.8-slim
-  # Hikvision SDK requires this particular base os to run on aarch64 machines (RPi)
-  aarch64: openeuler/openeuler:22.03-lts-sp1
