@@ -4,5 +4,5 @@
 !lib-aarch64/*.so*
 !lib-aarch64/**/*.so*
 
-# environment file for local development
+# Environment variables for local development
 development.env

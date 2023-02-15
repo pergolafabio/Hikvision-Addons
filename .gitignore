@@ -176,4 +176,4 @@ poetry.toml
 # End of https://www.toptal.com/developers/gitignore/api/python,codeio
 
 # IDE configuration
-.vscode
+.vscode/settings.json
