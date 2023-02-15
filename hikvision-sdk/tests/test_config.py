@@ -1,19 +1,19 @@
-from config import loadConfig
+from config import AppConfig
 import pytest
+from pydantic import ValidationError
 
 
-def test_loadConfig():
-    with pytest.raises(ValueError):
-        config = loadConfig()
+def test_AppConfig():
+    config = AppConfig()  # type: ignore
+    config.load()
 
 
-def test_loadConfig_from_file():
-    config = loadConfig("tests/assets/test_config.json")
-    assert config.ip is not None
-    assert config.system.log_level is not None
+def test_load_config_from_json():
+    config = AppConfig()  # type: ignore
+    config.load("tests/assets/test_config.json")
 
 
-def test_validateConfig_missing_fields():
-    with pytest.raises(ValueError):
-        config = loadConfig()
-        config.validate()
+def test_load_config_missing_token():
+    with pytest.raises(ValidationError):
+        config = AppConfig()  # type: ignore
+        config.load("tests/assets/test_config_wrong.json")

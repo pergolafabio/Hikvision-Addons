@@ -1,0 +1,30 @@
+# Default configuration file used if the application is run outside of an HA addon (for instance as a standalone container).
+
+# If you want to customize the settings, copy this file and set you own values
+# Each option can be overridden by settings environment variables using __ as delimiter for nesting the object.
+# For example to set system.log_level to DEBUG use the env variable SYSTEM__LOG_LEVEL=DEBUG
+
+# By default no doorbells are defined
+doorbells: []
+# Uncomment the following lines and define each doorbell by repeating the example config:
+#   - name: "Front porch"
+#     ip: 192.168.0.1
+#     username: admin
+#     password: password
+
+# Name of the sensors created inside Home Assistant
+sensors:
+  door: hikvision_door
+  callstatus: hikvision_callstatus
+  motion: hikvision_motion
+  tamper: hikvision_tamper
+  dismiss: hikvision_dismiss
+
+# Define the following options to enable the Home Assistant API integration
+# home_assistant:
+#   url: http://localhost:8123
+#  token: <secret_token>
+
+system:
+  log_level: WARNING
+  sdk_log_level: NONE

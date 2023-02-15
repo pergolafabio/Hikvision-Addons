@@ -13,29 +13,40 @@ boot: auto
 stdin: true
 homeassistant_api: true
 hassio_api: true
+
+# Default options when used as an HA add-on
 options:
-  ip: 192.168.0.70
-  ip_indoor: 192.168.0.71
-  username: admin
-  password: password
-  sensor_door: hikvision_door
-  sensor_callstatus: hikvision_callstatus
-  sensor_motion: hikvision_motion
-  sensor_tamper: hikvision_tamper
-  sensor_dismiss: hikvision_dismiss
+  doorbells:
+    - name: null
+      ip: null
+      username: ""
+      password: ""
+  sensors:
+    door: hikvision_door
+    callstatus: hikvision_callstatus
+    motion: hikvision_motion
+    tamper: hikvision_tamper
+    dismiss: hikvision_dismiss
+  home_assistant:
+    url: "http://supervisor/core"
   system:
     log_level: WARNING
     sdk_log_level: NONE
+
 schema:
-  ip: str
-  ip_indoor: str
-  username: str
-  password: str
-  sensor_door: str
-  sensor_callstatus: str
-  sensor_motion: str
-  sensor_tamper: str
-  sensor_dismiss: str
+  doorbells:
+    - name: str(1,)
+      ip: str
+      username: str
+      password: str
+  sensors:
+    door: str
+    callstatus: str
+    motion: str
+    tamper: str
+    dismiss: str
+  home_assistant:
+    url: match(^http://supervisor/core$)
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?

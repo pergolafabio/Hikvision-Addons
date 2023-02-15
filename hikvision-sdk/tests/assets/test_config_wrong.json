@@ -15,8 +15,7 @@
       "dismiss": "hikvision_dismiss"
   },
   "home_assistant": {
-      "url": "http://supervisor/core",
-      "token": "test_token"
+      "url": "http://supervisor/core"
   },
   "system": {
       "log_level": "WARNING",

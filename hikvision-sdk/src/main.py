@@ -1,30 +1,31 @@
 import asyncio
 import signal
 import sys
-from config import ADDON_CONFIG_PATH, loadConfig
-from doorbell import Doorbell, Config, Registry
+from config import AppConfig
+from doorbell import Doorbell, Registry
 from event import ConsoleHandler, EventManager
 from home_assistant import HomeAssistantAPI
-from sdk.utils import LogLevel, SDKConfig, loadSDK, setupSDK, shutdownSDK
+from sdk.utils import SDKConfig, loadSDK, setupSDK, shutdownSDK
 from loguru import logger
 
 from input import InputReader
 
 
 async def main():
-    config = loadConfig(ADDON_CONFIG_PATH)
+    # Disable type warning since the object is populated at runtime using goodconfig library
+    config = AppConfig()  # type:ignore
+    config.load()
 
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
-    logger.add(sys.stdout, colorize=True, level=config.system.log_level)
+    logger.add(sys.stdout, colorize=True, level=config.system.log_level.value)
     logger.debug('Importing Hikvision SDK')
 
     # Setup the SDK
     sdk = loadSDK()
     logger.debug("Hikvision SDK loaded")
-    sdk_log_level = config.system.sdk_log_level
     sdk_config: SDKConfig = {
-        "log_level": LogLevel[sdk_log_level],
+        "log_level": config.system.sdk_log_level,
         "log_dir": "./SDKLogs"
     }
     setupSDK(sdk, sdk_config)
@@ -33,24 +34,25 @@ async def main():
     console = ConsoleHandler()
     event_manager.register_handler(console)
 
-    ha_api = HomeAssistantAPI(config)
-    event_manager.register_handler(ha_api)
+    if config.home_assistant:
+        ha_api = HomeAssistantAPI(config.sensors, config.home_assistant)
+        event_manager.register_handler(ha_api)
 
     doorbell_registry = Registry()
-    doorbell_config: Config = {
-        'ip': config.ip,
-        'username': config.username,
-        'password': config.password
-    }
-    doorbell = Doorbell(sdk, doorbell_config)
-    doorbell.authenticate()
 
-    # Add the doorbell to the registry, indexed by ID
-    doorbell_registry[0] = doorbell
+    # Configure each doorbell
+    for index, doorbell_config in enumerate(config.doorbells):
+        doorbell = Doorbell(index, doorbell_config, sdk)
+        doorbell.authenticate()
+
+        # Add the doorbell to the registry, indexed by ID
+        doorbell_registry[index] = doorbell
 
     # Start listening for events
     event_manager.start()
-    doorbell.setup_alarm()
+
+    for _, doorbell in doorbell_registry.items():
+        doorbell.setup_alarm()
 
     input_reader = InputReader(doorbell_registry)
 

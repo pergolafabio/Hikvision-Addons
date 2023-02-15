@@ -1,7 +1,7 @@
 
 from ctypes import CDLL, POINTER, c_char_p, c_int, c_void_p, cdll
 from ctypes.wintypes import LPVOID
-from enum import Enum
+from enum import IntEnum
 import os
 import platform
 from typing import Optional, TypedDict
@@ -9,7 +9,7 @@ from loguru import logger
 from sdk.hcnetsdk import DWORD, LONG, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT, WORD, NET_DVR_DEVICEINFO_V30, fMessageCallBack
 
 
-class LogLevel(Enum):
+class SDKLogLevel(IntEnum):
     '''
     Define the level of verbosity of the SDK.
     '''
@@ -28,7 +28,7 @@ class SDKConfig(TypedDict):
         log_dir: Directory where the SDK will write the log files
 
     '''
-    log_level: LogLevel
+    log_level: SDKLogLevel
     log_dir: str
 
 
@@ -93,7 +93,7 @@ def setupSDK(sdk: CDLL, config: Optional[SDKConfig] = None):
     valid_ip_result = sdk.NET_DVR_SetValidIP(0, True)
     if not valid_ip_result:
         logger.warning("SDK setValidIP returned {}", valid_ip_result)
-    
+
     logger.debug("SDK initialized")
 
 

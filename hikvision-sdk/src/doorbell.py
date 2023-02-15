@@ -1,18 +1,11 @@
-from ctypes import CDLL, byref, c_byte, c_char, c_char_p, c_void_p, cast, memmove, pointer, sizeof
+from ctypes import CDLL, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
 import json
-from typing import TypedDict
-
 from loguru import logger
-from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_MIME_UNIT, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from config import AppConfig
+from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
 
 
-class Config(TypedDict):
-    ip: str
-    username: str
-    password: str
-
-
-class Doorbell:
+class Doorbell():
     """A doorbell device.
 
     This object manages a connection with the Hikvision door station.
@@ -21,21 +14,27 @@ class Doorbell:
     Call `logout` when you want to stop receiving events.
     """
     user_id: int
+    '''Provided by the SDK after login'''
 
-    def __init__(self, sdk: CDLL, config: Config):
-        logger.debug("Setting up doorbell")
+    def __init__(self, id: int, config: AppConfig.Doorbell, sdk: CDLL):
+        """
+        Parameters:
+            id: ID used internally to reference to this doorbell
+        """
+        logger.debug("Setting up doorbell: {}", config.name)
         self._sdk = sdk
         self._config = config
+        self._id = id
 
     def authenticate(self):
         '''Authenticate with the remote doorbell'''
         logger.debug("Logging into doorbell")
         self._device_info = NET_DVR_DEVICEINFO_V30()
         self.user_id = self._sdk.NET_DVR_Login_V30(
-            bytes(self._config["ip"], 'utf8'),
+            bytes(self._config.ip, 'utf8'),
             8000,
-            bytes(self._config["username"], 'utf8'),
-            bytes(self._config["password"], 'utf8'),
+            bytes(self._config.username, 'utf8'),
+            bytes(self._config.password, 'utf8'),
             self._device_info
         )
         if self.user_id < 0:
@@ -45,6 +44,7 @@ class Doorbell:
         logger.debug("Login returned user ID: {}", self.user_id)
         logger.debug("Doorbell serial number: {}, device type: {}",
                      self._device_info.serialNumber(), self._device_info.wDevType)
+        logger.info("Connected to doorbell: {}", self._config.name)
 
     def setup_alarm(self):
         '''Receive events from the doorbell. authenticate() must be called first.'''

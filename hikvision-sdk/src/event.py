@@ -29,8 +29,11 @@ class EventHandler:
 
 class ConsoleHandler(EventHandler):
     """Useful for debugging: it outputs each event it receives with the configured logger"""
-
-    name = 'ConsoleOutput'
+    name = 'ConsoleSTDOUT'
+    
+    def __init__(self) -> None:
+        super().__init__()
+        logger.info("Setting up event handler: Console stdout")
 
     async def motion_detection(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_ALARMINFO_V30, buffer_length, user_pointer: c_void_p):
         logger.info("Motion detected from {}", device.deviceIP())
