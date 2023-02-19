@@ -1,6 +1,7 @@
 from ctypes import CDLL, byref, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
 from enum import IntEnum
 import json
+import re
 from typing import Optional
 from loguru import logger
 from config import AppConfig
@@ -162,4 +163,13 @@ class Registry(dict[int, Doorbell]):
         """Return the first indoor unit, if found in the registry"""
         for _, doorbell in self.items():
             if doorbell._type is DeviceType.INDOOR:
+                return doorbell
+
+    def getByName(self, name: str) -> Optional[Doorbell]:
+        """Return the unit based on the input name, if found in the registry.
+        The name is matched against the lowercase version with underscore instead of spaces"""
+        for _, doorbell in self.items():
+            # Lowercase the name, then substitute any whitespace with _
+            sanitized_name = re.sub(r'\s', '_', doorbell._config.name.lower())
+            if sanitized_name == name:
                 return doorbell

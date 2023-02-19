@@ -1,4 +1,3 @@
-
 import asyncio
 import sys
 from loguru import logger
@@ -38,67 +37,62 @@ class InputReader():
             self.execute_command(command_sanitized)
 
     def execute_command(self, command: str):
-        # TODO how to handle multiple doorbells?
-        # Callsignal keywords : "request,cancle,answer,reject,bellTimeout,hangUp,deviceOnCall"
-        match command:
-            case "unlock1":
-                logger.info("Unlocking door 1 on doorbell {}", 0)
-                self._registry[0].unlock_door(0)
-            case "unlock2":
-                logger.info("Unlocking door 2 on doorbell {}", 0)
-                self._registry[0].unlock_door(0)
+        # Split the input string in various parts
+        # Expected input:
+        # <command> <doorbell_name> <optional_argument>
+        # Example:
+        # unlock main_door door1
+        arguments = command.split()
+        if not arguments:
+            logger.error("Received empty command")
+            return
+
+        # We expected at least a second argument: doorbell_name
+        if not len(arguments) > 1:
+            logger.error("Please provide the doorbell name")
+            return
+
+        # Get the doorbell by name from the registry
+        doorbell = self._registry.getByName(arguments[1])
+        if not doorbell:
+            logger.error("No doorbell named {}. Remember to use lowercase characters and substitute any whitespace with _", arguments[1])
+            return
+
+        # Match the <command> part
+        match arguments[0]:
+            case "unlock":
+                # Command is
+                # unlock <doorbell_name> <door_number>
+                if not len(arguments) == 3:
+                    logger.error("Please provide the doorbell name and the door number to unlock")
+                    return
+                doorNumber = int(arguments[2])
+                logger.info("Unlocking door {} on doorbell {}", doorNumber, doorbell)
+                # User specifies doors starting from 1, we instead index door by 0
+                doorbell.unlock_door(doorNumber - 1)
             case "answer":
                 logger.info("Answering the call")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("answer")
+                doorbell.call_signal("answer")
             case "reject":
                 logger.info("Rejecting the call")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("reject")
-            case "cancle":
-                # TODO: fix typo
+                doorbell.call_signal("reject")
+            case "cancel":
                 logger.info("Cancelling the call")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("cancle")
+                doorbell.call_signal("cancle")
             case "hangUp":
                 logger.info("Hanging up the call")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("hangUp")
+                doorbell.call_signal("hangUp")
             case "request":
                 logger.info("Requesting call")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("request")
+                doorbell.call_signal("request")
             case "bellTimeout":
                 logger.info("Bell timeout")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("bellTimeout")
+                doorbell.call_signal("bellTimeout")
             case "deviceOnCall":
                 logger.info("Device on call")
-                indoor_unit = self._registry.getFirstIndoor()
-                if not indoor_unit:
-                    logger.warning("No indoor unit available")
-                    return
-                indoor_unit.call_signal("deviceOnCall")
+                doorbell.call_signal("deviceOnCall")
             case "reboot":
                 logger.info("Rebooting door station")
-                # reboot_device()
+                doorbell.reboot_device()
             case _:
                 logger.error("Command not recognized: `{}`. Please see the documentation for the list of supported commands.", command)
