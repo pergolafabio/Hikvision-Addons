@@ -1,7 +1,7 @@
-name: Hikvision-SDK
+name: Hikvision Doorbell
+description: Connect your Hikvision doorbells to Home Assistant
 version: '2.1'
 slug: hikvision_sdk
-description: Capture events, open door, send callsignal based on SDK Hikvision
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk
 arch:
 - amd64

@@ -1,90 +1,66 @@
 # Home Assistant Add-on: Hikvision Doorbell
 
-## What can it do? 
-- It listen for events: callstatus/motion detection/door unlocked/tamper alarm/dimissed alarm
-- It can open a door, usefull for older devices where ISAPI is not possible, when port 80 is blocked
-- It can reboot your doorstation
-- It can send a callsignal command, like answer/reject,hangup ... verry usefull if you have for example a zigbee door sensor, if you open the door by hand, you can drop the ring signal on the indoor stations/or stop hikconnect devices ringing :-)
+<p align="center">
+   <a href="https://img.shields.io/badge/amd64-yes-green.svg">
+      <img alt="Supports amd64 Architecture" src="https://img.shields.io/badge/amd64-yes-green.svg">
+   </a>
+   <a href="https://img.shields.io/badge/aarch64-yes-green.svg">
+      <img alt="Supports aarch64 Architecture" src="https://img.shields.io/badge/aarch64-yes-green.svg">
+   </a>
+   <a href="https://img.shields.io/badge/i386-yes-green.svg">
+      <img alt="Supports i386 Architecture" src="https://img.shields.io/badge/i386-yes-green.svg">
+   </a>
+</p>
 
-## Get started
+Connect your Hikvision IP door station to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
 
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
 
-PS: On first start of the Addon, its possible that your doorstation gets stuck, sometimes a reboot is needed, because this Add-on will download the complete backlog... its only the first time
+## Features
+- Capture doorbell events: callstatus/motion detection/door unlocked/tamper alarm/dismissed alarm
+- Open doors connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
+- Remote actions such as answering/rejecting the call, hanging up, etc using the `ISAPI` API.
+_This can be exploited in HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
+- Reboot the door station
 
-## Gonfiguration of the Add-On
+## Getting started
 
-````
-    "ip": "192.168.0.70" # The IP of your outdoor station
-    "ip_indoor": "192.168.0.71", # In case you have an indoor Panel, usefull for the callsignal command, more info below
-    "username": "admin", # The username of your outdoor station
-    "password": "password" # The password of your outdoor station
-    "sensor_door" : "hikvision_door",
-    "sensor_callstatus" : "hikvision_callstatus"
-    "sensor_motion" : "hikvision_motion"
-    "sensor_tamper" : "hikvision_tamper"
-    "sensor_dimiss" : "hikvision_dismiss"		
-````	
+- Add this repository on your local Home Assistance instance by clicking the following button:
+<p align="center">
+    <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons">
+        <img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.">
+    </a>
+</p>
 
-First of all, create the template sensors in your yaml configuration, like below:
-When door is opened by key/badge, or when the doorbell is ringing, or motion detected, or tamper alarm, dismiss... the state of the sensors below are "on" for 1 second. The door sensor will have some attributes also, you will see the door ID that was opened, as well the badge/key
+- Confirm the **Manage add-on repositories** dialog by clicking **ADD**.
+- **Hikvision Doorbell** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
+- Select the add-on then click **INSTALL**.
+- Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
+(The documentation is also available online on the [Github repo](DOCS.md)).
 
-## Sensors 
+## Supported devices
+This devices has been reported to be working from other HA users.
+If your device is not on the list, we are happy to include it. Just [open an issue here][issue] on GitHub and let us know the kind of device you have.
 
-````
-template:
-  - sensor: 
-      - name: hikvision_door
-        state: "off"
-      - name: hikvision_callstatus
-        state: "off"
-      - name: hikvision_motion
-        state: "off"
-      - name: hikvision_tamper
-        state: "off"
-      - name: hikvision_dismiss
-        state: "off"    		
-````
+- DS-KV8413
+- KD8003
+- DS-KV8113
+- KV8213
+- DS-KV6113
 
-## Open a door  or reboot the doorstation
+## Additional resources
+- [Add-on documentation](DOCS.md)
+- [Development documentation](docs/)
+- [Home Assistant community forum](https://community.home-assistant.io/t/add-on-hikvision-doorbell-integration/532796)
 
-To open a door or reboot the doorstation, we need to send a stdin message to the add-on, it can be used with this service below, use as input: unlock1 OR unlock2, depending if you have 2 output relays on your doorstation.
+## Contributing
 
-In below example, a53439b8_hikvision_sdk is the addon name, its possible that its different for you
+This is an active open-source project. We are always open to people who want to
+use the code or contribute to it. Thank you for being involved! :heart_eyes:
 
-PS: Use underscore! Dont copy/paste from the addon name itself, there its "-" instead of "_"!
+Have a look at the [documentation folder](docs/) for more information.
 
-````
-service: hassio.addon_stdin
-data:
-  addon: a53439b8_hikvision_sdk
-  input: unlock1
-````
+## Donations
+ Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
 
-````
-service: hassio.addon_stdin
-data:
-  addon: a53439b8_hikvision_sdk
-  input: reboot
-````
-
-## Callsignal
-
-The callsignal service is usefull to reject the call, i personally use it with a zigbee sensor at my door... When someone pressed the doorbutton, if i open the door by hand without pickup up, the below service rejects the call, and all indoor stations stop ringing, including the hikconnect devices.
-Available commands are: "request, cancle, answer, reject, bellTimeout, hangUp, deviceOnCall" ... no idea what they do, i only use "reject".
-
-Again, "a53439b8_hikvision_sdk" is an example of the add-on name, it can be different for you...
-
-The "ip_indoor" in the configuration above is important, i have a DS-KD8003 device, with indoor stations, so i need to send the callsignal command to my indoor station... If you dont have an indoor station, just setup the "ip_indoor" with the same IP as the outdoor station, so the callsignal will be send to the outdoor unit.
-
-````
-service: hassio.addon_stdin
-data:
-  addon: a53439b8_hikvision_sdk
-  input: reject
-````
-
-Like my work? You can always send me a donation: https://paypal.me/pergolafabio
-
-Creds:
-The add-on is based on this script : https://github.com/laszlojakab/hikvision-intercom-python-demo
+## Credits
+This add-on was initially inspired by [this script](https://github.com/laszlojakab/hikvision-intercom-python-demo).
