@@ -12,13 +12,13 @@
    </a>
 </p>
 
-Connect your Hikvision IP door station to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
+Connect your Hikvision IP door stations to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
 
 
 ## Features
 - Capture doorbell events: callstatus/motion detection/door unlocked/tamper alarm/dismissed alarm
 - Open doors connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
-- Remote actions such as answering/rejecting the call, hanging up, etc using the `ISAPI` API.
+- Remote actions such as answering/rejecting the call, hanging up, etc (via the `ISAPI` API).
 _This can be exploited in HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
 - Reboot the door station
 
@@ -33,9 +33,9 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 
 - Confirm the **Manage add-on repositories** dialog by clicking **ADD**.
 - **Hikvision Doorbell** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
-- Select the add-on then click **INSTALL**.
+- Select the **Hikvision Doorbell** add-on, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
-(The documentation is also available online on the [Github repo](DOCS.md)).
+(The documentation can also be browsed online in the [Github repo](DOCS.md)).
 
 ## Supported devices
 This devices has been reported to be working from other HA users.
@@ -58,6 +58,13 @@ This is an active open-source project. We are always open to people who want to
 use the code or contribute to it. Thank you for being involved! :heart_eyes:
 
 Have a look at the [documentation folder](docs/) for more information.
+
+### Contributors
+<a href="https://github.com/pergolafabio/Hikvision-Addons/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=pergolafabio/Hikvision-Addons" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## Donations
  Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).

@@ -6,14 +6,29 @@
 The following configuration options are available to be setup using the **Configuration** tab of this add-on in the Home Assistant interface:
 
 ### Network
-Configure the connection to the door station. If not provided, the default value are used.
+Configure the connection to the doorbells. If not provided, the default values are used.
+Repeat the following configuration option for each doorbell:
 
-| Name          | Default       | Description                           |
+| Option        | Default       | Description                           |
 | --------      | ----          | ----                                  |
-| ip            | 192.168.0.70  | IP address of your outdoor station
-| username      | admin         | Username to access your outdoor station
-| password      | password      | Password to access your outdoor station
-| ip_indoor     | 192.168.0.80  | The IP address of your indoor station (optional, if available)
+| name          |               | Custom name for this doorbell
+| ip            |               | IP address of the doorbell
+| username      | admin         | Username to access the doorbell
+| password      |               | Password to access the doorbell
+
+#### Example config
+
+```yaml
+doorbells: 
+  - name: "Front door"
+    ip: 192.168.0.1
+    username: admin
+    password: password  
+  - name: "Rear door"
+    ip: 192.168.0.2
+    username: admin
+    password: password
+```
 
 ### Sensors
 Configure the name of the sensors that are created in Home Assistant.
@@ -29,21 +44,22 @@ Configure the name of the sensors that are created in Home Assistant.
 ### General
 The following settings are also available:
 
-```yaml
-system:
-  log_level: WARNING
-```
-
 | Name              | Default               | Description                           |
 | --------          | ----                  | ----                                  |
 | log_level         | WARNING               | The verbosity of the add-on logs. Available options: _ERROR_ _WARNING_ _INFO_ _DEBUG_
-
+| sdk_log_level     | NONE               | The verbosity of the Hikvision SDK logs. Available options: _NONE_ _ERROR_ _INFO_ _DEBUG_
+#### Example config
+```yaml
+system:
+  log_level: WARNING
+  sdk_log_level: NONE
+```
 
 ## Integrating with Home Assistant
 
 Create the template sensors in your `configuration.yaml`, following the example below.
 
-The state of each sensor is `on` for 1 second when triggered.
+When triggered, the state of each sensor is `on` for 1 second.
 
 The `sensor_door` exports as attributes the `door ID` that was opened as well the badge/key used.
 
@@ -67,72 +83,71 @@ template:
 
 ## Sending commands
 
-To open a door or reboot the door station, send a text message to the add-on via `stdin`. The available commands are:
+To open a door or reboot the door station, send a text message to the add-on via its `standard input`. You can use the built-in `hassio.addon_stdin` service provided by Home Assistant.
 
-| Command   | Description                                               |
-| --------  | ----                                                      |
-| unlock1   | Unlock the *first* door, if connected to the doorbell station output relay
-| unlock2   | Unlock the *second* door, if connected to the doorbell station output relay
-| reboot    | Reboot the door station
+The input string must be in the format
+```
+<command> <doorbell_name> <optional_parameter>
+```
+- `<command>` is one of:
+
+  | Command     | Description                                               |
+  | --------    | ----                                                      |
+  | unlock      | Unlock the specified door (`<optional_parameter>` must be `1` or `2`) connected to the doorbell station output relay
+  | reboot      | Reboot the specified  door station
+  | reject      | Reject the incoming call and stop the indoor stations from ringing
+  | request     | Unknown
+  | cancel      | Unknown
+  | answer      | Unknown
+  | reject      | Unknown
+  | bellTimeout | Unknown
+  | hangUp      | Unknown
+  | deviceOnCall| Unknown
+- `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
+
+  E.G.: If the doorbell is named `Front door`, the input string must reference it as `front_door`.
+
+- `<optional_parameter>` can be an additional string, used for instance to specify additional options for a command
 
 ### Example
-In the following code, `a53439b8_hikvision_sdk` is the unique add-on ID, check your local Home Assistant instance to correctly set it up.
+__Note__: In the following examples, `a53439b8_hikvision_doorbell` is the unique add-on ID, check your local Home Assistant instance and substitute it with your own local ID.
 
 For more details see the [official documentation]((https://www.home-assistant.io/integrations/hassio/#service-hassioaddon_stdin)) about the `hassio.addon_stdin` service.
 
 #### Unlock a door
-This service call unlocks door 1 connected to the output relay of the door station.
+This service unlocks the door connected to the _1st_ output relay of the door station named `Front door`:
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: a53439b8_hikvision_sdk
-  input: unlock1
+  addon: a53439b8_hikvision_doorbell
+  input: unlock front_door 1
 ````
 
 #### Reboot the device
+To reboot the doorbell named `Rear door`:
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: a53439b8_hikvision_sdk
-  input: reboot
+  addon: a53439b8_hikvision_doorbell
+  input: reboot rear_door
 ````
 
-### `callsignal` API
-
-The `callsignal` API is useful to reject the call.
-For example it might come in handy in tandem with a sensor monitoring the status of the front door. When someone presses the ring button on the doorbell, if the door is opened by hand without picking up the call, the below service rejects the call.
+#### Reject a call
+It might come in handy in tandem with a sensor monitoring the status of the front door. When someone presses the ring button on the doorbell, if the door is opened by hand without picking up the call, the below service rejects the call.
 All indoor stations including the Hik-Connect devices stop ringing.
 
-Available commands are:
-| Command     | Description                                               |
-| --------    | ----                                                      |
-| reject      | Reject the door, the indoor stations stop ringing
-| request     | Unknown
-| cancle      | Unknown
-| answer      | Unknown
-| reject      | Unknown
-| bellTimeout | Unknown
-| hangUp      | Unknown
-| deviceOnCall| Unknown
-
-#### Example
-
-N.B.: `a53439b8_hikvision_sdk` is an example of the add-on name, substitute with your own value.
-
-The `ip_indoor` configuration option is important for this to work.
-It has been tested on a `DS-KD8003` outdoor unit with indoor stations.
-The `callsignal` commands must be sent to the indoor station.
-If you do not have an indoor station, just setup `ip_indoor` with the same IP as the outdoor station, so the callsignal will be send to the outdoor unit.
+This example has been tested on a `DS-KD8003` outdoor unit with indoor stations named `Indoor unit`.
+This type of command must be sent to an indoor station only.
 
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: a53439b8_hikvision_sdk
-  input: reject
+  addon: a53439b8_hikvision_doorbell
+  input: reject indoor_unit
 ````
 
 ## Support
-If you find a bug or need support [open an issue here][issue] on GitHub.
+If you find a bug or need support [open an issue here](https://github.com/pergolafabio/Hikvision-Addons/issues/new) on GitHub.
 If required by the developers, please attach a copy of your logs in the issue to help us better diagnose the problem!
 
 ### Troubleshooting
@@ -142,6 +157,7 @@ You can increase the verbosity by changing the `system.log_level` configuration 
 ```yaml
 system:
   log_level: DEBUG
+  sdk_log_level: DEBUG
 ```
 
 *N.B.*: When the add-on connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. A reboot might be required.
