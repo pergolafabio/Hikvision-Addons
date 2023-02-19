@@ -146,7 +146,46 @@ class Doorbell():
         logger.debug("Response buffer: {}", buffer_p.value.decode("utf-8"))
         logger.debug("Response output: size: {}, value: {}", outputStruct.dwReturnedXMLSize, pszGetOutput.value.decode("utf-8"))
         if not result:
-            # print(HCNetSDK.NET_DVR_GetLastError())
+            logger.error("Result error: {}", self._sdk.NET_DVR_GetLastError())
+
+    def reboot_device(self):
+        inUrl = "PUT /ISAPI/System/reboot"
+        inPutBuffer = ""
+
+        szUrl = (c_char * 256)()
+        # Input information
+        inputStruct = NET_DVR_XML_CONFIG_INPUT()
+        inputStruct.dwSize = sizeof(inputStruct)
+
+        szGetOutput = (1024 * 1024)
+        pszGetOutput = (c_char * szGetOutput)()
+
+        csCommand = bytes(inUrl, "ascii")
+        inputStruct.lpRequestUrl = cast(c_char_p(csCommand), c_void_p)
+        inputStruct.dwRequestUrlLen = len(szUrl)
+
+        m_csInputParam = bytes(inPutBuffer, "ascii")
+
+        inputStruct.lpInBuffer = cast(c_char_p(m_csInputParam), c_void_p)
+        inputStruct.dwInBufferSize = len(m_csInputParam)
+        
+        # Output information
+        outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
+        outputStruct.dwSize = sizeof(outputStruct)
+        dwBufferLen = 1024 * 1024
+        pBuffer = (c_char * dwBufferLen)()
+
+        outputStruct.lpStatusBuffer = cast(pBuffer, c_void_p)
+        outputStruct.dwStatusSize = dwBufferLen
+
+        outputStruct.lpOutBuffer = cast(pszGetOutput, c_void_p)
+        outputStruct.dwOutBufferSize = szGetOutput
+
+        result = self._sdk.NET_DVR_STDXMLConfig(self.user_id, inputStruct, outputStruct)
+
+        logger.debug("Response buffer: {}", pBuffer.value.decode("utf-8"))
+        logger.debug("Response output: {}", pszGetOutput.value.decode("utf-8"))
+        if not result:
             logger.error("Result error: {}", self._sdk.NET_DVR_GetLastError())
 
     def __del__(self):
