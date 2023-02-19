@@ -26,7 +26,7 @@ Connect to you Hikvision IP doorbells to receive events (motion detection, incom
 
 ### Getting started
 
-See the documentation [here](hikvision-sdk/README.md).
+See the documentation [here](hikvision-doorbell/README.md).
 
 ## Hikvision Baresip client
 

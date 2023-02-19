@@ -1,6 +1,6 @@
 # Running the addon with Docker
 
-To manually build and run the container, run the following from the `hikvision-sdk` folder:
+To manually build and run the container, run the following from the `hikvision-doorbell` folder:
 
 - Build the image, specifying your architecture.
 For instance:

@@ -8,7 +8,7 @@ The current setup only works for x86/x64 system due to the HikVision SDK native 
 - (optional) A fresh [virtualenv](https://docs.python.org/3/library/venv.html) for this project
 
 ## Instructions
-After having cloned the repository, run the following commands from the `hikvision-sdk` directory.
+After having cloned the repository, run the following commands from the `hikvision-doorbell` directory.
 
 - Install the required packages
 ```bash

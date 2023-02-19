@@ -8,31 +8,21 @@
             "name": "Python: main.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/hikvision-sdk/src/main.py",
-            "cwd": "${workspaceFolder}/hikvision-sdk",
+            "program": "${workspaceFolder}/hikvision-doorbell/src/main.py",
+            "cwd": "${workspaceFolder}/hikvision-doorbell",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "envFile": "${workspaceFolder}/hikvision-sdk/development.env"
+            "envFile": "${workspaceFolder}/hikvision-doorbell/development.env"
         },
         {
             "name": "Python: hik.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/hikvision-sdk/src/hik.py",
-            "cwd": "${workspaceFolder}/hikvision-sdk",
+            "program": "${workspaceFolder}/hikvision-doorbell/src/hik.py",
+            "cwd": "${workspaceFolder}/hikvision-doorbell",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "envFile": "${workspaceFolder}/hikvision-sdk/development.env"
-        },
-        {
-            "name": "Python: doorbell_callback.py",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/hikvision-sdk/tests/doorbell_callback.py",
-            "cwd": "${workspaceFolder}/hikvision-sdk",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "envFile": "${workspaceFolder}/hikvision-sdk/development.env"
+            "envFile": "${workspaceFolder}/hikvision-doorbell/development.env"
         }
     ]
 }

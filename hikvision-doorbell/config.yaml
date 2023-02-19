@@ -1,8 +1,8 @@
 name: Hikvision Doorbell
 description: Connect your Hikvision doorbells to Home Assistant
 version: '2.1'
-slug: hikvision_sdk
-url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk
+slug: hikvision_doorbell
+url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-doorbell
 arch:
 - amd64
 - i386
