@@ -7,7 +7,6 @@ services:
         # Change this according to your architecture (so the correct native C libraries are used)
         - BUILD_ARCH=amd64
         # - BUILD_ARCH=aarch64
-        - BUILD_FROM=python:3.10.8-slim
       context: .
     env_file:
       # Create a copy of development.env.example and set your variables accordingly
