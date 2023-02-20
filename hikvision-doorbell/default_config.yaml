@@ -14,11 +14,11 @@ doorbells: []
 
 # Name of the sensors created inside Home Assistant
 sensors:
-  door: hikvision_door
-  callstatus: hikvision_callstatus
-  motion: hikvision_motion
-  tamper: hikvision_tamper
-  dismiss: hikvision_dismiss
+  door: door
+  callstatus: callstatus
+  motion: motion
+  tamper: tamper
+  dismiss: dismiss
 
 # Define the following options to enable the Home Assistant API integration
 # home_assistant:

@@ -34,15 +34,6 @@ async def main():
 
     doorbell_registry = Registry()
 
-    event_manager = EventManager(sdk, doorbell_registry)
-    console = ConsoleHandler()
-    event_manager.register_handler(console)
-
-    if config.home_assistant:
-        ha_api = HomeAssistantAPI(config.sensors, config.home_assistant)
-        event_manager.register_handler(ha_api)
-
-
     # Configure each doorbell
     for index, doorbell_config in enumerate(config.doorbells):
         doorbell = Doorbell(index, doorbell_config, sdk)
@@ -51,9 +42,18 @@ async def main():
         # Add the doorbell to the registry, indexed by ID
         doorbell_registry[index] = doorbell
 
+    event_manager = EventManager(sdk, doorbell_registry)
+    console = ConsoleHandler()
+    event_manager.register_handler(console)
+
+    if config.home_assistant:
+        ha_api = HomeAssistantAPI(config.sensors, config.home_assistant, doorbell_registry)
+        event_manager.register_handler(ha_api)
+
     # Start listening for events
     event_manager.start()
 
+    # Arm each doorbell
     for _, doorbell in doorbell_registry.items():
         doorbell.setup_alarm()
 
