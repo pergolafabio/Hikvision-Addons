@@ -1,6 +1,8 @@
 import asyncio
 from ctypes import c_void_p
+from typing_extensions import override
 from config import AppConfig
+from doorbell import Doorbell
 from event import EventHandler
 from sdk.hcnetsdk import NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
 from loguru import logger
@@ -39,13 +41,29 @@ class HomeAssistantAPI(EventHandler):
         except:
             logger.exception("Cannot update sensor")
 
-    async def motion_detection(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_ALARMINFO_V30, buffer_length, user_pointer: c_void_p):
-        logger.info("Motion detected, updating sensor {}", self._sensors['motion'])
+    @override
+    async def motion_detection(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARMINFO_V30,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.info("Motion detected from {}, updating sensor {}", doorbell._config.name, self._sensors['motion'])
         self.update_sensor(self._sensors['motion'], 'on')
         await asyncio.sleep(1)
         self.update_sensor(self._sensors['motion'], 'off')
 
-    async def video_intercom_event(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT, buffer_length, user_pointer: c_void_p):
+    @override
+    async def video_intercom_event(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT,
+            buffer_length,
+            user_pointer: c_void_p):
         if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
             logger.info("Door {} unlocked by {}, updating sensor {}",
                         alarm_info.uEventInfo.struUnlockRecord.wLockID,
@@ -64,7 +82,15 @@ class HomeAssistantAPI(EventHandler):
         else:
             logger.warning("Unhandled eventType: {}", alarm_info.byEventType)
 
-    async def video_intercom_alarm(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM, buffer_length, user_pointer: c_void_p):
+    @override
+    async def video_intercom_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM,
+            buffer_length,
+            user_pointer: c_void_p):
         if alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING:
             logger.info("Doorbell ringing, updating sensor {}", self._sensors['callstatus'])
             self.update_sensor(self._sensors['callstatus'], 'on')
@@ -85,5 +111,13 @@ class HomeAssistantAPI(EventHandler):
         else:
             logger.warning("Unhandled alarmType: {}", alarm_info.byAlarmType)
 
-    async def unhandled_event(self, command: int, device: NET_DVR_ALARMER, alarm_info_pointer, buffer_length, user_pointer: c_void_p):
+    @override
+    async def unhandled_event(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info_pointer,
+            buffer_length,
+            user_pointer: c_void_p):
         raise NotImplementedError

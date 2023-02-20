@@ -1,4 +1,5 @@
 from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
+import re
 
 BOOL = c_bool
 WORD = c_ushort
@@ -232,7 +233,9 @@ class NET_DVR_ALARMER(Structure):
     ]
 
     def serialNumber(self):
-        return "".join([str(number) for number in self.sSerialNumber[:]])
+        """Return the serial number as a string representation, removing the ending 0s"""
+        serial = "".join([str(number) for number in self.sSerialNumber[:]])
+        return re.sub(r"0*$", "", serial)
 
     def deviceName(self):
         return self.sDeviceName[:].decode('utf-8')
@@ -274,7 +277,9 @@ class NET_DVR_DEVICEINFO_V30(Structure):
     ]
 
     def serialNumber(self):
-        return "".join([str(number) for number in self.sSerialNumber[:]])
+        """Return the serial number as a string representation, removing the ending 0s"""
+        serial = "".join([str(number) for number in self.sSerialNumber[:]])
+        return re.sub(r"0*$", "", serial)
 
 
 class NET_DVR_DEVICEINFO_V40(Structure):

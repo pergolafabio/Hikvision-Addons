@@ -1,7 +1,9 @@
 """Manage events coming from the Hikvision devices"""
 import asyncio
 from ctypes import CDLL, CFUNCTYPE, POINTER, c_void_p, cast
+from typing_extensions import override
 from loguru import logger
+from doorbell import Doorbell, Registry
 
 from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, DWORD, LONG, NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, MessageCallbackAlarmInfoUnion
 
@@ -11,16 +13,44 @@ class EventHandler:
 
     name: str = 'BaseHandler'
 
-    async def motion_detection(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_ALARMINFO_V30, buffer_length, user_pointer: c_void_p):
+    async def motion_detection(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARMINFO_V30,
+            buffer_length,
+            user_pointer: c_void_p):
         raise NotImplementedError
 
-    async def video_intercom_event(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT, buffer_length, user_pointer: c_void_p):
+    async def video_intercom_event(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT,
+            buffer_length,
+            user_pointer: c_void_p):
         raise NotImplementedError
 
-    async def video_intercom_alarm(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM, buffer_length, user_pointer: c_void_p):
+    async def video_intercom_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM,
+            buffer_length,
+            user_pointer: c_void_p):
         raise NotImplementedError
 
-    async def unhandled_event(self, command: int, device: NET_DVR_ALARMER, alarm_info_pointer, buffer_length, user_pointer: c_void_p):
+    async def unhandled_event(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info_pointer,
+            buffer_length,
+            user_pointer: c_void_p):
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -30,23 +60,54 @@ class EventHandler:
 class ConsoleHandler(EventHandler):
     """Useful for debugging: it outputs each event it receives with the configured logger"""
     name = 'ConsoleSTDOUT'
-    
+
     def __init__(self) -> None:
         super().__init__()
         logger.info("Setting up event handler: Console stdout")
 
-    async def motion_detection(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_ALARMINFO_V30, buffer_length, user_pointer: c_void_p):
-        logger.info("Motion detected from {}", device.deviceIP())
+    @override
+    async def motion_detection(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARMINFO_V30,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.info("Motion detected from {}", doorbell._config.name)
 
-    async def video_intercom_event(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT, buffer_length, user_pointer: c_void_p):
-        logger.info("Video intercom event from {}", device.deviceIP())
+    @override
+    async def video_intercom_event(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.info("Video intercom event from {}", doorbell._config.name)
 
-    async def video_intercom_alarm(self, command: int, device: NET_DVR_ALARMER, alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM, buffer_length, user_pointer: c_void_p):
-        logger.info("Video intercom alarm from {}", device.deviceIP())
+    @override
+    async def video_intercom_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.info("Video intercom alarm from {}", doorbell._config.name)
 
-    async def unhandled_event(self, command: int, device: NET_DVR_ALARMER, alarm_info_pointer, buffer_length, user_pointer: c_void_p):
-        logger.warning("Unknown event from {}", device.deviceIP())
-
+    @override
+    async def unhandled_event(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info_pointer,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.warning("Unknown event from {}", doorbell._config.name)
 
 
 class EventManager:
@@ -60,8 +121,9 @@ class EventManager:
     _handlers: set[EventHandler] = set()
     _background_tasks = set()
 
-    def __init__(self, sdk: CDLL):
+    def __init__(self, sdk: CDLL, doorbells: Registry):
         self._sdk = sdk
+        self._doorbells = doorbells
         # Save a reference to the main asyncio loop to schedule from another thread
         self._async_loop = asyncio.get_running_loop()
 
@@ -77,7 +139,9 @@ class EventManager:
             logger.warning("Received unhandled command: {}", command)
             return callback_alarm_info_p
 
-    async def _invoke_handlers(self, command, device, alarm_info, buffer_length, user_pointer):
+    async def _invoke_handlers(self, command, device: NET_DVR_ALARMER, alarm_info, buffer_length, user_pointer):
+        # Match the device information from the callback with a Doorbell instance in the registry
+        doorbell = self._doorbells.getBySerialNumber(device.serialNumber())
         logger.debug("Invoking {} handlers", len(self._handlers))
         for handler in self._handlers:
 
@@ -93,8 +157,8 @@ class EventManager:
                     handler_func = handler.unhandled_event
 
             # Ignore type checking since it gets confused by the match-case statement above
-            task = asyncio.create_task(handler_func(command, device, alarm_info, buffer_length, user_pointer), name=handler.name) # type: ignore
-            
+            task = asyncio.create_task(handler_func(doorbell, command, device, alarm_info, buffer_length, user_pointer), name=handler.name)  # type: ignore
+
             # Add task to the set. This creates a strong reference, as instructed by asyncio
             self._background_tasks.add(task)
 

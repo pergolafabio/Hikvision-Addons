@@ -26,6 +26,8 @@ class Doorbell():
     _id: int
     '''Used internally to distinguish between multiple doorbells'''
     _type: DeviceType
+    _device_info: NET_DVR_DEVICEINFO_V30
+    '''Populated after authenticate method is invoked'''
 
     def __init__(self, id: int, config: AppConfig.Doorbell, sdk: CDLL):
         """
@@ -194,9 +196,10 @@ class Doorbell():
 
 class Registry(dict[int, Doorbell]):
 
-    def getBySerialNumber(self) -> Doorbell:
-        # TODO
-        pass
+    def getBySerialNumber(self, serial: str) -> Optional[Doorbell]:
+        for _, doorbell in self.items():
+            if serial in doorbell._device_info.serialNumber():
+                return doorbell
 
     def getFirstIndoor(self) -> Optional[Doorbell]:
         """Return the first indoor unit, if found in the registry"""

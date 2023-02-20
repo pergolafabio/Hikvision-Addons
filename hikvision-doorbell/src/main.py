@@ -32,7 +32,9 @@ async def main():
     }
     setupSDK(sdk, sdk_config)
 
-    event_manager = EventManager(sdk)
+    doorbell_registry = Registry()
+
+    event_manager = EventManager(sdk, doorbell_registry)
     console = ConsoleHandler()
     event_manager.register_handler(console)
 
@@ -40,7 +42,6 @@ async def main():
         ha_api = HomeAssistantAPI(config.sensors, config.home_assistant)
         event_manager.register_handler(ha_api)
 
-    doorbell_registry = Registry()
 
     # Configure each doorbell
     for index, doorbell_config in enumerate(config.doorbells):
