@@ -1,4 +1,4 @@
-<sip:7000@192.168.0.17>;auth_pass=1234;regint=60;answermode=auto
+<sip:7000@192.168.0.17>;auth_pass=1234;regint=60;answermode=auto;video_codecs=h264
 #
 # SIP accounts - one account per line
 #
