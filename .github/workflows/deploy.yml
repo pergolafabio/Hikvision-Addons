@@ -9,20 +9,28 @@ on:
 
 
 jobs:
+  # Remove the prefix `doorbell-v` from the Git tag and set it as output of this step
+  extract-version:
+    name: Extract version from tag
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+    steps:
+      - name: Extract version
+        id: extract_version
+        run: |
+          echo ${{ github.ref_name }} | sed -nr 's/doorbell-v(.*)/version=\1/p' >> $GITHUB_OUTPUT
+
   docker-image_amd64:
     name: Docker image (amd64)
     runs-on: ubuntu-latest
+    needs: ["extract-version"]
     permissions:
       packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      
-        # Remove the prefix `doorbell-v` from the Git tag and set it as output of this step
-      - name: Extract Docker tag
-        id: extract_docker_tag
-        run: |
-          echo ${{ github.ref_name }} | sed -nr 's/doorbell-v(.*)/version=\1/p' >> $GITHUB_OUTPUT
 
       - name: Docker metadata
         id: meta
@@ -36,15 +44,17 @@ jobs:
             # define match group
             type=match,pattern=doorbell-v(.*),group=1
           # Append architecture to generated tag
-          flavor:
+          # Disable latest tag
+          flavor: |
+            latest=false
             suffix=-amd64
           labels: |
             org.opencontainers.image.title=Hikvision Doorbell
             # Custom label required by Home Assistant supervisor
              #https://developers.home-assistant.io/docs/add-ons/configuration?_highlight=add&_highlight=on&_highlight=label#add-on-dockerfile
-            io.hass.version=${{ steps.extract_docker_tag.outputs.version }}
-            io.hass.type="addon"
-            io.hass.arch="amd64"
+            io.hass.version=${{ needs.extract-version.outputs.version }}
+            io.hass.type=addon
+            io.hass.arch=amd64
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -67,21 +77,19 @@ jobs:
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Disable provenance, since it creates problem with docker manifests
+          # https://github.com/docker/build-push-action/releases/tag/v4.0.0
+          provenance: false
 
   docker-image_aarch64:
     name: Docker image (aarch64)
     runs-on: ubuntu-latest
+    needs: ["extract-version"]
     permissions:
       packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      
-        # Remove the prefix `doorbell-v` from the Git tag and set it as output of this step
-      - name: Extract Docker tag
-        id: extract_docker_tag
-        run: |
-          echo ${{ github.ref_name }} | sed -nr 's/doorbell-v(.*)/version=\1/p' >> $GITHUB_OUTPUT
 
       - name: Docker metadata
         id: meta
@@ -95,15 +103,17 @@ jobs:
             # define match group
             type=match,pattern=doorbell-v(.*),group=1
           # Append architecture to generated tag
-          flavor:
+          # Disable latest tag
+          flavor: |
+            latest=false
             suffix=-aarch64
           labels: |
             org.opencontainers.image.title=Hikvision Doorbell
             # Custom label required by Home Assistant supervisor
              #https://developers.home-assistant.io/docs/add-ons/configuration?_highlight=add&_highlight=on&_highlight=label#add-on-dockerfile
-            io.hass.version=${{ steps.extract_docker_tag.outputs.version }}
-            io.hass.type="addon"
-            io.hass.arch="aarch64"
+            io.hass.version=${{ needs.extract-version.outputs.version }}
+            io.hass.type=addon
+            io.hass.arch=aarch64
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -126,11 +136,14 @@ jobs:
           platforms: linux/aarch64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Disable provenance, since it creates problem with docker manifests
+          # https://github.com/docker/build-push-action/releases/tag/v4.0.0
+          provenance: false
 
   update-manifest:
     name: Update Docker image manifest
     runs-on: ubuntu-latest
-    needs: [docker-image_amd64, docker-image_aarch64]
+    needs: [extract-version, docker-image_amd64, docker-image_aarch64]
     permissions:
       packages: write
     steps:
@@ -143,9 +156,7 @@ jobs:
 
       - name: Update image manifest and push it
         run: |
-          # Strip git ref prefix from version
-          VERSION=$(echo ${{ github.ref_name }} | sed -nr 's/doorbell-v(.*)/version=\1/p')
-
+          VERSION=${{ needs.extract-version.outputs.version }}
           echo VERSION=$VERSION
 
           # Create a single manifest from the two images
