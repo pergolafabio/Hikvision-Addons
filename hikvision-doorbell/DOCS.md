@@ -46,29 +46,12 @@ system:
 
 ## Integrating with Home Assistant
 
-Create the template sensors in your `configuration.yaml`, following the example below.
+Binary sensors are automatically when the Add-on is started .
 
-When triggered, the state of each sensor is `on` for 1 second.
+When triggered, the state of each binary sensor is `on` for 1 second.
 
-The `sensor_door` exports as attributes the `door ID` that was opened as well the badge/key used.
+The door sensor exports as attributes the `door ID` that was opened as well the badge/key used.
 
-### Example
-
-````yaml
-# configuration.yaml
-template:
-  - sensor:
-      - name: hikvision_door
-        state: "off"
-      - name: hikvision_callstatus
-        state: "off"
-      - name: hikvision_motion
-        state: "off"
-      - name: hikvision_tamper
-        state: "off"
-      - name: hikvision_dismiss
-        state: "off"
-````
 
 ## Sending commands
 
