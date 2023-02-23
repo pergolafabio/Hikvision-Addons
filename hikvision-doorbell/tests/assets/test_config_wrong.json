@@ -1,0 +1,24 @@
+{
+  "doorbells": [
+      {
+          "name": "test",
+          "ip": "192.168.0.1",
+          "username": "",
+          "password": ""
+      }
+  ],
+  "sensors": {
+      "door": "hikvision_door",
+      "callstatus": "hikvision_callstatus",
+      "motion": "hikvision_motion",
+      "tamper": "hikvision_tamper",
+      "dismiss": "hikvision_dismiss"
+  },
+  "home_assistant": {
+      "url": "http://supervisor/core"
+  },
+  "system": {
+      "log_level": "WARNING",
+      "sdk_log_level": "NONE"
+  }
+}

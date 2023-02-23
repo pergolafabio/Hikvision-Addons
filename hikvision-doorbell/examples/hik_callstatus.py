@@ -1,9 +1,12 @@
-from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_CALL_STATUS, NET_DVR_VIDEO_CALL_PARAM
-from ctypes import c_byte, sizeof, byref, c_char, memmove, cast, c_void_p, POINTER
+from ctypes import byref, sizeof
+
+from sdk.hcnetsdk import (NET_DVR_CALL_STATUS, NET_DVR_DEVICEINFO_V30,
+                          NET_DVR_VIDEO_CALL_PARAM)
+from sdk.utils import loadSDK
 
 # NET_DVR_GET_CALL_STATUS                  16034  
 # NET_DVR_SET_CALL_SIGNAL                  16036  
-
+HCNetSDK = loadSDK()
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 

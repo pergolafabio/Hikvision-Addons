@@ -1,36 +1,34 @@
-from unittest import expectedFailure
-from hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, \
+from sdk.hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM, fMessageCallBack, \
     COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_ALARMINFO_V30, \
     ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, \
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, \
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, NET_DVR_VIDEO_INTERCOM_EVENT, \
     VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT, \
-    NET_DVR_UNLOCK_RECORD_INFO, NET_DVR_CONTROL_GATEWAY, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT, setupSDK
-from ctypes import POINTER, cast, c_char_p, c_byte, sizeof, byref, memmove, c_void_p, c_char
+    NET_DVR_CONTROL_GATEWAY, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from ctypes import POINTER, cast, c_byte, sizeof, byref, memmove, c_void_p, c_char
 import requests
 import json
 import time
-from datetime import datetime
 import sys
-import os
-from config import validateConfig, loadConfig, SUPERVISOR_TOKEN
+from config import AppConfig
+from sdk.utils import loadSDK
 from loguru import logger
 
+config = AppConfig()  # type:ignore
+config.load()
 if __name__ == '__main__':
-    config = loadConfig()
-    validateConfig(config)
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
-    logger.add(sys.stdout, colorize=True, level=config['system']['log_level'])
+    logger.add(sys.stdout, colorize=True, level=config.system.log_level)
     logger.debug('Importing HIKVISION SDK')
-    HCNetSDK = setupSDK()
+    HCNetSDK = loadSDK()
     logger.debug("Hikvision SDK loaded")
 
-sensor_name_door = "sensor." + config["sensor_door"]
-sensor_name_callstatus = "sensor." + config["sensor_callstatus"]
-sensor_name_motion = "sensor." + config["sensor_motion"]
-sensor_name_tamper = "sensor." + config["sensor_tamper"]
-sensor_name_dismiss = "sensor." + config["sensor_dismiss"]
+sensor_name_door = "sensor." + config.sensors.door
+sensor_name_callstatus = "sensor." + config.sensors.callstatus
+sensor_name_motion = "sensor." + config.sensors.motion
+sensor_name_tamper = "sensor." + config.sensors.tamper
+sensor_name_dismiss = "sensor." + config.sensors.dismiss
 
 
 def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):
@@ -95,14 +93,14 @@ def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, us
         logger.warning("Unhandled command: {}", command)
 
 
-headers = {
-    'Authorization': f'Bearer {SUPERVISOR_TOKEN}'
-}
 
 
 def update_sensor(sensor_name: str, state: str, attr: dict = None):
     """ Update the sensor by invoking the Home Assistant HTTP API
     """
+    headers = {
+        'Authorization': f'Bearer {config.home_assistant.token}'
+    }
     data = {'state': state, 'attributes': attr}
     try:
         response = requests.post(url_states + sensor_name, headers=headers, json=data)
@@ -115,6 +113,9 @@ def update_sensor(sensor_name: str, state: str, attr: dict = None):
 
 ## Unused function
 def set_attribute(sensor_name, attribute, value):
+    headers = {
+        'Authorization': f'Bearer {config.home_assistant.token}'
+    }
     response = requests.get(url_states + sensor_name, headers=headers)
     msg = json.loads(response.text)
     msg['attributes'][attribute] = value
@@ -126,11 +127,12 @@ def set_attribute(sensor_name, attribute, value):
 url_states = "http://supervisor/core/api/states/"
 
 HCNetSDK.NET_DVR_Init()
+HCNetSDK.NET_DVR_SetLogToFile(3, bytes("/tmp/", 'utf8'), False)
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
 device_info = NET_DVR_DEVICEINFO_V30()
-user_id = HCNetSDK.NET_DVR_Login_V30(config["ip"].encode('utf-8'), 8000, config["username"].encode('utf-8'),
-                                     config["password"].encode('utf-8'), device_info)
+user_id = HCNetSDK.NET_DVR_Login_V30(config.doorbells[0].ip.encode('utf-8'), 8000, config.doorbells[0].username.encode('utf-8'),
+                                     config.doorbells[0].password.encode('utf-8'), device_info)
 
 # fix for segmentation faults, remove device info:
 
@@ -181,8 +183,8 @@ def callsignal(value):
     HCNetSDK.NET_DVR_SetValidIP(0, True)
     # For 8003 owners, send callsignal to indoor station!!!!
 
-    user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config["ip_indoor"].encode('utf-8'), 8000,
-                                                config["username"].encode('utf-8'), config["password"].encode('utf-8'))
+    user_id_indoor = HCNetSDK.NET_DVR_Login_V30(config.doorbells[1].ip.encode('utf-8'), 8000,
+                                                config.doorbells[1].username.encode('utf-8'), config.doorbells[1].password.encode('utf-8'), NET_DVR_DEVICEINFO_V30())
     if (user_id_indoor < 0):
         logger.error("NET_DVR_Login_V30 failed, error code = {}", HCNetSDK.NET_DVR_GetLastError())
 
@@ -313,6 +315,7 @@ def reboot_device():
 #        os.system("Success")
 #    else:
 #        os.system("Grab stream fail")
+
 
 loop = True
 while loop:

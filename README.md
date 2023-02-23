@@ -18,23 +18,19 @@
    </a>
 </p>
 
-This repository can be added to a Home Assistant installation. It provides the following add-ons:
+This repository can be added to an Home Assistant OS installation.
+It provides the following add-ons:
 
-## Hikvision Doorbell
+## [Hikvision Doorbell](hikvision-doorbell/README.md)
 
-Connect to you Hikvision IP doorbells to receive events (motion detection, incoming call, etc..) and relay back commands.
+Connect to you Hikvision IP doorbells to receive events (motion detection, incoming call, etc..) and relay back commands (reject call, open doors, etc...).
 
-### Getting started
+__Note__: This add-on can also run as a standalone Docker container, for HA installations without the add-on store. For more details see the relevant [documentation](hikvision-doorbell/docs/docker.md).
 
-See the documentation [here](hikvision-sdk/README.md).
+## [Hikvision Baresip client](hikvision-baresip/README.md)
 
-## Hikvision Baresip client
+Inject an RTSP video feed into an Asterisk conference.
 
-Useful for injecting RTSP video feed into an Asterisk conference.
-
-### Getting started
-
-See the documentation [here](hikvision-baresip/README.md).
 
 ## Donations
  Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).

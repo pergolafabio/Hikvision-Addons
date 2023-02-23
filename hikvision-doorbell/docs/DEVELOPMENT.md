@@ -1,4 +1,4 @@
-# Development guide (for x86/64 only)
+# Development guide
 
 The current setup only works for x86/x64 system due to the HikVision SDK native libraries used, and has been tested on a Linux OS (Linux Mint).
 
@@ -8,23 +8,23 @@ The current setup only works for x86/x64 system due to the HikVision SDK native 
 - (optional) A fresh [virtualenv](https://docs.python.org/3/library/venv.html) for this project
 
 ## Instructions
-After having cloned the repository, run the following commands from the `hikvision-sdk` directory.
+After having cloned the repository, run the following commands from the `hikvision-doorbell` directory.
 
 - Install the required packages
 ```bash
 pip install -r requirements.txt
 ```
 
-- Export the required environment variables to configure the software (see `config.py`)
+- Export the required environment variables to configure the software (see `development.env.example` for reference)
 ```bash
-export IP=192.168.0.100
-export USER=admin
-export PASSWORD=admin
+export DOORBELLS='[{"name":"outdoor", "ip": "192.168.0.1", "username": "user", "password": "password"}]'
+export HOME_ASSISTANT__URL=http://localhost:8123
+export HOME_ASSISTANT__TOKEN=<secret_token>
 ```
 
-- Run/Debug the application
+- Launch the application
 ```bash
-python hik.py
+python src/main.py
 ```
 
 ## VSCode

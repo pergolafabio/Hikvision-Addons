@@ -1,35 +1,31 @@
-from hcnetsdk import HCNetSDK, NET_DVR_DEVICEINFO_V30, NET_DVR_DEVICEINFO_V30, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
-from ctypes import c_byte, sizeof, byref, c_char, memmove, cast, c_void_p, POINTER
-import sys
+from ctypes import byref, c_byte, c_char, c_void_p, cast, memmove, sizeof
 
+from sdk.hcnetsdk import NET_DVR_DEVICEINFO_V30, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from sdk.utils import loadSDK
+
+# NET_DVR_GET_CALL_STATUS                  16034  
+# NET_DVR_SET_CALL_SIGNAL                  16036  
+HCNetSDK = loadSDK()
 HCNetSDK.NET_DVR_Init()
 HCNetSDK.NET_DVR_SetValidIP(0, True)
 
+device_info = NET_DVR_DEVICEINFO_V30()
 
-# For 8003 owners, send callsignal to indoor station!!!!
-user_id = HCNetSDK.NET_DVR_Login_V30( "192.168.0.71".encode('utf-8'), 8000, "admin".encode('utf-8'), "XXX".encode('utf-8'))
-  
+user_id = HCNetSDK.NET_DVR_Login_V30( "192.168.0.70".encode('utf-8'), 8000, "admin".encode('utf-8'), "XXX".encode('utf-8'), device_info)
+
 if (user_id < 0):
     print(
         f"NET_DVR_Login_V30 failed, error code = {HCNetSDK.NET_DVR_GetLastError()}")
     HCNetSDK.NET_DVR_Cleanup()
     exit(1)
 
-#inUrl = "GET /ISAPI/VideoIntercom/callSignal/capabilities?format=json"
-#inPutBuffer = ""
-# RESULTS :  ["answer", "reject", "bellTimeout", "hangUp", "deviceOnCall"]
+inUrl = "GET /ISAPI/VideoIntercom/callStatus?format=json"
+#inUrl = "GET /ISAPI/VideoIntercom/callStatus?format=json&channelType=tripartitePlatform"
+inPutBuffer = ""
 
-inUrl = "PUT /ISAPI/VideoIntercom/callSignal?format=json"
-inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\"}}"
+#inUrl = "PUT /ISAPI/AccessControl/RemoteControl/door/1"
+#inPutBuffer = "<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>"
 
-#optional , but not needed??
-#inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"periodNumber\": 1,\"buildingNumber\": 1,\"unitNumber\": 1,\"floorNumber\": 0,\"roomNumber\": 1,\"unitType\": \"villa\",\"coderType\":\"ezviz\", \"model\": 1}}"
-#inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"src\":{\"periodNumber\":1,\"buildingNumber\":1,\"unitNumber\":1,\"floorNumber\":0,\"roomNumber\":1}}}"
-
-#optional , but not needed??
-#inUrl = "DELETE /ISAPI/VideoIntercom/ring"
-#inPutBuffer = ""
-                    
 szUrl = (c_char * 256)()
 struInput = NET_DVR_XML_CONFIG_INPUT()
 struOuput = NET_DVR_XML_CONFIG_OUTPUT()
@@ -66,9 +62,9 @@ struOuput.dwOutBufferSize = szGetOutput
 
 result = HCNetSDK.NET_DVR_STDXMLConfig(user_id, byref(struInput), byref(struOuput))
 
-#print(result)
-#print(pBuffer.value)
-print(pszGetOutput.value.decode("utf-8") )
+print(result)
+print(pBuffer.value)
+print(pszGetOutput.value)
 
 if result == 0:
     print(HCNetSDK.NET_DVR_GetLastError())

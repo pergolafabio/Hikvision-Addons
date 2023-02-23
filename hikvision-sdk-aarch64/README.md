@@ -1,7 +1,7 @@
 Like my work? You can always send me a donation: https://paypal.me/pergolafabio
 
 # Home Assistant Add-on: Hikvision SDK for Door Intercoms (deprecated)
-## N.B.: From v2.0 this addon is deprecated, use the [multi-architecture addon](/hikvision-sdk)
+## N.B.: From v2.0 this addon is deprecated, use the [multi-architecture addon](/hikvision-doorbell)
 This addon was built specifically for `aarch64` architecture (RaspberryPi 4 with 64bit OS).
 From version 2.0 the addon has introduced multi-architecture support, so there is a single version for both `x86/64` and `aarch64`.
 

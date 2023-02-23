@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  doorbell:
+    build:
+      args:       
+        # Change this according to your architecture (so the correct native C libraries are used)
+        - BUILD_ARCH=amd64
+        # - BUILD_ARCH=aarch64
+      context: .
+    env_file:
+      # Create a copy of development.env.example and set your variables accordingly
+      - development.env
+    tty: true   # To read stdin commands
+    # network_mode: "host"
+
+  home-assistant:
+    container_name: home-assistant
+    image: homeassistant/home-assistant:2023.2
+    volumes:
+      - /etc/localtime:/etc/localtime:ro    # To use host local time
+    mem_limit: 600m
+    stop_grace_period: 5m
+    network_mode: host
+  
+  mosquitto:
+    image: eclipse-mosquitto:1.6
+    container_name: mosquitto
+    volumes:
+      - /etc/localtime:/etc/localtime:ro    # To use host local time
+    ports:
+      - 1883:1883
+      - 9001:9001

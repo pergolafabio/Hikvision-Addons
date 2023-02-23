@@ -1,11 +1,5 @@
-import platform
-import sys
-import os
-import logging
-import os.path
-from ctypes import cdll, CFUNCTYPE, Structure, POINTER, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_char_p, c_void_p, c_short, Union, sizeof, c_uint
-from loguru import logger
-
+from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
+import re
 
 BOOL = c_bool
 WORD = c_ushort
@@ -158,27 +152,6 @@ VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT = 5
 VIDEO_INTERCOM_EVENT_EVENTTYPE_DOOR_STATION_ISSUED_CARD_LOG = 6
 
 
-def setupSDK():
-    """Load the Hikvision SDK library and return it
-
-    Returns:
-       CDLL : The loaded library
-    """
-    logger.info(f"Using OS: {platform.uname()[0]} with architecture: {platform.uname()[4]}")
-
-    if platform.uname()[0] == "Windows":
-        hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
-    if platform.uname()[0] == "Linux":
-        if platform.uname()[4] == "x86_64":
-            hcnetsdk_path = os.path.join("lib-amd64", "libhcnetsdk.so")
-        elif platform.uname()[4] == "aarch64":
-            hcnetsdk_path = os.path.join("lib-aarch64", "libhcnetsdk.so")
-        else:
-            logger.error("No supported Linux library found!")
-
-    logger.debug(f"Loading library from {hcnetsdk_path}")
-    return cdll.LoadLibrary(hcnetsdk_path)
-
 class LPNET_DVR_DEVICE_INFO(Structure):
     _fields_ = [
         ("sSerialNumber", BYTE * SERIALNO_LEN),
@@ -259,9 +232,21 @@ class NET_DVR_ALARMER(Structure):
         ("byRes2", BYTE * 6)
     ]
 
+    def serialNumber(self):
+        """Return the serial number as a string representation, removing the ending 0s"""
+        serial = "".join([str(number) for number in self.sSerialNumber[:]])
+        return re.sub(r"0*$", "", serial)
+
+    def deviceName(self):
+        return self.sDeviceName[:].decode('utf-8')
+
+    def deviceIP(self):
+        return self.sDeviceIP[:].decode('utf-8')
+
+
 class NET_DVR_DEVICEINFO_V30(Structure):
     _fields_ = [
-        ("sSerialNumber", BYTE),
+        ("sSerialNumber", BYTE * SERIALNO_LEN),
         ("byAlarmInPortNum", BYTE),
         ("byAlarmOutPortNum", BYTE),
         ("byDiskNum", BYTE),
@@ -286,12 +271,15 @@ class NET_DVR_DEVICEINFO_V30(Structure):
         ("byLanguageType", BYTE),
         ("byVoiceInChanNum", BYTE),
         ("byStartVoiceInChanNo", BYTE),
-        ("bySupport5", BYTE),
-        ("bySupport6", BYTE),
+        ("byRes3", BYTE * 2),
         ("byMirrorChanNum", BYTE),
-        ("wStartMirrorChanNo", WORD),
-        ("byRes2", BYTE)
+        ("wStartMirrorChanNo", WORD)
     ]
+
+    def serialNumber(self):
+        """Return the serial number as a string representation, removing the ending 0s"""
+        serial = "".join([str(number) for number in self.sSerialNumber[:]])
+        return re.sub(r"0*$", "", serial)
 
 
 class NET_DVR_DEVICEINFO_V40(Structure):
@@ -344,21 +332,6 @@ class NET_DVR_SETUPALARM_PARAM_V50(Structure):
         ("byCustomCtrl", BYTE),
         ("byRes4", BYTE * 128),
     ]
-
-class NET_DVR_DEVICEINFO_V40(Structure):
-    _fields_ = [
-        ("struDeviceV30", NET_DVR_DEVICEINFO_V30),
-        ("bySupportLock", BYTE),
-        ("byRetryLoginTime", BYTE),
-        ("byPasswordLevel", BYTE),
-        ("byProxyType", BYTE),
-        ("dwSurplusLockTime", DWORD),
-        ("byCharEncodeType", BYTE),
-        ("bySupportDev5", BYTE),
-        ("byLoginMode", BYTE),
-        ("byRes2", BYTE * 253)
-    ]
-
 
 
 class NET_DVR_ALARMINFO_V30(Structure):
@@ -509,7 +482,7 @@ class NET_DVR_MIME_UNIT(Structure):
         ("szName", char * MAX_FILE_PATH_LEN),
         ("szFilename", char * MAX_FILE_PATH_LEN),
         ("dwContentLen", DWORD),
-        ("pContent", char),
+        ("pContent", c_char_p),
         ("byRes", BYTE * 16),
     ]
 
