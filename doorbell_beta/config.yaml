@@ -1,0 +1,40 @@
+name: Hikvision Doorbell (Beta)
+description: Capture events, open door, send callsignal based on SDK Hikvision (Beta version)
+version: '3.0.0-beta.2'
+image: ghcr.io/pergolafabio/hikvision-doorbell
+slug: hikvision_doorbell_beta
+url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell_beta
+arch:
+- amd64
+- i386
+- aarch64
+stage: experimental
+startup: application
+boot: auto
+stdin: true
+homeassistant_api: true
+
+# Default options when used as an HA add-on
+options:
+  doorbells:
+    - name: null
+      ip: null
+      username: admin
+      password: ""
+  home_assistant:
+    url: "http://supervisor/core"
+  system:
+    log_level: INFO
+    sdk_log_level: NONE
+
+schema:
+  doorbells:
+    - name: str
+      ip: str
+      username: str
+      password: str
+  home_assistant:
+    url: match(^http://supervisor/core$)
+  system:
+    log_level: match(^ERROR|WARNING|INFO|DEBUG$)
+    sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
