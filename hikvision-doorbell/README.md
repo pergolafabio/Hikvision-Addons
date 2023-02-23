@@ -42,9 +42,9 @@ This devices has been reported to be working from other HA users.
 If your device is not on the list, we are happy to include it. Just [open an issue here][issue] on GitHub and let us know the kind of device you have.
 
 - DS-KV8413
-- KD8003
+- DS-KD8003
 - DS-KV8113
-- KV8213
+- DS-KV8213
 - DS-KV6113
 
 ## Additional resources
