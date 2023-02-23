@@ -33,12 +33,6 @@ schema:
       ip: str
       username: str
       password: str
-  sensors:
-    door: str
-    callstatus: str
-    motion: str
-    tamper: str
-    dismiss: str
   home_assistant:
     url: match(^http://supervisor/core$)
   system:
