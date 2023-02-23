@@ -35,7 +35,7 @@ Configure the name of the sensors that are created in Home Assistant.
 
 | Name              | Default               | Description                           |
 | --------          | ----                  | ----                                  |
-| callstatus | callstatus  | Call status event
+| callstatus | callstatus  | Call status event (on when ringing)
 | dimiss     | dismiss     | Call dismissed event
 | motion     | motion      | Motion detection alarm
 | door       | door        | Door open event
@@ -57,6 +57,15 @@ system:
 
 ## Integrating with Home Assistant
 
+This add-on creates multiple sensors inside Home Assistant, each prefixed with the name of the doorbell it is part of.
+For instance a doorbell named `Front door` creates the sensor having ID `binary_sensor.front_door_callstatus`.
+
+A basic blueprint showing how to integrate the sensors in you automation is provided as part of this add-on.
+The automation displays a notification inside the Home Assistant UI.
+To import the blueprint in you Home Assistant installation, click the button:
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons%2Fblob%2Fdev%2Fblueprints%2Fdoorbell-ringing.yaml)
+
+<!-- ### Advanced configuration
 Create the template sensors in your `configuration.yaml`, following the example below.
 
 When triggered, the state of each sensor is `on` for 1 second.
@@ -79,7 +88,7 @@ template:
         state: "off"
       - name: hikvision_dismiss
         state: "off"
-````
+```` -->
 
 ## Sending commands
 
