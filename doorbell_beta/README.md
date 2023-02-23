@@ -41,6 +41,7 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 - Select the **Hikvision Doorbell (Beta)** add-on, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
 (The documentation can also be browsed online in the [Github repo](DOCS.md)).
+- When you have setup the required configuration options, click **START** to start the add-on
 
 ## Supported devices
 This devices has been reported to be working from other HA users.
