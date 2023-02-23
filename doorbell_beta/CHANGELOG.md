@@ -18,7 +18,7 @@ The addon has been completely __overhauled__, with lots of __new features__ and 
 - Handle __multiple doorbells__
     - Customize the __name__ of each doorbell
     - Automatic discovery of __doorbell type__ (indoor or outdoor) upon connection
-- Run the addon as a standalone __Docker container__, for Home Assistant installations without _supervisor_. (this feature is considered _experimental_ and still to be appropriately tested)
+- Run the addon as a standalone __Docker container__, for Home Assistant installations without _supervisor_. (this feature is considered _experimental_ and still to be appropriately tested. Feedback is welcome!)
     - Load __configuration__ from a JSON/YAML file or from environment variables
 - Configurable __system logs__
 - Events coming from the doorbells are written to the __console__, for easier debugging and troubleshooting
@@ -28,6 +28,7 @@ The addon has been completely __overhauled__, with lots of __new features__ and 
 
 ### Changed
 
+- Change the name of the addon to __Hikvision Doorbell__
 - Improved __documentation__ for both end users and developers
 - Changed the format of __input commands__ to: `<command> <doorbell_name> <optional_argument>`
   - The __name__ of the doorbell must be specified as part of the command
@@ -39,4 +40,4 @@ The addon has been completely __overhauled__, with lots of __new features__ and 
 
 ### Deprecated
 - Old __configuration options__
-- Remove __`aarch64`__ edition of the addon
+- Remove __`aarch64`__ folder of the deprecated addon
