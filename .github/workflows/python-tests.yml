@@ -12,6 +12,12 @@ on:
 permissions:
   contents: read
 
+# To cancel a currently running workflow from the same PR, branch or tag when a new workflow is triggered you can use:
+# Taken from https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -60,7 +66,7 @@ jobs:
           outputs: |
             type=docker,dest=/tmp/image.tar
           platforms: linux/amd64
-          tags: ${{github.repository_owner}}/hikvision-doorbell:latest
+          tags: hikvision-doorbell:latest
       
       - name: Upload image
         uses: actions/upload-artifact@v3
@@ -90,7 +96,7 @@ jobs:
           outputs: |
             type=docker,dest=/tmp/image.tar
           platforms: linux/arm64
-          tags: ${{github.repository_owner}}/hikvision-doorbell:latest
+          tags: hikvision-doorbell:latest
 
       - name: Upload image
         uses: actions/upload-artifact@v3
@@ -121,7 +127,7 @@ jobs:
           SYSTEM__LOG_LEVEL: DEBUG
           SYSTEM__SDK_LOG_LEVEL: DEBUG
         run: |
-          echo -n "" | docker run -i -e SYSTEM__LOG_LEVEL -e SYSTEM__SDK_LOG_LEVEL ${{github.repository_owner}}/hikvision-doorbell:latest
+          echo -n "" | docker run -i -e SYSTEM__LOG_LEVEL -e SYSTEM__SDK_LOG_LEVEL hikvision-doorbell:latest
 
   test-image-aarch64:
     runs-on: ubuntu-latest
@@ -177,4 +183,5 @@ jobs:
             docker image ls -a
             echo "Loaded image.tar"
 
-            echo -n "" | docker run -i -e SYSTEM__LOG_LEVEL -e SYSTEM__SDK_LOG_LEVEL ${{github.repository_owner}}/hikvision-doorbell:latest
+            echo -n "" | docker run -i -e SYSTEM__LOG_LEVEL -e SYSTEM__SDK_LOG_LEVEL hikvision-doorbell:latest
+
