@@ -3,7 +3,7 @@ description: Capture events, open door, send callsignal based on SDK Hikvision (
 version: '3.0.0-beta.1'
 image: ghcr.io/pergolafabio/hikvision-doorbell
 slug: hikvision_doorbell_beta
-url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk
+url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell_beta
 arch:
 - amd64
 - i386
