@@ -44,7 +44,7 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 
 ## Supported devices
 This devices has been reported to be working from other HA users.
-If your device is not on the list, we are happy to include it. Just [open an issue here][issue] on GitHub and let us know the kind of device you have.
+If your device is not on the list, we are happy to include it. Just [open an issue here](https://github.com/pergolafabio/Hikvision-Addons/issues) on GitHub and let us know the kind of device you have.
 
 - DS-KV8413
 - KD8003
