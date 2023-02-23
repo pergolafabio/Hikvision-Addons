@@ -1,6 +1,6 @@
 name: Hikvision Doorbell (Beta)
 description: Capture events, open door, send callsignal based on SDK Hikvision (Beta version)
-version: '3.0.0-beta.1'
+version: '3.0.0-beta.2'
 image: ghcr.io/pergolafabio/hikvision-doorbell
 slug: hikvision_doorbell_beta
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell_beta
@@ -21,12 +21,6 @@ options:
       ip: null
       username: admin
       password: ""
-  sensors:
-    door: door
-    callstatus: callstatus
-    motion: motion
-    tamper: tamper
-    dismiss: dismiss
   home_assistant:
     url: "http://supervisor/core"
   system:
@@ -39,12 +33,6 @@ schema:
       ip: str
       username: str
       password: str
-  sensors:
-    door: str
-    callstatus: str
-    motion: str
-    tamper: str
-    dismiss: str
   home_assistant:
     url: match(^http://supervisor/core$)
   system:
