@@ -4,7 +4,7 @@ The current setup only works for x86/x64 system due to the HikVision SDK native 
 
 ## Requirements
 
-- Python 3.8
+- Python 3.10
 - (optional) A fresh [virtualenv](https://docs.python.org/3/library/venv.html) for this project
 
 ## Instructions
@@ -49,3 +49,19 @@ Inside the _devcontainer_ use the task `Start Home Assistant` to bootstrap the H
 The local instance is accessible under `http://localhost:7123/`.
 
 The addon should be visible in the add-on store.
+
+## Release
+The release process is automated using Github Actions.
+See the [workflow file](/.github/workflows/deploy.yml) for the definition of the automated steps.
+
+The manual steps to publish a new release are as follows:
+1. `git checkout` the branch containing the release code
+2. Update the `CHANGELOG.md` file as appropriate 
+   
+   Update the `config.yaml`->`version` to point to the new version
+3. `git commit` the changes
+3. `git tag` using the format `<name of the addon>-<version number>`
+    
+    e.g: `git tag doorbell-v3.0.0` to release version `3.0.0` of the addon `doorbell`
+4. `git push --tags` to push the tags to the repository and start the automatic release process
+
