@@ -26,6 +26,9 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 
 ## Getting started
 
+- __NOTE__: To use this _beta_ version, enable __Advanced mode__ in you Home Assistant profile:
+   - Click on you user name (in the lower-right corner of Home Assistant UI)
+   - Scroll down the profile page and toggle __Advanced Mode__
 - Add this repository on your local Home Assistance instance by clicking the following button:
 <p align="center">
     <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons">
