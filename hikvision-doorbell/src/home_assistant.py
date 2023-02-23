@@ -1,5 +1,6 @@
 import asyncio
 from ctypes import c_void_p
+import re
 from typing import Any, TypedDict
 from typing_extensions import override
 from config import AppConfig
@@ -21,8 +22,8 @@ import requests
 
 
 def sanitize_doorbell_name(doorbell_name: str) -> str:
-    """Given a doorbell name, lowercase it and substitute spaces with underscore"""
-    return doorbell_name.lower().replace(" ", "_")
+    """Given a doorbell name, lowercase it and substitute whitespaces and `-` with `_`"""
+    return re.sub(r"\s|-", "_", doorbell_name.lower())
 
 
 class Sensor(TypedDict):
