@@ -11,6 +11,7 @@ from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DV
 class DeviceType(IntEnum):
     OUTDOOR = 603
     INDOOR = 602
+    VillaVTO = 605
 
 
 class Doorbell():

@@ -71,7 +71,8 @@ class HomeAssistantAPI(EventHandler):
 
         # For each outdoor doorbell, initialize the sensors inside HA
         for doorbell in doorbells.values():
-            if not doorbell._type == DeviceType.OUTDOOR:
+            # Skip if we have an indoor unit, since it does not support all the events for now
+            if doorbell._type == DeviceType.INDOOR:
                 continue
             for name, sensor in self._sensors.items():
                 doorbell_name = doorbell._config.name
