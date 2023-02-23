@@ -181,4 +181,5 @@ class HomeAssistantAPI(EventHandler):
             alarm_info_pointer,
             buffer_length,
             user_pointer: c_void_p):
-        raise NotImplementedError
+        # Do nothing if we receive an unknown event
+        pass
