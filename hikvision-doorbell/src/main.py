@@ -47,7 +47,7 @@ async def main():
     event_manager.register_handler(console)
 
     if config.home_assistant:
-        ha_api = HomeAssistantAPI(config.sensors, config.home_assistant, doorbell_registry)
+        ha_api = HomeAssistantAPI(config.home_assistant, doorbell_registry)
         event_manager.register_handler(ha_api)
 
     # Start listening for events

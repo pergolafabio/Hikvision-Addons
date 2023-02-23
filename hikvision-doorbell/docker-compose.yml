@@ -12,7 +12,7 @@ services:
       # Create a copy of development.env.example and set your variables accordingly
       - development.env
     tty: true   # To read stdin commands
-    # network_mode: "host"
+    network_mode: "host"
 
   home-assistant:
     container_name: home-assistant
