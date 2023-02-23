@@ -12,5 +12,5 @@ Some of the biggest improvements are:
     - Load configuration from a JSON/YAML file or from environment variables
 - Configurable system logs
 - New beta channel to test pre-release versions of the addon
-- Automated testing using Github Actions
+- Automated testing and release using Github Actions
 - Improved documentation for both end users and developers
