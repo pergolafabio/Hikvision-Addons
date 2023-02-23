@@ -30,17 +30,6 @@ doorbells:
     password: password
 ```
 
-### Sensors
-Configure the name of the sensors that are created in Home Assistant.
-
-| Name              | Default               | Description                           |
-| --------          | ----                  | ----                                  |
-| callstatus | callstatus  | Call status event (on when ringing)
-| dimiss     | dismiss     | Call dismissed event
-| motion     | motion      | Motion detection alarm
-| door       | door        | Door open event
-| tamper     | tamper      | Tamper alarm
-
 ### General
 The following settings are also available:
 
