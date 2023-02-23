@@ -7,13 +7,6 @@
           "password": ""
       }
   ],
-  "sensors": {
-      "door": "hikvision_door",
-      "callstatus": "hikvision_callstatus",
-      "motion": "hikvision_motion",
-      "tamper": "hikvision_tamper",
-      "dismiss": "hikvision_dismiss"
-  },
   "home_assistant": {
       "url": "http://supervisor/core",
       "token": "test_token"

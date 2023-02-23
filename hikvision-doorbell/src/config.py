@@ -33,13 +33,6 @@ class AppConfig(GoodConf):
         username: str
         password: str
 
-    class Sensors(BaseModel):
-        door: str
-        callstatus: str
-        motion: str
-        tamper: str
-        dismiss: str
-
     class HomeAssistant(BaseModel):
         url: AnyHttpUrl = Field(description="Base url of Home Assistant")
         # Cannot load directly SUPERVISOR_TOKEN env variable here, since it is not supported by Pydantic
@@ -67,7 +60,6 @@ class AppConfig(GoodConf):
             return level
 
     doorbells: list[Doorbell] = Field(description="List of doorbells to connect to")
-    sensors: Sensors
     home_assistant: Optional[HomeAssistant]
     system: System
 
