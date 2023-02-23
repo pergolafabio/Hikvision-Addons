@@ -19,6 +19,7 @@ services:
     image: homeassistant/home-assistant:2023.2
     volumes:
       - /etc/localtime:/etc/localtime:ro    # To use host local time
+      - ../blueprints:/config/blueprints/automation/    # Test local blueprints
     mem_limit: 600m
     stop_grace_period: 5m
     network_mode: host
