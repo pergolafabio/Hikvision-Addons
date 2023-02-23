@@ -35,7 +35,7 @@ class HomeAssistantAPI(EventHandler):
     name = "HomeAssistantAPI"
     _sensors: dict[str, Sensor] = {}
 
-    def __init__(self, sensors: AppConfig.Sensors, config: AppConfig.HomeAssistant, doorbells: Registry) -> None:
+    def __init__(self, config: AppConfig.HomeAssistant, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: Home Assistant API")
 
@@ -43,27 +43,27 @@ class HomeAssistantAPI(EventHandler):
         self._doorbells = doorbells
 
         self._sensors['door'] = Sensor(
-            name=sensors.door,
+            name="door",
             type="binary_sensor",
             attributes={"device_class": "door"}
         )
         self._sensors['callstatus'] = Sensor(
-            name=sensors.callstatus,
+            name="callstatus",
             type="binary_sensor",
             attributes={"device_class": "sound"}
         )
         self._sensors['motion'] = Sensor(
-            name=sensors.motion,
+            name="motion",
             type="binary_sensor",
             attributes={"device_class": "motion"}
         )
         self._sensors['tamper'] = Sensor(
-            name=sensors.tamper,
+            name='tamper',
             type="binary_sensor",
             attributes={"device_class": "tamper"}
         )
         self._sensors['dismiss'] = Sensor(
-            name=sensors.dismiss,
+            name='dismiss',
             type="binary_sensor",
             attributes={}
         )

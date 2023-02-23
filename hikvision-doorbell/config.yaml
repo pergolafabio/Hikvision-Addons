@@ -21,12 +21,6 @@ options:
       ip: null
       username: admin
       password: ""
-  sensors:
-    door: door
-    callstatus: callstatus
-    motion: motion
-    tamper: tamper
-    dismiss: dismiss
   home_assistant:
     url: "http://supervisor/core"
   system:

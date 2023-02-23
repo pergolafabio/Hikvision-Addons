@@ -12,14 +12,6 @@ doorbells: []
 #     username: admin
 #     password: password
 
-# Name of the sensors created inside Home Assistant
-sensors:
-  door: door
-  callstatus: callstatus
-  motion: motion
-  tamper: tamper
-  dismiss: dismiss
-
 # Define the following options to enable the Home Assistant API integration
 # home_assistant:
 #   url: http://localhost:8123
