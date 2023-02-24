@@ -1,8 +1,9 @@
 import asyncio
+import json
 import sys
 from loguru import logger
 
-from doorbell import Registry
+from doorbell import Doorbell, Registry
 
 
 async def connect_stdin():
@@ -35,6 +36,19 @@ class InputReader():
             command_sanitized = command.replace('"', "")
             logger.debug("Received: {}", command_sanitized)
             self.execute_command(command_sanitized)
+
+    def _send_callsignal(self, doorbell: Doorbell, command: str):
+        url = "/ISAPI/VideoIntercom/callSignal?format=json"
+        requestBody = {
+            "CallSignal": {
+                "cmdType": command
+            }
+        }
+        try:
+            doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+        except RuntimeError:
+            # Ignore error to avoid crashing application
+            pass
 
     def execute_command(self, command: str):
         # Split the input string in various parts
@@ -72,25 +86,25 @@ class InputReader():
                 doorbell.unlock_door(doorNumber - 1)
             case "answer":
                 logger.info("Answering the call")
-                doorbell.call_signal("answer")
+                self._send_callsignal(doorbell, "answer")
             case "reject":
                 logger.info("Rejecting the call")
-                doorbell.call_signal("reject")
+                self._send_callsignal(doorbell, "reject")
             case "cancel":
                 logger.info("Cancelling the call")
-                doorbell.call_signal("cancle")
+                self._send_callsignal(doorbell, "cancle")
             case "hangUp":
                 logger.info("Hanging up the call")
-                doorbell.call_signal("hangUp")
+                self._send_callsignal(doorbell, "hangUp")
             case "request":
                 logger.info("Requesting call")
-                doorbell.call_signal("request")
+                self._send_callsignal(doorbell, "request")
             case "bellTimeout":
                 logger.info("Bell timeout")
-                doorbell.call_signal("bellTimeout")
+                self._send_callsignal(doorbell, "bellTimeout")
             case "deviceOnCall":
                 logger.info("Device on call")
-                doorbell.call_signal("deviceOnCall")
+                self._send_callsignal(doorbell, "deviceOnCall")
             case "reboot":
                 logger.info("Rebooting door station")
                 doorbell.reboot_device()

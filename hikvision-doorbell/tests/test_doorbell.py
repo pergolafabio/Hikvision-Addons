@@ -1,11 +1,12 @@
 import json
 import os
+import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Generator
+
+import pytest
 from config import AppConfig
 from doorbell import Doorbell
-from sdk.utils import loadSDK, setupSDK, shutdownSDK, SDKConfig, SDKLogLevel
-import pytest
+from sdk.utils import SDKConfig, SDKLogLevel, loadSDK, setupSDK, shutdownSDK
 
 
 @pytest.fixture
@@ -47,3 +48,12 @@ class TestDoorbell:
     def test_reboot(self, doorbell: Doorbell):
         doorbell.authenticate()
         doorbell.reboot_device()
+    
+    def test_call_isapi(self, doorbell: Doorbell):
+        doorbell.authenticate()
+        result = doorbell._call_isapi("GET", "/ISAPI/System/IO/outputs")
+        assert len(result) != 0
+
+        root = ET.fromstring(result)
+        
+        assert 'IOOutputPortList' in root.tag
