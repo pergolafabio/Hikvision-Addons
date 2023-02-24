@@ -55,7 +55,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 
 ## Additional resources
 - [Add-on documentation](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell_beta/DOCS.md)
-- [Development documentation](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell_beta/docs)
+- [Development documentation](https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-sdk/docs)
 - [Home Assistant community forum](https://community.home-assistant.io/t/add-on-hikvision-doorbell-integration/532796)
 
 ## Contributing
