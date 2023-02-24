@@ -48,8 +48,8 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-KV6113
 
 ## Additional resources
-- [Add-on documentation](DOCS.md)
-- [Development documentation](docs/)
+- [Add-on documentation](https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sdk/DOCS.md)
+- [Development documentation](https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-sdk/docs)
 - [Home Assistant community forum](https://community.home-assistant.io/t/add-on-hikvision-doorbell-integration/532796)
 
 ## Contributing
