@@ -1,5 +1,5 @@
 
-from ctypes import CDLL, POINTER, c_char_p, c_int, c_void_p, cdll
+from ctypes import CDLL, POINTER, c_char_p, c_int, c_long, c_void_p, cdll
 from ctypes.wintypes import LPVOID
 from enum import IntEnum
 import os
@@ -66,12 +66,13 @@ def setupFunctionTypes(lib: CDLL):
     # Arguments
     lib.NET_DVR_Login_V30.argtypes = [c_char_p, WORD, c_char_p, c_char_p, POINTER(NET_DVR_DEVICEINFO_V30)]
     lib.NET_DVR_Logout_V30.argtypes = [c_int]
+    lib.NET_DVR_GetErrorMsg.argtypes = [POINTER(c_long)]
     lib.NET_DVR_SetDVRMessageCallBack_V50.argtypes = [c_int, fMessageCallBack, c_void_p]
     lib.NET_DVR_SetupAlarmChan_V50.argtypes = [LONG, NET_DVR_SETUPALARM_PARAM_V50, c_char_p, DWORD]
     lib.NET_DVR_RemoteControl.argtypes = [LONG, DWORD, c_void_p, DWORD]
     lib.NET_DVR_STDXMLConfig.argtypes = [LONG, POINTER(NET_DVR_XML_CONFIG_INPUT), POINTER(NET_DVR_XML_CONFIG_OUTPUT)]
     # Return types
-    # lib.NET_DVR_Login_V30.restype = LONG
+    lib.NET_DVR_GetErrorMsg.restype = c_char_p
 
 
 def setupSDK(sdk: CDLL, config: Optional[SDKConfig] = None):
@@ -101,3 +102,23 @@ def shutdownSDK(sdk: CDLL):
     """Release the resources held by the SDK"""
     logger.debug("Shutting down SDK")
     sdk.NET_DVR_Cleanup()
+
+
+class SDKError(RuntimeError):
+    """
+    This exception should be appropriately trapped and explained to the user where it is raised.
+    """
+    def __init__(self, sdk: CDLL, user_message: str, *args: object) -> None:
+        """Base exception class for error generating from the SDK API
+        
+        Use the `user_message` parameter to a user-friendly message that will be printed out along with the error.
+        It automatically extracts the error code and message from the SDK.
+        This class sets the `error_code` and `error_message` as a tuple inside its `args` property.
+        """
+        super().__init__(*args)
+        error_code = sdk.NET_DVR_GetLastError()
+        error_message: str = sdk.NET_DVR_GetErrorMsg(c_long(error_code)).decode('utf-8')
+        
+        # Prepend the three parameters to the rest of the tuple in args
+        self.args = (user_message, error_code, error_message, *self.args)
+        

@@ -3,6 +3,7 @@ import sys
 from loguru import logger
 
 from doorbell import Registry
+from sdk.utils import SDKError
 
 
 async def connect_stdin():
@@ -34,7 +35,10 @@ class InputReader():
             # Remove double quotes if found in the input string
             command_sanitized = command.replace('"', "")
             logger.debug("Received: {}", command_sanitized)
-            self.execute_command(command_sanitized)
+            try:
+                self.execute_command(command_sanitized)
+            except SDKError as e:
+                logger.error(f"Command failed: {e.args}")
 
     def execute_command(self, command: str):
         # Split the input string in various parts
@@ -49,7 +53,7 @@ class InputReader():
 
         # We expected at least a second argument: doorbell_name
         if not len(arguments) > 1:
-            logger.error("Please provide the doorbell name")
+            logger.error("Please provide the doorbell name in addition to the command")
             return
 
         # Get the doorbell by name from the registry

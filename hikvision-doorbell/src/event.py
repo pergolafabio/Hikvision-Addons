@@ -6,6 +6,7 @@ from loguru import logger
 from doorbell import Doorbell, Registry
 
 from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, DWORD, LONG, NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, MessageCallbackAlarmInfoUnion
+from sdk.utils import SDKError
 
 
 class EventHandler:
@@ -208,4 +209,4 @@ class EventManager:
             self.callback_func,
             None)
         if not result:
-            raise RuntimeError(f"SDK returned error code {self._sdk.NET_DVR_GetLastError()}")
+            raise SDKError(self._sdk, "Error while setting up event manager")

@@ -5,7 +5,7 @@ from config import AppConfig
 from doorbell import Doorbell, Registry
 from event import ConsoleHandler, EventManager
 from home_assistant import HomeAssistantAPI
-from sdk.utils import SDKConfig, loadSDK, setupSDK, shutdownSDK
+from sdk.utils import SDKConfig, SDKError, loadSDK, setupSDK, shutdownSDK
 from loguru import logger
 
 from input import InputReader
@@ -38,7 +38,6 @@ async def main():
     for index, doorbell_config in enumerate(config.doorbells):
         doorbell = Doorbell(index, doorbell_config, sdk)
         doorbell.authenticate()
-
         # Add the doorbell to the registry, indexed by ID
         doorbell_registry[index] = doorbell
 
@@ -82,4 +81,11 @@ def signal_handler(task: asyncio.Task):
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except SDKError as e:
+        # Define a global error handler for SDKErrors, to print them out in a user-friendly manner:
+        # <user_message> <sdk_message> <sdk_code>
+        user_message, sdk_code, sdk_message = e.args
+        logger.error("{}: {} Error code:{}", user_message, sdk_message, sdk_code)
+        sys.exit(1)

@@ -6,6 +6,7 @@ from typing import Optional
 from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from sdk.utils import SDKError
 
 
 class DeviceType(IntEnum):
@@ -52,8 +53,7 @@ class Doorbell():
             self._device_info
         )
         if self.user_id < 0:
-            # TODO raise exception
-            raise RuntimeError(f"SDK error code {self._sdk.NET_DVR_GetLastError()}")
+            raise SDKError(self._sdk, f"Error while logging into {self._config.name}")
 
         try:
             self._type = DeviceType(self._device_info.wDevType)
@@ -77,7 +77,7 @@ class Doorbell():
         alarm_handle = self._sdk.NET_DVR_SetupAlarmChan_V50(
             self.user_id, alarm_param, None, 0)
         if alarm_handle < 0:
-            raise RuntimeError(f"Error code {self._sdk.NET_DVR_GetLastError()}")
+            raise SDKError(self._sdk, f"Error while listening to events in {self._config.name}")
 
     def logout(self):
         logout_result = self._sdk.NET_DVR_Logout_V30(self.user_id)
@@ -96,7 +96,7 @@ class Doorbell():
 
         result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
         if not result:
-            raise RuntimeError(f"SDK returned error {self._sdk.NET_DVR_GetLastError()}")
+            raise SDKError(self._sdk)
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
@@ -149,7 +149,7 @@ class Doorbell():
         logger.debug("Response buffer: {}", buffer_p.value.decode("utf-8"))
         logger.debug("Response output: size: {}, value: {}", outputStruct.dwReturnedXMLSize, pszGetOutput.value.decode("utf-8"))
         if not result:
-            logger.error("Result error: {}", self._sdk.NET_DVR_GetLastError())
+            raise SDKError(self._sdk)
 
     def reboot_device(self):
         inUrl = "PUT /ISAPI/System/reboot"
@@ -189,7 +189,7 @@ class Doorbell():
         logger.debug("Response buffer: {}", pBuffer.value.decode("utf-8"))
         logger.debug("Response output: {}", pszGetOutput.value.decode("utf-8"))
         if not result:
-            logger.error("Result error: {}", self._sdk.NET_DVR_GetLastError())
+            raise SDKError(self._sdk)
 
     def __del__(self):
         self.logout()
