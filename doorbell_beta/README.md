@@ -27,8 +27,11 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 ## Getting started
 
 - __NOTE__: To use this _beta_ version, enable __Advanced mode__ in you Home Assistant profile:
-   - Click on you user name (in the lower-right corner of Home Assistant UI)
+   - Click on you user name (in the lower-left corner of Home Assistant UI)
    - Scroll down the profile page and toggle __Advanced Mode__
+     <p>
+     <img src="https://user-images.githubusercontent.com/4510647/221361317-a9076a72-9762-4320-8302-24414e6019f2.png" width="600">
+     </p>
 - Click the following button to automatically open the add-on in you Home Assistance UI:
    <p align="center">
       <a href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell_beta&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons" target="_blank">
