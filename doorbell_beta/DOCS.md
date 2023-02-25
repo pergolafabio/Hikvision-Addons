@@ -107,8 +107,13 @@ The input string must be in the format
 
 - `<optional_parameter>` can be an additional string, used for instance to specify additional options for a command
 
+### Testing
+To manually call the `hassio.addon_stdin` service (useful for testing and diagnosing issues), you can click the following button:
+
+<a href="https://my.home-assistant.io/redirect/developer_call_service/?service=hassio.addon_stdin" target="_blank"><img src="https://my.home-assistant.io/badges/developer_call_service.svg" alt="Open your Home Assistant instance and show your service developer tools with a specific service selected." /></a>
+
 ### Example
-__Note__: In the following examples, `a53439b8_hikvision_doorbell` is the unique add-on ID, check your local Home Assistant instance and substitute it with your own local ID.
+__Note__: In the following examples, `aff2db71_hikvision_doorbell_beta` is the unique add-on ID, check your local Home Assistant instance and substitute it with your own local ID.
 
 For more details see the [official documentation]((https://www.home-assistant.io/integrations/hassio/#service-hassioaddon_stdin)) about the `hassio.addon_stdin` service.
 
@@ -117,7 +122,7 @@ This service unlocks the door connected to the _1st_ output relay of the door st
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: a53439b8_hikvision_doorbell
+  addon: aff2db71_hikvision_doorbell_beta
   input: unlock front_door 1
 ````
 
@@ -126,7 +131,7 @@ To reboot the doorbell named `Rear door`:
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: a53439b8_hikvision_doorbell
+  addon: aff2db71_hikvision_doorbell_beta
   input: reboot rear_door
 ````
 
@@ -140,7 +145,7 @@ This type of command must be sent to an indoor station only.
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: a53439b8_hikvision_doorbell
+  addon: aff2db71_hikvision_doorbell_beta
   input: reject indoor_unit
 ````
 
