@@ -12,7 +12,6 @@ services:
       # Create a copy of development.env.example and set your variables accordingly
       - development.env
     tty: true   # To read stdin commands
-    network_mode: "host"
 
   home-assistant:
     container_name: home-assistant
@@ -20,15 +19,21 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro    # To use host local time
       - ../blueprints:/config/blueprints/automation/    # Test local blueprints
+      - config:/config
     mem_limit: 600m
     stop_grace_period: 5m
-    network_mode: host
+    ports:
+      - 8123:8123
   
   mosquitto:
-    image: eclipse-mosquitto:1.6
+    image: eclipse-mosquitto
     container_name: mosquitto
     volumes:
       - /etc/localtime:/etc/localtime:ro    # To use host local time
+      - ./tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
     ports:
       - 1883:1883
       - 9001:9001
+
+volumes:
+  config: {}

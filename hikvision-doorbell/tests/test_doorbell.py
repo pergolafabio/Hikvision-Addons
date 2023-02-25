@@ -53,6 +53,18 @@ class TestDoorbell:
         root = ET.fromstring(result)
 
         assert 'IOOutputPortList' in root.tag
+    
+    def test_get_num_outputs(self, doorbell: Doorbell):
+        doorbell.authenticate()
+        outputs = doorbell.get_num_outputs()
+        print(outputs)
+        assert outputs is not None
+    
+    def test_get_device_info(self, doorbell: Doorbell):
+        doorbell.authenticate()
+        info = doorbell.get_device_info()
+        print(info)
+        assert info is not None
 
     def test_reboot(self, doorbell: Doorbell):
         # This test reboots the doorbell!

@@ -6,6 +6,7 @@ from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
 from sdk.utils import SDKError
+import xml.etree.ElementTree as ET
 
 
 class DeviceType(IntEnum):
@@ -169,6 +170,21 @@ class Doorbell():
 
         return outputBuffer.value.decode("utf-8")
 
+    def get_num_outputs(self) -> int:
+        """Get the number of output relays configured for this doorbell"""
+        xml_string = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
+
+        root = ET.fromstring(xml_string)
+        if 'IOOutputPortList' not in root.tag:
+            raise RuntimeError(f'Unexpected XML response tag: {root.tag}')
+
+        return len(root)
+
+    def get_device_info(self):
+        """Retrieve device information (model, sw version, etc) using the ISAPI endpoint. Returned the parsed XML document"""
+        xml_string = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
+        return ET.fromstring(xml_string)
+        
     def __del__(self):
         self.logout()
 

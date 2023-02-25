@@ -5,6 +5,8 @@ from config import AppConfig
 from doorbell import Doorbell, Registry
 from event import ConsoleHandler, EventManager
 from home_assistant import HomeAssistantAPI
+from mqtt import MQTTHandler
+from mqtt_input import MQTTInput
 from sdk.utils import SDKConfig, SDKError, loadSDK, setupSDK, shutdownSDK
 from loguru import logger
 
@@ -45,10 +47,16 @@ async def main():
     console = ConsoleHandler()
     event_manager.register_handler(console)
 
-    if config.home_assistant:
-        ha_api = HomeAssistantAPI(config.home_assistant, doorbell_registry)
-        event_manager.register_handler(ha_api)
+    # if config.home_assistant:
+    #     ha_api = HomeAssistantAPI(config.home_assistant, doorbell_registry)
+    #     event_manager.register_handler(ha_api)
 
+    # Add MQTT message handler
+    mqtt = MQTTHandler(doorbell_registry)
+    event_manager.register_handler(mqtt)
+
+    mqtt_input = MQTTInput(doorbell_registry)
+    
     # Start listening for events
     event_manager.start()
 
