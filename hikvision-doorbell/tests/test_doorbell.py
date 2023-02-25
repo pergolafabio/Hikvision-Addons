@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Generator
 from config import AppConfig
 from doorbell import Doorbell
-from sdk.utils import loadSDK, setupSDK, shutdownSDK, SDKConfig, SDKLogLevel
+from sdk.utils import SDKError, loadSDK, setupSDK, shutdownSDK, SDKConfig, SDKLogLevel
 import pytest
 
 
@@ -45,5 +45,6 @@ class TestDoorbell:
         doorbell.setup_alarm()
 
     def test_reboot(self, doorbell: Doorbell):
+        # This test reboots the doorbell!
         doorbell.authenticate()
         doorbell.reboot_device()

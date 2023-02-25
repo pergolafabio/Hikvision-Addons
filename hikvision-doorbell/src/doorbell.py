@@ -188,8 +188,10 @@ class Doorbell():
 
         logger.debug("Response buffer: {}", pBuffer.value.decode("utf-8"))
         logger.debug("Response output: {}", pszGetOutput.value.decode("utf-8"))
-        if not result:
-            raise SDKError(self._sdk)
+        
+        # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
+        if not result and self._sdk.NET_DVR_GetLastError() != 10:
+            raise SDKError(self._sdk, "Error while rebooting device")
 
     def __del__(self):
         self.logout()
