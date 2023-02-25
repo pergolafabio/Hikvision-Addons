@@ -29,15 +29,18 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 - __NOTE__: To use this _beta_ version, enable __Advanced mode__ in you Home Assistant profile:
    - Click on you user name (in the lower-right corner of Home Assistant UI)
    - Scroll down the profile page and toggle __Advanced Mode__
-- Add this repository on your local Home Assistance instance by clicking the following button:
-<p align="center">
-    <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons">
-        <img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.">
-    </a>
-</p>
-
-- Confirm the **Manage add-on repositories** dialog by clicking **ADD**.
-- **Hikvision Doorbell (Beta)** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
+- Click the following button to automatically open the add-on in you Home Assistance UI:
+   <p align="center">
+      <a href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell_beta&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons" target="_blank">
+         <img src="https://my.home-assistant.io/badges/supervisor_addon.svg" alt="Open your Home Assistant instance and show the dashboard of a Supervisor add-on." />
+      </a>
+   </p>
+   
+   If you are having problems, here are the manual steps:
+   - Open you Home Assistance interface, and navigate to _Settings_ -> _Add-ons_ -> _Add-on store_ -> _Repositories_ (in the upper-right corner)
+   - Paste the following URL in the input field: `https://github.com/pergolafabio/Hikvision-Addons`
+   - Confirm the dialog by clicking **ADD**.
+   - **Hikvision Doorbell (Beta)** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
 - Select the **Hikvision Doorbell (Beta)** add-on, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
 (The documentation can also be browsed online in the [Github repo](DOCS.md)).
