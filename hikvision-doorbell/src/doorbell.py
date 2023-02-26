@@ -163,7 +163,6 @@ class Doorbell():
         if not result:
             # The response status is populated only in case of error
             logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8"))
-            logger.error("SDK error: {}", self._sdk.NET_DVR_GetLastError())
             raise SDKError(self._sdk, "Error while calling ISAPI endpoint")
         
         logger.debug("Response output: {}", outputBuffer.value.decode("utf-8"))

@@ -106,12 +106,10 @@ class MQTTHandler(EventHandler):
     def door_switch_callback(self, client, user_data: tuple[Doorbell, Switch, int], message: MQTTMessage):
         doorbell, switch, door_id = user_data
         command = message.payload.decode("utf-8")
-        logger.debug("Received command from Home Assistant: {}", command)
+        logger.debug("Received command: {}, door_id: {}, doorbell: {}", command, door_id, doorbell._config.name)
         match command:
             case "ON":
-                doorbell.unlock_door(door_id)                  
-            case "OFF":
-                pass
+                doorbell.unlock_door(door_id)
     
     @override
     async def motion_detection(

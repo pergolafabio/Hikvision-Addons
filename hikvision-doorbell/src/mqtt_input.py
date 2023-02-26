@@ -1,12 +1,13 @@
-
-from doorbell import DeviceType, Registry
-from ha_mqtt_discoverable import Settings, DeviceInfo, Discoverable, EntityInfo, EntityType
+import json
+from doorbell import DeviceType, Doorbell, Registry
+from ha_mqtt_discoverable import (DeviceInfo, Discoverable, EntityInfo, EntityType, Settings)
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo
-from paho.mqtt.client import MQTTMessage
 from home_assistant import sanitize_doorbell_name
 from loguru import logger
-
 from mqtt import extract_device_info
+from paho.mqtt.client import MQTTMessage
+
+from sdk.utils import SDKError
 
 
 class MQTTInput():
@@ -29,9 +30,9 @@ class MQTTInput():
                 object_id=f"{sanitized_doorbell_name}_reboot")
             settings = Settings(mqtt=mqtt_settings, entity=button_info)
             reboot_button = Button(settings)
-            reboot_button.set_callback(self._reboot_callback)
+            reboot_button.set_callback(self._reboot_callback, doorbell)
             
-            # Consider only indoor units
+            # Consider only indoor units for the next sensors
             if doorbell._type is not DeviceType.INDOOR:
                 continue
 
@@ -44,12 +45,27 @@ class MQTTInput():
                 object_id=f"{sanitized_doorbell_name}_reject_call")
             settings = Settings(mqtt=mqtt_settings, entity=button_info)
             reboot_button = Button(settings)
-            reboot_button.set_callback(self._reject_call_callback)
+            reboot_button.set_callback(self._reject_call_callback,  doorbell)
 
-    def _reboot_callback(self, client, user_data, message: MQTTMessage):
-        command = message.payload.decode("utf-8")
-        logger.debug("Received command from Home Assistant: {}", command)
+    def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.debug("Received reboot command for doorbell: {}", doorbell._config.name)
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell.reboot_device()
+        except SDKError as err:
+            logger.error("Error while rebooting device: {}", err)
+        
+    def _reject_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.debug("Received reject command for doorbell: {}", doorbell._config.name)
 
-    def _reject_call_callback(self, client, user_data, message: MQTTMessage):
-        command = message.payload.decode("utf-8")
-        logger.debug("Received command from Home Assistant: {}", command)
+        url = "/ISAPI/VideoIntercom/callSignal?format=json"
+        requestBody = {
+            "CallSignal": {
+                "cmdType": "reject"
+            }
+        }
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+        except SDKError as err:
+            logger.error("Error while rejecting call: {}", err)
