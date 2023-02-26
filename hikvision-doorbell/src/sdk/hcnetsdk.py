@@ -1,4 +1,5 @@
 from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
+from enum import Enum
 import re
 
 BOOL = c_bool
@@ -150,6 +151,12 @@ VIDEO_INTERCOM_EVENT_EVENTTYPE_ANNOUNCEMENT_READING_RECEIPT = 2
 VIDEO_INTERCOM_EVENT_EVENTTYPE_AUTHENTICATION_LOG = 3
 VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT = 5
 VIDEO_INTERCOM_EVENT_EVENTTYPE_DOOR_STATION_ISSUED_CARD_LOG = 6
+
+
+class DeviceCapabilityType(Enum):
+    DEVICE_VIDEOPIC_ABILITY = 0x00e
+    DEVICE_NETAPP_ABILITY = 0x00d
+    DEVICE_ABILITY_INFO = 0x011
 
 
 class LPNET_DVR_DEVICE_INFO(Structure):

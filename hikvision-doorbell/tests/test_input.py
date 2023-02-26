@@ -40,7 +40,7 @@ def test_callsignal_command(mocker: MockerFixture):
     reader.execute_command(command)
     mocked_registry.getByName.assert_called_once_with("doorbell")
     mocked_doorbell = mocked_registry.getByName('doorbell')
-    mocked_doorbell.call_signal.assert_called_once_with("answer")
+    mocked_doorbell._call_isapi.assert_called_once_with('PUT', '/ISAPI/VideoIntercom/callSignal?format=json', '{"CallSignal": {"cmdType": "answer"}}')
 
 
 def test_reboot_command(mocker: MockerFixture):

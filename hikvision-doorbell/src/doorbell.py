@@ -1,6 +1,5 @@
 from ctypes import CDLL, byref, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
 from enum import IntEnum
-import json
 import re
 from typing import Optional
 from loguru import logger
@@ -96,102 +95,79 @@ class Doorbell():
 
         result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
         if not result:
-            raise SDKError(self._sdk)
+            raise SDKError(self._sdk, "Error while invoking NET_DVR_RemoteControl API")
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
-    def call_signal(self, command: str):
-        inUrl = "PUT /ISAPI/VideoIntercom/callSignal?format=json"
-        requestBody = {
-            "CallSignal": {
-                "cmdType": command
-            }
-        }
-        logger.debug("Request body: {}", json.dumps(requestBody))
-
-        # optional , but not needed??
-        # inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"periodNumber\": 1,\"buildingNumber\": 1,\"unitNumber\": 1,\"floorNumber\": 0,\"roomNumber\": 1,\"unitType\": \"villa\",\"coderType\":\"ezviz\", \"model\": 1}}"
-        # inPutBuffer = "{\"CallSignal\":{\"cmdType\":\"reject\",\"src\":{\"periodNumber\":1,\"buildingNumber\":1,\"unitNumber\":1,\"floorNumber\":0,\"roomNumber\":1}}}"
-
-        # Input information
-        inputStruct = NET_DVR_XML_CONFIG_INPUT()
-
-        szUrl = (c_char * 256)()
-
-        csCommand = bytes(inUrl, "ascii")
-        inputStruct.lpRequestUrl = cast(c_char_p(csCommand), c_void_p)
-        inputStruct.dwRequestUrlLen = len(szUrl)
-
-        m_csInputParam = bytes(json.dumps(requestBody), "ascii")
-
-        inputStruct.lpInBuffer = cast(c_char_p(m_csInputParam), c_void_p)
-        inputStruct.dwInBufferSize = len(m_csInputParam)
-
-        inputStruct.dwSize = sizeof(inputStruct)
-
-        # Output information
-        outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
-        outputBufferLength = 1024 * 1024
-        buffer_p = (c_char * outputBufferLength)()
-        outputStruct.lpStatusBuffer = cast(buffer_p, c_void_p)
-        outputStruct.dwStatusSize = outputBufferLength
-
-        szGetOutput = (1024 * 1024)
-        pszGetOutput = (c_char * szGetOutput)()
-
-        outputStruct.lpOutBuffer = cast(pszGetOutput, c_void_p)
-        outputStruct.dwOutBufferSize = szGetOutput
-        outputStruct.dwSize = sizeof(outputStruct)
-
-        # Invoke the device API
-        result = self._sdk.NET_DVR_STDXMLConfig(self.user_id, inputStruct, outputStruct)
-
-        logger.debug("Response buffer: {}", buffer_p.value.decode("utf-8"))
-        logger.debug("Response output: size: {}, value: {}", outputStruct.dwReturnedXMLSize, pszGetOutput.value.decode("utf-8"))
-        if not result:
-            raise SDKError(self._sdk)
-
     def reboot_device(self):
-        inUrl = "PUT /ISAPI/System/reboot"
-        inPutBuffer = ""
+        # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
+        try:
+            self._call_isapi("PUT", "/ISAPI/System/reboot")
+        except SDKError as err:
+            # If error code is 10 (NET_DVR_NETWORK_RECV_TIMEOUT) suppress it,
+            error_code = err.args[1]
+            if error_code != 10:
+                # It is another kind of error, thrown it
+                raise err
 
-        szUrl = (c_char * 256)()
+    def _call_isapi(self, http_method: str, url: str, requestBody: str = "") -> str:
+        """Call the ISAPI endpoints using the SDK.
+        
+        Args:
+            http_method: HTTP method to use (e.g. GET, POST, PUT)
+            url: The URL to invoke. Must start with `/ISAPI`
+            requestBody: optional request body
+        Returns:
+            str: The response message as a string
+        """
+        # Build the HTTP request string
+        # e.g.: `GET /ISAPI/System/IO/outputs`
+        inUrl = f"{http_method} {url}"
+
+        logger.debug("Request body: {}", requestBody)
+
         # Input information
         inputStruct = NET_DVR_XML_CONFIG_INPUT()
+
+        urlSize = (c_char * 256)()
+
+        requestUrlBuffer = bytes(inUrl, "ascii")
+        inputStruct.lpRequestUrl = cast(c_char_p(requestUrlBuffer), c_void_p)
+        inputStruct.dwRequestUrlLen = len(urlSize)
+
+        inputBuffer = bytes(requestBody, "ascii")
+
+        inputStruct.lpInBuffer = cast(c_char_p(inputBuffer), c_void_p)
+        inputStruct.dwInBufferSize = len(inputBuffer)
+
         inputStruct.dwSize = sizeof(inputStruct)
 
-        szGetOutput = (1024 * 1024)
-        pszGetOutput = (c_char * szGetOutput)()
-
-        csCommand = bytes(inUrl, "ascii")
-        inputStruct.lpRequestUrl = cast(c_char_p(csCommand), c_void_p)
-        inputStruct.dwRequestUrlLen = len(szUrl)
-
-        m_csInputParam = bytes(inPutBuffer, "ascii")
-
-        inputStruct.lpInBuffer = cast(c_char_p(m_csInputParam), c_void_p)
-        inputStruct.dwInBufferSize = len(m_csInputParam)
-        
         # Output information
         outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
+        outputBufferSize = 1024 * 1024
+        responseStatusBuffer = (c_char * outputBufferSize)()
+        outputStruct.lpStatusBuffer = cast(responseStatusBuffer, c_void_p)
+        outputStruct.dwStatusSize = outputBufferSize
+
+        outputSize = (1024 * 1024)
+        outputBuffer = (c_char * outputSize)()
+
+        outputStruct.lpOutBuffer = cast(outputBuffer, c_void_p)
+        outputStruct.dwOutBufferSize = outputSize
         outputStruct.dwSize = sizeof(outputStruct)
-        dwBufferLen = 1024 * 1024
-        pBuffer = (c_char * dwBufferLen)()
 
-        outputStruct.lpStatusBuffer = cast(pBuffer, c_void_p)
-        outputStruct.dwStatusSize = dwBufferLen
-
-        outputStruct.lpOutBuffer = cast(pszGetOutput, c_void_p)
-        outputStruct.dwOutBufferSize = szGetOutput
-
+        # Invoke the ISAPI API
         result = self._sdk.NET_DVR_STDXMLConfig(self.user_id, inputStruct, outputStruct)
 
-        logger.debug("Response buffer: {}", pBuffer.value.decode("utf-8"))
-        logger.debug("Response output: {}", pszGetOutput.value.decode("utf-8"))
+        if not result:
+            # The response status is populated only in case of error
+            logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8"))
+            logger.error("SDK error: {}", self._sdk.NET_DVR_GetLastError())
+            raise SDKError(self._sdk, "Error while calling ISAPI endpoint")
         
-        # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
-        if not result and self._sdk.NET_DVR_GetLastError() != 10:
-            raise SDKError(self._sdk, "Error while rebooting device")
+        logger.debug("Response output: {}", outputBuffer.value.decode("utf-8"))
+
+        return outputBuffer.value.decode("utf-8")
 
     def __del__(self):
         self.logout()
