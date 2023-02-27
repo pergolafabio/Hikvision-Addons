@@ -69,9 +69,11 @@ class MQTTHandler(EventHandler):
                 object_id=f"{sanitized_doorbell_name}_motion",
                 off_delay=1)
 
-            settings = Settings(mqtt=mqtt_settings, entity=motion_sensor_info)
+            settings = Settings(mqtt=mqtt_settings, entity=motion_sensor_info, manual_availability=True)
             motion_sensor = BinarySensor(settings)
             motion_sensor.off()
+            motion_sensor.set_availability(True)
+
             self._sensors[doorbell]['motion'] = motion_sensor
             ##################
             # Call state
@@ -82,9 +84,10 @@ class MQTTHandler(EventHandler):
                 object_id=f"{sanitized_doorbell_name}_call_state",
                 icon="mdi:bell")
 
-            settings = Settings(mqtt=mqtt_settings, entity=call_sensor_info)
+            settings = Settings(mqtt=mqtt_settings, entity=call_sensor_info, manual_availability=True)
             call_sensor = Sensor(settings)
             call_sensor.set_state("idle")
+            call_sensor.set_availability(True)
             self._sensors[doorbell]['call'] = call_sensor
             ##################
             # Create switch for output relays used to open doors
@@ -97,14 +100,14 @@ class MQTTHandler(EventHandler):
                     unique_id=f"{sanitized_doorbell_name}_door_relay_{door_id}",
                     device=device,
                     object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
-                settings = Settings(mqtt=mqtt_settings, entity=door_switch_info)
-                door_switch = Switch(settings)
+                settings = Settings(mqtt=mqtt_settings, entity=door_switch_info, manual_availability=True)
+                door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
                 door_switch.off()
-                door_switch.set_callback(self.door_switch_callback, (doorbell, door_switch, door_id))
+                door_switch.set_availability(True)
                 self._sensors[doorbell][f'door_{door_id}'] = door_switch
 
-    def door_switch_callback(self, client, user_data: tuple[Doorbell, Switch, int], message: MQTTMessage):
-        doorbell, switch, door_id = user_data
+    def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
+        doorbell, door_id = user_data
         command = message.payload.decode("utf-8")
         logger.debug("Received command: {}, door_id: {}, doorbell: {}", command, door_id, doorbell._config.name)
         match command:

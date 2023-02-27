@@ -28,9 +28,9 @@ class MQTTInput():
                 device_class="restart",
                 device=device,
                 object_id=f"{sanitized_doorbell_name}_reboot")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info)
-            reboot_button = Button(settings)
-            reboot_button.set_callback(self._reboot_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            reboot_button = Button(settings, self._reboot_callback, doorbell)
+            reboot_button.set_availability(True)
             
             # Consider only indoor units for the next sensors
             if doorbell._type is not DeviceType.INDOOR:
@@ -43,9 +43,10 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_reject_call",
                 device=device,
                 object_id=f"{sanitized_doorbell_name}_reject_call")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info)
-            reboot_button = Button(settings)
-            reboot_button.set_callback(self._reject_call_callback,  doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            reject_button = Button(settings, self._reject_call_callback, doorbell)
+            reject_button.set_availability(True)
+
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.debug("Received reboot command for doorbell: {}", doorbell._config.name)
