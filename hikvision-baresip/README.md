@@ -214,7 +214,7 @@ In the dialplan below you see i have created a while loop... Before the loop i d
 I use linhome in example below, you can also use linphone, they both do early media... they also have a free flexisip server, so no need to open ports in your router to Asterisk... Another advantage, flexisip allows multiple contacts on the same account, so you have early video on all of them...! Linhome is easy to setup, everything is preconfigured, if you use linphone, make sure to enable push and early media in the settings...
 
 ```
-#### Setup this in extensions.conf:
+#### Setup this in extensions.conf, make sure to add it in the [default] section!
 
 exten => 10000000005,1,NoOp()
  same => n,Progress()
@@ -243,7 +243,7 @@ exten => 7002,1,NoOp()
  same => n,Set(CALLERID(name)=DS-KD8003) 
  same => n,Set(COUNT=1)
  same => n,While($[ ${COUNT} < 60 ])
- same => n,Set(DIALGROUP(mygroup,add)=PJSIP/USER1@sip.linhome.org)
+ same => n,Set(DIALGROUP(mygroup,add)=PJSIP/outgoing/USER1@sip.linhome.org)
  same => n,Dial(${DIALGROUP(mygroup)},60) 
  same => n,Set(HANGUPCAUSEKEYS=${HANGUPCAUSE_KEYS()})
  same => n,Set(HANGUP_CAUSE=${HANGUPCAUSE})
