@@ -318,7 +318,7 @@ video_mode=first_marked
 
 ```
 
-## MOTES: Multiple doorbells? Multiple cameras?
+## NOTES: Multiple doorbells? Multiple cameras?
 In the 10000000005 dialplan i send a command to the baresip console client to call 70001. In the config file as described above, the rtsp stream configured... But if you want tos etup multiple trunks, for multiple doorbells, and you have another incoming call, we need to change the rtsp source... The httpd module has an optio to send /vidsrc... So in 10000000005 dialplan, right before the curl to 7001, add another curl to change source
 
 This needs to be sended:
