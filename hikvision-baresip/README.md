@@ -243,8 +243,7 @@ exten => 7002,1,NoOp()
  same => n,Set(CALLERID(name)=DS-KD8003) 
  same => n,Set(COUNT=1)
  same => n,While($[ ${COUNT} < 60 ])
- same => n,Set(DIALGROUP(mygroup,add)=PJSIP/outgoing/USER1@sip.linhome.org)
- same => n,Dial(${DIALGROUP(mygroup)},60) 
+ same => n,Dial(PJSIP/outgoing/sip:USER1@sip.linhome.org)  
  same => n,Set(HANGUPCAUSEKEYS=${HANGUPCAUSE_KEYS()})
  same => n,Set(HANGUP_CAUSE=${HANGUPCAUSE})
  same => n,Verbose(2, HANGUP_CAUSE=${HANGUPCAUSE})
@@ -317,7 +316,24 @@ type=bridge
 max_members=10
 video_mode=first_marked
 
+```
+
+## MOTES: Multiple doorbells? Multiple cameras?
+In the 10000000005 dialplan i send a command to the baresip console client to call 70001. In the config file as described above, the rtsp stream configured... But if you want tos etup multiple trunks, for multiple doorbells, and you have another incoming call, we need to change the rtsp source... The httpd module has an optio to send /vidsrc... So in 10000000005 dialplan, right before the curl to 7001, add another curl to change source
+
+This needs to be sended:
 
 ```
+/vidsrc avformat,rtsp://admin:XXX@192.168.0.70:554/Streaming/Channels/101
+```
+
+But it needs to be encoded, use this link for it: https://www.url-encode-decode.com/ 
+
+So the curl becomes:
+```
+curl http://localhost:8000/?%2Fvidsrc%20avformat%2Crtsp%3A%2F%2Fadmin%3AXXX%40192.168.0.70%3A554%2FStreaming%2FChannels%2F101
+```
+
+
 
 Like my work? You can always send me a donation: https://paypal.me/pergolafabio
