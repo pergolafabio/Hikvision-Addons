@@ -12,6 +12,7 @@ from sdk.hcnetsdk import (
     NET_DVR_VIDEO_INTERCOM_ALARM,
     NET_DVR_VIDEO_INTERCOM_EVENT,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL,
+    VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM,
@@ -68,7 +69,11 @@ class HomeAssistantAPI(EventHandler):
             type="binary_sensor",
             attributes={}
         )
-
+        self._sensors['alarm'] = Sensor(
+            name='alarm',
+            type="binary_sensor",
+            attributes={"device_class": "door"}
+        )
         # For each outdoor doorbell, initialize the sensors inside HA
         for doorbell in doorbells.values():
             # Skip if we have an indoor unit, since it does not support all the events for now
@@ -168,8 +173,24 @@ class HomeAssistantAPI(EventHandler):
             self.update_sensor(doorbell._config.name, self._sensors['tamper'], 'on')
             await asyncio.sleep(1)
             self.update_sensor(doorbell._config.name, self._sensors['tamper'], 'off')
-        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
-            logger.info("Door not closed alarm")
+        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN or VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
+            logger.info("Alarm {} detected on lock {}, updating sensor {}",
+                        alarm_info.uAlarmInfo,
+                        alarm_info.wLockID,
+                        self._sensors['alarm'])
+            additional_attributes = {
+                'AlarmInfo': alarm_info.uAlarmInfo,
+                'AlarmType': alarm_info.byAlarmType,
+                'LockID': alarm_info.wLockID
+            }
+            # Add additional attributes to the sensor
+            original_attributes = self._sensors['alarm']['attributes']
+            self._sensors['alarm']['attributes'] = original_attributes | additional_attributes
+            self.update_sensor(doorbell._config.name, self._sensors['alarm'], 'on')
+            await asyncio.sleep(1)
+            # Revert back to original attributes
+            self._sensors['alarm']['attributes'] = original_attributes
+            self.update_sensor(doorbell._config.name, self._sensors['alarm'], 'off')
         else:
             logger.warning("Unhandled alarmType: {}", alarm_info.byAlarmType)
 
