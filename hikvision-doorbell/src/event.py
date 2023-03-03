@@ -5,7 +5,7 @@ from typing_extensions import override
 from loguru import logger
 from doorbell import Doorbell, Registry
 
-from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, DWORD, LONG, NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, MessageCallbackAlarmInfoUnion
+from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, DWORD, LONG, NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, NET_DVR_ALARM_ISAPI_INFO, COMM_ISAPI_ALARM, MessageCallbackAlarmInfoUnion
 from sdk.utils import SDKError
 
 
@@ -40,6 +40,15 @@ class EventHandler:
             command: int,
             device: NET_DVR_ALARMER,
             alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM,
+            buffer_length,
+            user_pointer: c_void_p):
+        raise NotImplementedError
+    async def isapi_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARM_ISAPI_INFO,
             buffer_length,
             user_pointer: c_void_p):
         raise NotImplementedError
@@ -99,6 +108,15 @@ class ConsoleHandler(EventHandler):
             user_pointer: c_void_p):
         logger.info("Video intercom alarm from {}", doorbell._config.name)
 
+    async def isapi_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARM_ISAPI_INFO,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.info("Isapi alarm from {}", doorbell._config.name)
     @override
     async def unhandled_event(
             self,
@@ -136,6 +154,8 @@ class EventManager:
             return cast(callback_alarm_info_p, POINTER(NET_DVR_VIDEO_INTERCOM_ALARM)).contents
         elif (command == COMM_UPLOAD_VIDEO_INTERCOM_EVENT):
             return cast(callback_alarm_info_p, POINTER(NET_DVR_VIDEO_INTERCOM_EVENT)).contents
+        elif (command == COMM_ISAPI_ALARM):
+            return cast(callback_alarm_info_p, POINTER(NET_DVR_ALARM_ISAPI_INFO)).contents
         else:
             logger.warning("Received unhandled command: {}", command)
             return callback_alarm_info_p
@@ -154,6 +174,8 @@ class EventManager:
                     handler_func = handler.video_intercom_alarm
                 case NET_DVR_VIDEO_INTERCOM_EVENT():
                     handler_func = handler.video_intercom_event
+                case NET_DVR_ALARM_ISAPI_INFO():
+                    handler_func = handler.isapi_alarm
                 case _:
                     handler_func = handler.unhandled_event
 

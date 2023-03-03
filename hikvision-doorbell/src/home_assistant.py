@@ -11,6 +11,7 @@ from sdk.hcnetsdk import (
     NET_DVR_ALARMINFO_V30,
     NET_DVR_VIDEO_INTERCOM_ALARM,
     NET_DVR_VIDEO_INTERCOM_EVENT,
+    NET_DVR_ALARM_ISAPI_INFO,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
     VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED,
@@ -193,6 +194,17 @@ class HomeAssistantAPI(EventHandler):
             self.update_sensor(doorbell._config.name, self._sensors['alarm'], 'off')
         else:
             logger.warning("Unhandled alarmType: {}", alarm_info.byAlarmType)
+    async def isapi_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARM_ISAPI_INFO,
+            buffer_length,
+            user_pointer: c_void_p):
+            logger.info("Isapi alarm detected from {}, file saved in: {}",
+                        doorbell._config.name,
+                        alarm_info.szFilename)
 
     @override
     async def unhandled_event(
