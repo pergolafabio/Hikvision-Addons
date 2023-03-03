@@ -508,7 +508,13 @@ class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
         ("uEventInfo", NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON),
         ("byRes2", BYTE * 256),
     ]
-
+class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
+    _fields_ = [
+        ("dwPicLen", DWORD),
+        ("byRes", BYTE * 4),
+        ("szFilename", char * MAX_FILE_PATH_LEN),
+        ("pPicData", BYTE),
+    ]
 class NET_DVR_ALARM_ISAPI_INFO(Structure):
     _fields_ = [
         ("pAlarmData", char),
@@ -518,14 +524,6 @@ class NET_DVR_ALARM_ISAPI_INFO(Structure):
         ("byRes", BYTE * 2),
         ("pPicPackData", NET_DVR_ALARM_ISAPI_PICDATA),
         ("byRes2", BYTE * 32),
-    ]
-
-class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
-    _fields_ = [
-        ("dwPicLen", DWORD),
-        ("byRes", BYTE * 4),
-        ("szFilename", char * MAX_FILE_PATH_LEN),
-        ("pPicData", BYTE),
     ]
 
 class MessageCallbackAlarmInfoUnion(Union):
