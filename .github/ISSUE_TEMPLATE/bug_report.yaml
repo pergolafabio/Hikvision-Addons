@@ -1,0 +1,71 @@
+name: Bug Report
+description: Report an issue with one of the add-ons.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: >-
+        Describe the issue you are experiencing here.
+        Tell us what you were trying to do and what happened.
+    validations:
+      required: true
+  - type: dropdown
+    id: add-on
+    attributes:
+      label: Add-on
+      description: What is the add-on that is causing the issue?
+      options:
+        - Hikvision Doorbell
+        - Hikvision Baresip
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: What version of the add-on are you running?
+      description: >
+        If running as an HA add-on, can be found in: [Settings -> Add-ons -> "Add-on name" -> `Current version`]
+      placeholder: 3.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation type
+      description: How are you running the add-on?
+      options:
+        - Home Assistant add-on
+        - Docker container (standalone)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: Text
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Relevant configuration
+      description: |
+        If you think the bug is related to your specific setup, please copy and paste the piece of YAML configuration that can help us understand the problem.
+        You can leave black if you prefer. This will be automatically formatted into code, so no need for backticks.
+        **Note**: Make sure to leave out security details like your **passwords**!
+      render: YAML
+
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: |
+        Links? References? Anything that will give us more context about the issue you are encountering!
+
+        Tip: You can attach images or by clicking this area to highlight it and then dragging files in.
+    validations:
+      required: false
