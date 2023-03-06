@@ -32,7 +32,7 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
 </p>
 
 - Confirm the **Manage add-on repositories** dialog by clicking **ADD**.
-- **Hikvision Doorbell** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
+- **Hikvision Doorbell** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to `Settings` -> `Add-ons` -> `Add-on store`).
 - Select the **Hikvision Doorbell** add-on, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
 (The documentation can also be browsed online in the [Github repo](DOCS.md)).
