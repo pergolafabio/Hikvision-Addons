@@ -115,7 +115,7 @@ class HomeAssistantAPI(EventHandler):
             user_pointer: c_void_p):
         logger.info("Motion detected from {}, updating sensor {}", doorbell._config.name, self._sensors['motion'])
         self.update_sensor(doorbell._config.name, self._sensors['motion'], 'on')
-        await asyncio.sleep(1)
+        await asyncio.sleep(5)
         self.update_sensor(doorbell._config.name, self._sensors['motion'], 'off')
 
     @override
@@ -140,7 +140,7 @@ class HomeAssistantAPI(EventHandler):
             original_attributes = self._sensors['door']['attributes']
             self._sensors['door']['attributes'] = original_attributes | additional_attributes
             self.update_sensor(doorbell._config.name, self._sensors['door'], 'on')
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
             # Revert back to original attributes
             self._sensors['door']['attributes'] = original_attributes
             self.update_sensor(doorbell._config.name, self._sensors['door'], 'off')
@@ -162,17 +162,17 @@ class HomeAssistantAPI(EventHandler):
         if alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING:
             logger.info("Doorbell ringing, updating sensor {}", self._sensors['callstatus'])
             self.update_sensor(doorbell._config.name, self._sensors['callstatus'], 'on')
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
             self.update_sensor(doorbell._config.name, self._sensors['callstatus'], 'off')
         elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL:
             logger.info("Call dismissed, updating sensor {}", self._sensors['dismiss'])
             self.update_sensor(doorbell._config.name, self._sensors['dismiss'], 'on')
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
             self.update_sensor(doorbell._config.name, self._sensors['dismiss'], 'off')
         elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM:
             logger.info("Tampering alarm, updating sensor {}", self._sensors['tamper'])
             self.update_sensor(doorbell._config.name, self._sensors['tamper'], 'on')
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
             self.update_sensor(doorbell._config.name, self._sensors['tamper'], 'off')
         elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN or VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
             logger.info("Alarm {} detected on lock {}, updating sensor {}",
@@ -188,7 +188,7 @@ class HomeAssistantAPI(EventHandler):
             original_attributes = self._sensors['alarm']['attributes']
             self._sensors['alarm']['attributes'] = original_attributes | additional_attributes
             self.update_sensor(doorbell._config.name, self._sensors['alarm'], 'on')
-            await asyncio.sleep(1)
+            await asyncio.sleep(6)
             # Revert back to original attributes
             self._sensors['alarm']['attributes'] = original_attributes
             self.update_sensor(doorbell._config.name, self._sensors['alarm'], 'off')
