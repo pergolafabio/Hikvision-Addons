@@ -1,6 +1,7 @@
 import asyncio
 from ctypes import c_void_p
 from typing import Any, Optional, cast
+from config import AppConfig
 
 from doorbell import DeviceType, Doorbell, Registry
 from event import EventHandler
@@ -41,16 +42,21 @@ class MQTTHandler(EventHandler):
     name = 'MQTT'
     _sensors: dict[Doorbell, dict[str, Discoverable[Any]]] = {}
 
-    def __init__(self, doorbells: Registry) -> None:
+    def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: {}", self.name)
 
-        mqtt_settings = Settings.MQTT(host="localhost")
+        mqtt_settings = Settings.MQTT(
+            host=config.host,
+            username=config.username,
+            password=config.password
+        )
         for doorbell in doorbells.values():
             # Consider only outdoor units
             if doorbell._type is DeviceType.INDOOR:
                 continue
 
+            logger.debug("Setting up entities for {}", doorbell._config.name)
             # Create an empty dict to hold the sensors
             self._sensors[doorbell] = {}
             doorbell_name = doorbell._config.name
@@ -113,7 +119,7 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_door(door_id)
-    
+
     @override
     async def motion_detection(
             self,

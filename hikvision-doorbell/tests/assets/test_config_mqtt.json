@@ -1,0 +1,22 @@
+{
+    "doorbells": [
+        {
+            "name": "test",
+            "ip": "192.168.0.1",
+            "username": "",
+            "password": ""
+        }
+    ],
+    "home_assistant": {
+        "url": "http://supervisor/core",
+        "token": "test_token"
+    },
+    "system": {
+        "log_level": "WARNING",
+        "sdk_log_level": "NONE"
+    },
+    "mqtt": {
+        "host": "127.0.0.1",
+        "port": "1883"
+    }
+  }

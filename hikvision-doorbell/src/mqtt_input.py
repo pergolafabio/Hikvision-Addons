@@ -1,6 +1,7 @@
 import json
+from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
-from ha_mqtt_discoverable import (DeviceInfo, Discoverable, EntityInfo, EntityType, Settings)
+from ha_mqtt_discoverable import Settings
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo
 from home_assistant import sanitize_doorbell_name
 from loguru import logger
@@ -11,8 +12,14 @@ from sdk.utils import SDKError
 
 
 class MQTTInput():
-    def __init__(self, doorbells: Registry) -> None:
-        mqtt_settings = Settings.MQTT(host="localhost")
+    def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
+        logger.debug("Setting up MQTTInput")
+
+        mqtt_settings = Settings.MQTT(
+            host=config.host,
+            username=config.username,
+            password=config.password
+        )
         for doorbell in doorbells.values():
             doorbell_name = doorbell._config.name
             device = extract_device_info(doorbell)
@@ -46,7 +53,6 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             reject_button = Button(settings, self._reject_call_callback, doorbell)
             reject_button.set_availability(True)
-
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.debug("Received reboot command for doorbell: {}", doorbell._config.name)

@@ -1,18 +1,16 @@
 name: Hikvision Doorbell
 description: Connect your Hikvision doorbells to Home Assistant
-version: '2.1'
+version: '3.0.0'
 slug: hikvision_doorbell
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/hikvision-doorbell
 arch:
 - amd64
 - i386
 - aarch64
-host_network: true
 startup: application
 boot: auto
 stdin: true
 homeassistant_api: true
-hassio_api: true
 
 # Default options when used as an HA add-on
 options:
@@ -27,6 +25,7 @@ options:
     log_level: WARNING
     sdk_log_level: NONE
 
+# Schema for the options above
 schema:
   doorbells:
     - name: str
@@ -34,7 +33,11 @@ schema:
       username: str
       password: str
   home_assistant:
-    url: match(^http://supervisor/core$)
+    url: "str?"
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
+
+# To request MQTT configuration using the supervisor API
+services:
+  - "mqtt:want"

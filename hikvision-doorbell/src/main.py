@@ -16,7 +16,7 @@ from input import InputReader
 async def main():
     """Main entrypoint of the application"""
 
-    # Disable type warnings since the object is populated at runtime using goodconfig library
+    # Disable type warnings since the object is populated at runtime using goodconf library
     config = AppConfig()  # type:ignore
     config.load()
 
@@ -47,16 +47,20 @@ async def main():
     console = ConsoleHandler()
     event_manager.register_handler(console)
 
-    # if config.home_assistant:
-    #     ha_api = HomeAssistantAPI(config.home_assistant, doorbell_registry)
-    #     event_manager.register_handler(ha_api)
+    # If MQTT configuration is defined, register its event handler and the input manager
+    if config.mqtt:
+        mqtt = MQTTHandler(config.mqtt, doorbell_registry)
+        event_manager.register_handler(mqtt)
+        # Create the MQTT input to manage commands coming from HA
+        _ = MQTTInput(config.mqtt, doorbell_registry)
 
-    # Add MQTT message handler
-    mqtt = MQTTHandler(doorbell_registry)
-    event_manager.register_handler(mqtt)
+    # If Home Assistant configuration is defined, register its event handler
+    # MQTT and HA handlers conflict with each other, so activate one or the another
+    elif config.home_assistant:
+        ha_api = HomeAssistantAPI(config.home_assistant, doorbell_registry)
+        event_manager.register_handler(ha_api)
 
-    mqtt_input = MQTTInput(doorbell_registry)
-    
+
     # Start listening for events
     event_manager.start()
 

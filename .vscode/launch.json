@@ -23,6 +23,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "envFile": "${workspaceFolder}/hikvision-doorbell/development.env"
+        },
+        {
+            "name": "Python: debug tests",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/hikvision-doorbell",
+            "justMyCode": false,
+            "envFile": "${workspaceFolder}/hikvision-doorbell/development.env",
+            "purpose": ["debug-test"]
         }
     ]
 }

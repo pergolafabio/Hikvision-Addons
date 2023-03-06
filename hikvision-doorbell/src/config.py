@@ -1,9 +1,11 @@
 from enum import Enum
 import os
-from typing import Optional
+from typing import Any, Optional
 from goodconf import GoodConf
 from pydantic import validator, Field, BaseModel, AnyHttpUrl
+import requests
 from sdk.utils import SDKLogLevel
+from loguru import logger
 
 
 def ha_token_from_env():
@@ -15,6 +17,41 @@ def ha_token_from_env():
     if not addon_token:
         raise ValueError("Configure a token to authenticate to Home Assistant")
     return addon_token
+
+
+def mqtt_config_from_supervisor():
+    """Factory function to read MQTT configuration from the HA supervisor, used when running as a HA addon.
+    If the configuration cannot be read (MQTT add-on not configured), do nothing.
+    """
+    # Try to get the token from the environment
+    addon_token = os.getenv('SUPERVISOR_TOKEN')
+    if not addon_token:
+        # We are not running as an add-on, skip this step
+        return
+
+    auth_headers = {
+        "Authorization": f"Bearer {addon_token}"
+    }
+    # Use the supervisor API to get the token configuration
+    logger.debug("Requesting MQTT service configuration to supervisor")
+    service_response = requests.get("http://supervisor/services/mqtt", headers=auth_headers)
+    if service_response.status_code == 400:
+        # MQTT addon is not configured
+        logger.debug("MQTT service not available")
+        return
+
+    if service_response.status_code != 200:
+        raise RuntimeError(f"Unexpected response while requesting MQTT service: {service_response.text}")
+
+    mqtt_config: dict[str, Any] = service_response.json()['data']
+
+    return AppConfig.MQTT(
+        host=mqtt_config['host'],
+        port=mqtt_config['port'],
+        ssl=mqtt_config.get('ssl'),
+        username=mqtt_config.get('username'),
+        password=mqtt_config.get('password')
+    )
 
 
 class LogLevel(str, Enum):
@@ -46,6 +83,13 @@ class AppConfig(GoodConf):
                 raise ValueError("Url must not end with /")
             return v
 
+    class MQTT(BaseModel):
+        host: str
+        port: int = 1883
+        ssl: Optional[bool] = Field(default=False, description="Set to true to enable SSL")
+        username: Optional[str] = None
+        password: Optional[str] = None
+
     class System(BaseModel):
         log_level: LogLevel = LogLevel.WARNING
         sdk_log_level: SDKLogLevel = SDKLogLevel.NONE
@@ -61,6 +105,8 @@ class AppConfig(GoodConf):
 
     doorbells: list[Doorbell] = Field(description="List of doorbells to connect to")
     home_assistant: Optional[HomeAssistant]
+    # Use a factory function to automatically load the MQTT configuration using the supervisor API, if MQTT is available
+    mqtt: Optional[MQTT] = Field(default_factory=mqtt_config_from_supervisor)
     system: System
 
     class Config:
