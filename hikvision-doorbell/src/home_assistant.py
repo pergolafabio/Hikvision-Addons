@@ -131,12 +131,15 @@ class HomeAssistantAPI(EventHandler):
             buffer_length,
             user_pointer: c_void_p):
         if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
+            # Convert the controlSource to a string, removing suffix `0`s
+            control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
             logger.info("Door {} unlocked by {}, updating sensor {}",
                         alarm_info.uEventInfo.struUnlockRecord.wLockID,
-                        list(alarm_info.uEventInfo.struUnlockRecord.byControlSrc),
+                        control_source,
                         self._sensors[doorbell]['door'])
             additional_attributes = {
-                'Unlock': list(alarm_info.uEventInfo.struUnlockRecord.byControlSrc),
+                # TODO: better rename to `control source`, similar to the original field?
+                'Unlock': control_source,
                 'DoorID': alarm_info.uEventInfo.struUnlockRecord.wLockID
             }
             # Add additional attributes to the sensor
