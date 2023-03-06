@@ -212,7 +212,7 @@ class HomeAssistantAPI(EventHandler):
             user_pointer: c_void_p):
         logger.info("Isapi alarm detected from {}, file saved in: {}",
                     doorbell._config.name,
-                    alarm_info.szFilename)
+                    alarm_info.pPicPackData.szFilename)
 
     @override
     async def unhandled_event(
