@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.0.0.beta.7 - 2022-03-06
+
+### Added
+
+- Changed sensor 'off' state to 5 sec instead of 1 for testing
+- Added ISAPI alarm
+- Added alarm sensor for 'door not open/closed' alarm
+- Added Face Access Terminal as supported device
+
 ## 3.0.0.beta.1 - 2022-02-23
 
 This is the first of the releases made available under the __Beta channel__. Expect some small issues while we iron out the last bugs and get ready for an exiting official release!
