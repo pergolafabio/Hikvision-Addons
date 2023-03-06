@@ -54,6 +54,17 @@ class MQTTInput():
             reject_button = Button(settings, self._reject_call_callback, doorbell)
             reject_button.set_availability(True)
 
+            ###########
+            # Answer call button
+            button_info = ButtonInfo(
+                name="Answer call",
+                unique_id=f"{sanitized_doorbell_name}_answer_call",
+                device=device,
+                object_id=f"{sanitized_doorbell_name}_answer_call")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            answer_button = Button(settings, self._answer_call_callback, doorbell)
+            answer_button.set_availability(True)
+
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.debug("Received reboot command for doorbell: {}", doorbell._config.name)
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
@@ -76,3 +87,18 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
             logger.error("Error while rejecting call: {}", err)
+
+    def _answer_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.debug("Received answer command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/callSignal?format=json"
+        requestBody = {
+            "CallSignal": {
+                "cmdType": "answer"
+            }
+        }
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+        except SDKError as err:
+            logger.error("Error while answering call: {}", err)
