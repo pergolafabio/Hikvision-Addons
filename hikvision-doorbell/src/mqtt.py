@@ -10,9 +10,17 @@ from ha_mqtt_discoverable import Settings, DeviceInfo, Discoverable
 from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, SensorInfo, Sensor, SwitchInfo, Switch
 from loguru import logger
 from home_assistant import sanitize_doorbell_name
-from sdk.hcnetsdk import (NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30,
+from sdk.hcnetsdk import (NET_DVR_ALARMER,
+                          NET_DVR_ALARMINFO_V30,
                           NET_DVR_VIDEO_INTERCOM_ALARM,
-                          NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG)
+                          NET_DVR_VIDEO_INTERCOM_EVENT,
+                          NET_DVR_ALARM_ISAPI_INFO,
+                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL,
+                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING,
+                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
+                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED,
+                          VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
+                          VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM)
 from typing_extensions import override
 
 
@@ -132,6 +140,16 @@ class MQTTHandler(EventHandler):
         motion_sensor = cast(BinarySensor, self._sensors[doorbell]['motion'])
         logger.debug("Updating sensor {}", motion_sensor._entity.name)
         motion_sensor.on()
+    @override
+    async def isapi_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ALARM_ISAPI_INFO,
+            buffer_length,
+            user_pointer: c_void_p):
+        logger.info("Isapi alarm detected on {}", doorbell._config.name)
 
     @override
     async def video_intercom_event(
@@ -177,6 +195,10 @@ class MQTTHandler(EventHandler):
             call_sensor.set_state('dismissed')
             # Put sensor back to idle
             call_sensor.set_state('idle')
+        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN or VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
+            logger.info("Alarm {} detected on lock {}", alarm_info.uAlarmInfo, alarm_info.wLockID)
+        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM:
+            logger.info("Tamper alarm detected on {}", doorbell._config.name)
 
     @override
     async def unhandled_event(
