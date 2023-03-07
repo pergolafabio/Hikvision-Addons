@@ -40,8 +40,8 @@ class MQTTInput():
             reboot_button.set_availability(True)
             
             # Consider only indoor units for the next sensors
-            if doorbell._type is not DeviceType.INDOOR:
-                continue
+            # if doorbell._type is not DeviceType.INDOOR:
+            #    continue
 
             ###########
             # Reject call button
