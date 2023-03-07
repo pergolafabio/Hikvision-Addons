@@ -395,6 +395,12 @@ class NET_DVR_UNLOCK_RECORD_INFO(Structure):
         ("byRes", BYTE * 168),
     ]
 
+    def controlSource(self):
+        """Return the controls source number as a string representation, removing the ending `0`s"""
+        serial = "".join([str(number) for number in self.byControlSrc[:]])
+        return re.sub(r"0*$", "", serial)
+
+
 class NET_DVR_NOTICEDATA_RECEIPT_INFO(Structure):
     _fields_ = [
         ("byNoticeNumber", BYTE * MAX_NOTICE_NUMBER_LEN),
@@ -508,12 +514,30 @@ class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
         ("uEventInfo", NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON),
         ("byRes2", BYTE * 256),
     ]
+class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
+    _fields_ = [
+        ("dwPicLen", DWORD),
+        ("byRes", BYTE * 4),
+        ("szFilename", char * MAX_FILE_PATH_LEN),
+        ("pPicData", BYTE),
+    ]
+class NET_DVR_ALARM_ISAPI_INFO(Structure):
+    _fields_ = [
+        ("pAlarmData", char),
+        ("dwAlarmDataLen", DWORD),
+        ("byDataType", BYTE),
+        ("byPicturesNumber", BYTE),
+        ("byRes", BYTE * 2),
+        ("pPicPackData", NET_DVR_ALARM_ISAPI_PICDATA),
+        ("byRes2", BYTE * 32),
+    ]
 
 class MessageCallbackAlarmInfoUnion(Union):
     _fields_ = [
         ("NET_DVR_ALARMINFO_V30", NET_DVR_ALARMINFO_V30),
         ("NET_DVR_VIDEO_INTERCOM_ALARM", NET_DVR_VIDEO_INTERCOM_ALARM),
-        ("NET_DVR_VIDEO_INTERCOM_EVENT", NET_DVR_VIDEO_INTERCOM_EVENT)
+        ("NET_DVR_VIDEO_INTERCOM_EVENT", NET_DVR_VIDEO_INTERCOM_EVENT),
+        ("NET_DVR_ALARM_ISAPI_INFO", NET_DVR_ALARM_ISAPI_INFO)
     ]
 
 fMessageCallBack = CFUNCTYPE(BOOL, LONG, POINTER(

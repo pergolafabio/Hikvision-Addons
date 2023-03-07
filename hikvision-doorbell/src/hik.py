@@ -29,6 +29,7 @@ sensor_name_callstatus = "sensor." + config.sensors.callstatus
 sensor_name_motion = "sensor." + config.sensors.motion
 sensor_name_tamper = "sensor." + config.sensors.tamper
 sensor_name_dismiss = "sensor." + config.sensors.dismiss
+sensor_name_alarm = "sensor." + config.sensors.alarm
 
 
 def callback(command: int, alarmer_pointer, alarminfo_pointer, buffer_length, user_pointer):

@@ -13,6 +13,7 @@ class DeviceType(IntEnum):
     OUTDOOR = 603
     INDOOR = 602
     VillaVTO = 605
+    FaceAccessTerminal = 10510
 
 
 class Doorbell():
