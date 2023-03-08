@@ -66,7 +66,7 @@ class MQTTInput():
             answer_button.set_availability(True)
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        logger.debug("Received reboot command for doorbell: {}", doorbell._config.name)
+        logger.info("Received reboot command for doorbell: {}", doorbell._config.name)
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell.reboot_device()
@@ -74,7 +74,7 @@ class MQTTInput():
             logger.error("Error while rebooting device: {}", err)
         
     def _reject_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        logger.debug("Received reject command for doorbell: {}", doorbell._config.name)
+        logger.info("Received reject command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/callSignal?format=json"
         requestBody = {
@@ -89,7 +89,7 @@ class MQTTInput():
             logger.error("Error while rejecting call: {}", err)
 
     def _answer_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        logger.debug("Received answer command for doorbell: {}", doorbell._config.name)
+        logger.info("Received answer command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/callSignal?format=json"
         requestBody = {
