@@ -93,16 +93,6 @@ class TestVideoIntercomAlarm:
         # Check that the entity is saved in the dict
         assert handler._sensors[doorbell]["door_not_closed_0"] is not None
 
-    
-    def test_tampering(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
-        video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
-        video_intercom_alarm.byAlarmType = VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM
-
-        asyncio.run(handler.video_intercom_alarm(doorbell, 0, None, video_intercom_alarm, 0, None))
-
-        # Check that the entity is saved in the dict
-        assert handler._sensors[doorbell]["tampering"] is not None
-    
     @pytest.mark.parametrize(argnames="alarm_type", argvalues=list(VideoInterComAlarmType))
     def test_all_alarm_types(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture, alarm_type: VideoInterComAlarmType):
         if alarm_type in (VideoInterComAlarmType.DOOR_NOT_OPEN, 
