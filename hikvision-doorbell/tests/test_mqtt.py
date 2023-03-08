@@ -3,10 +3,10 @@ import pytest
 from pytest_mock import MockerFixture
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
-from mqtt import MQTTHandler
+from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler
 from ha_mqtt_discoverable import DeviceInfo
 
-from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM
+from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VideoInterComAlarmType
 
 
 def test_init(mocker: MockerFixture):
@@ -93,6 +93,7 @@ class TestVideoIntercomAlarm:
         # Check that the entity is saved in the dict
         assert handler._sensors[doorbell]["door_not_closed_0"] is not None
 
+    
     def test_tampering(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
         video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
         video_intercom_alarm.byAlarmType = VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM
@@ -101,3 +102,27 @@ class TestVideoIntercomAlarm:
 
         # Check that the entity is saved in the dict
         assert handler._sensors[doorbell]["tampering"] is not None
+    
+    @pytest.mark.parametrize(argnames="alarm_type", argvalues=list(VideoInterComAlarmType))
+    def test_all_alarm_types(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture, alarm_type: VideoInterComAlarmType):
+        if alarm_type in (VideoInterComAlarmType.DOOR_NOT_OPEN, 
+                          VideoInterComAlarmType.DOOR_NOT_CLOSED,
+                          VideoInterComAlarmType.DOORBELL_RINGING,
+                          VideoInterComAlarmType.DISMISS_INCOMING_CALL
+                          ):
+            pytest.skip("Tested in another function")
+        video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
+        video_intercom_alarm.byAlarmType = alarm_type.value
+
+        asyncio.run(handler.video_intercom_alarm(doorbell, 0, None, video_intercom_alarm, 0, None))
+
+        entity_key_name = DEVICE_TRIGGERS_DEFINITIONS[alarm_type]['name']
+
+        # Check that the entity is saved in the dict
+        assert handler._sensors[doorbell][entity_key_name] is not None
+    
+    def test_unknown_alarm_type(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
+        video_intercom_alarm.byAlarmType = 999
+
+        asyncio.run(handler.video_intercom_alarm(doorbell, 0, None, video_intercom_alarm, 0, None))

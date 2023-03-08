@@ -1,6 +1,6 @@
 import asyncio
 from ctypes import c_void_p
-from typing import Any, Optional, cast
+from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
 
 from doorbell import DeviceType, Doorbell, Registry
@@ -15,12 +15,9 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           NET_DVR_VIDEO_INTERCOM_ALARM,
                           NET_DVR_VIDEO_INTERCOM_EVENT,
                           NET_DVR_ALARM_ISAPI_INFO,
-                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL,
-                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING,
                           VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
-                          VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED,
                           VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
-                          VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM)
+                          VideoInterComAlarmType)
 from typing_extensions import override
 
 
@@ -44,6 +41,36 @@ def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
         sw_version=parsed_device_info["firmware"],
         hw_version=parsed_device_info["hardware"]
     )
+
+
+class DeviceTriggerMetadata(TypedDict):
+    """Helper subclass defining the information of a device trigger.
+    Used when building the DeviceTrigger entity"""
+    name: str
+    """Name of this device trigger"""
+    type: str
+    """Displayed in the HA UI"""
+    subtype: str
+    """Displayed in the HA UI"""
+
+
+DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata] = {
+    VideoInterComAlarmType.ZONE_ALARM: DeviceTriggerMetadata(name='zone_alarm', type='alarm', subtype='zone'),
+    VideoInterComAlarmType.TAMPERING_ALARM: DeviceTriggerMetadata(name='tampering_alarm', type='alarm', subtype='tampering'),
+    VideoInterComAlarmType.HIJACKING_ALARM: DeviceTriggerMetadata(name='hijacking_alarm', type='alarm', subtype='hijacking'),
+    VideoInterComAlarmType.MULTIPLE_PASSWORD_UNLOCK_FAILURE_ALARM: DeviceTriggerMetadata(name='multiple_passwords_unlock_failure', type='alarm', subtype='password unlock failures'),
+    VideoInterComAlarmType.SOS: DeviceTriggerMetadata(name='sos', type='SOS', subtype=''),
+    VideoInterComAlarmType.INTERCOM: DeviceTriggerMetadata(name='intercom', type='Intercom', subtype=''),
+    VideoInterComAlarmType.SMART_LOCK_FINGERPRINT_ALARM: DeviceTriggerMetadata(name='smart_lock_fingerprint_alarm', type='smart lock alarm', subtype='fingerprint'),
+    VideoInterComAlarmType.SMART_LOCK_PASSWORD_ALARM: DeviceTriggerMetadata(name='smart_lock_password_alarm', type='smart lock alarm', subtype='password'),
+    VideoInterComAlarmType.SMART_LOCK_DOOR_PRYING_ALARM: DeviceTriggerMetadata(name='smart_lock_door_prying_alarm', type='smart lock alarm', subtype='door prying'),
+    VideoInterComAlarmType.SMART_LOCK_DOOR_LOCK_ALARM: DeviceTriggerMetadata(name='smart_lock_door_lock_alarm', type='smart lock alarm', subtype='door lock'),
+    VideoInterComAlarmType.SMART_LOCK_LOW_BATTERY_ALARM: DeviceTriggerMetadata(name='smart_lock_low_battery_alarm', type='smart lock alarm', subtype='low battery'),
+    VideoInterComAlarmType.BLACKLIST_ALARM: DeviceTriggerMetadata(name='smart_lock_blacklist_alarm', type='alarm', subtype='blacklist'),
+    VideoInterComAlarmType.SMART_LOCK_DISCONNECTED: DeviceTriggerMetadata(name='smart_lock_disconnected', type='smart lock disconnected', subtype=''),
+    VideoInterComAlarmType.ACCESS_CONTROL_TAMPERING_ALARM: DeviceTriggerMetadata(name='access_control_tampering_alarm', type='alarm', subtype='access control tampering'),
+}
+"""Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComAlarmType"""
 
 
 class MQTTHandler(EventHandler):
@@ -194,76 +221,40 @@ class MQTTHandler(EventHandler):
             user_pointer: c_void_p):
         call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
 
-        if alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOORBELL_RINGING:
-            logger.info("Doorbell ringing, updating sensor {}", call_sensor)
-            call_sensor.set_state('ringing')
-        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DISMISS_INCOMING_CALL:
-            logger.info("Call dismissed, updating sensor {}", call_sensor)
-            call_sensor.set_state('dismissed')
-            # Put sensor back to idle
-            call_sensor.set_state('idle')
-        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN or alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
-            # Extract the door that caused this alarm
-            door_id = alarm_info.wLockID
-            logger.info("Alarm {} detected on door {}", alarm_info.uAlarmInfo, door_id)
-            
-            # Create the key to extract the entity from the `sensors` dict, depending on the alarm type
-            if alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN:
-                trigger_name, trigger_type = f"door_not_open_{door_id}", "not open"
-            else:
-                trigger_name, trigger_type = f"door_not_closed_{door_id}", "not closed"
-            
-            # Get the alarm from the `sensors` dict, if it exists
-            device_trigger = self._sensors[doorbell].get(trigger_name)
-            
-            if not device_trigger:
-                device_info = extract_device_info(doorbell)
+        # Extract the type of alarm as a Python enum
+        try:
+            alarm_type = VideoInterComAlarmType(alarm_info.byAlarmType)
+        except ValueError:
+            logger.warning("Received unknown alarm type: {}", alarm_info.byAlarmType)
+            return
+        
+        match alarm_type:
+            case VideoInterComAlarmType.DOORBELL_RINGING:
+                logger.info("Doorbell ringing, updating sensor {}", call_sensor)
+                call_sensor.set_state('ringing')
+            case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
+                logger.info("Call dismissed, updating sensor {}", call_sensor)
+                call_sensor.set_state('dismissed')
+                # Put sensor back to idle
+                call_sensor.set_state('idle')
+            case VideoInterComAlarmType.DOOR_NOT_OPEN | VideoInterComAlarmType.DOOR_NOT_CLOSED:
+                # Get information about the door that caused this alarm
+                door_id = alarm_info.wLockID
+                logger.info("Alarm {} detected on door {}", alarm_info.uAlarmInfo, door_id)
+                
+                # Create the key to extract the entity from the `sensors` dict, depending on the alarm type
+                # use `subtype` to display doors starting from index 1 in the UI
+                if alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN:
+                    trigger = DeviceTriggerMetadata(name=f"door_not_open_{door_id}", type="not open", subtype=f"Door {door_id+1}")
+                else:
+                    trigger = DeviceTriggerMetadata(name=f"door_not_closed_{door_id}", type="not closed", subtype=f"Door {door_id+1}")
 
-                # This is the first time we encounter this alarm, first create the Python entity
-                device_trigger_info = DeviceTriggerInfo(name=trigger_name, 
-                                                        device=device_info,
-                                                        type=trigger_type, 
-                                                        # Display doors starting from index 1 in the UI
-                                                        subtype=f"Door {door_id+1}",
-                                                        unique_id=f"{device_info.identifiers}-{trigger_name}")
-                settings = Settings(mqtt=self._mqtt_settings, entity=device_trigger_info, manual_availability=True)
-                device_trigger = DeviceTrigger(settings)
-                # Save the entity in the dict for future reference
-                self._sensors[doorbell][trigger_name] = device_trigger
-            
-            # Cast to know type DeviceTrigger
-            device_trigger = cast(DeviceTrigger, device_trigger)
-            # Trigger the event
-            device_trigger.trigger()
-
-        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM:
-            logger.info("Tamper alarm detected on {}", doorbell._config.name)
-            trigger_name, trigger_type = "tampering", "Tampering detected"
-
-            # Get the alarm from the `sensors` dict, if it exists
-            device_trigger = self._sensors[doorbell].get(trigger_name)
-            
-            if not device_trigger:
-                device_info = extract_device_info(doorbell)
-
-                # This is the first time we encounter this alarm, first create the Python entity
-                device_trigger_info = DeviceTriggerInfo(name=trigger_name, 
-                                                        device=device_info,
-                                                        type=trigger_type, 
-                                                        subtype="",
-                                                        unique_id=f"{device_info.identifiers}-{trigger_name}")
-                settings = Settings(mqtt=self._mqtt_settings, entity=device_trigger_info, manual_availability=True)
-                device_trigger = DeviceTrigger(settings)
-                # Save the entity in the dict for future reference
-                self._sensors[doorbell][trigger_name] = device_trigger
-            
-            # Cast to know type DeviceTrigger
-            device_trigger = cast(DeviceTrigger, device_trigger)
-            # Trigger the event
-            device_trigger.trigger()
-
-        else:
-            logger.warning("Unhandled alarmType: {}", alarm_info.byAlarmType)
+                self.handle_device_trigger(doorbell, trigger)
+            case _:
+                """Generic alarm: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
+                
+                logger.info("Video intercom alarm {} detected on {}", alarm_type.name, doorbell._config.name)
+                self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS[alarm_type])
 
     @override
     async def unhandled_event(
@@ -275,3 +266,31 @@ class MQTTHandler(EventHandler):
             buffer_length,
             user_pointer: c_void_p):
         logger.warning("Unknown event from {}", doorbell._config.name)
+
+    def handle_device_trigger(self, doorbell: Doorbell, trigger: DeviceTriggerMetadata):
+        """
+        Generate a device trigger event.
+        Create the device trigger entity if it doesn't exist, and save it as part of the `sensors` dict
+        """
+        # Get the device trigger from the `sensors` dict, if it exists
+        device_trigger = self._sensors[doorbell].get(trigger['name'])
+        # If it doesn't exist, create it
+        if not device_trigger:
+            device_info = extract_device_info(doorbell)
+
+            # This is the first time we encounter this alarm, first create the Python entity
+            device_trigger_info = DeviceTriggerInfo(name=trigger['name'], 
+                                                    device=device_info,
+                                                    type=trigger['type'], 
+                                                    subtype=trigger["subtype"],
+                                                    unique_id=f"{device_info.identifiers}-{trigger['name']}")
+            settings = Settings(mqtt=self._mqtt_settings, entity=device_trigger_info)
+            device_trigger = DeviceTrigger(settings)
+            # Save the entity in the dict for future reference
+            self._sensors[doorbell][trigger["name"]] = device_trigger
+
+        # Cast to know type DeviceTrigger
+        device_trigger = cast(DeviceTrigger, device_trigger)
+        # Trigger the event
+        logger.debug("Invoking device trigger {}", trigger)
+        device_trigger.trigger()
