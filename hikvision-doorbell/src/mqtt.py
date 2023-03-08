@@ -179,7 +179,7 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_ALARM_ISAPI_INFO,
             buffer_length,
             user_pointer: c_void_p):
-        logger.info("Isapi alarm detected on {}", doorbell._config.name)
+        logger.info("ISAPI alarm detected on {}", doorbell._config.name)
 
     @override
     async def video_intercom_event(
@@ -198,15 +198,14 @@ class MQTTHandler(EventHandler):
                         door_id+1,
                         control_source,
                         door_sensor._entity.name)
-            # TODO: add unlock source as attribute
-            # additional_attributes = {
-            #     'Control source': control_source,
-            # }
+            attributes = {
+                'control source': control_source,
+            }
             door_sensor.on()
-            # Wait some seconds, then turn off switch (the relay is momentary)
+            door_sensor.set_attributes(attributes)
+            # Wait some seconds, then turn off the switch entity (since the relay is momentary)
             await asyncio.sleep(2)
             door_sensor.off()
-            # TODO: revert to original attributes
         else:
             logger.warning("Unhandled eventType: {}", alarm_info.byEventType)
 
