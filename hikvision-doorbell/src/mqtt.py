@@ -7,7 +7,7 @@ from doorbell import DeviceType, Doorbell, Registry
 from event import EventHandler
 from paho.mqtt.client import MQTTMessage
 from ha_mqtt_discoverable import Settings, DeviceInfo, Discoverable
-from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, SensorInfo, Sensor, SwitchInfo, Switch
+from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, SensorInfo, Sensor, SwitchInfo, Switch, DeviceTrigger, DeviceTriggerInfo
 from loguru import logger
 from home_assistant import sanitize_doorbell_name
 from sdk.hcnetsdk import (NET_DVR_ALARMER,
@@ -49,12 +49,14 @@ def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
 class MQTTHandler(EventHandler):
     name = 'MQTT'
     _sensors: dict[Doorbell, dict[str, Discoverable[Any]]] = {}
+    """Keep references to the Discoverable entities created for each doorbell, indexed by their name"""
 
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: {}", self.name)
-
-        mqtt_settings = Settings.MQTT(
+        
+        # Save the MQTT settings as an attribute
+        self._mqtt_settings = Settings.MQTT(
             host=config.host,
             username=config.username,
             password=config.password
@@ -77,13 +79,13 @@ class MQTTHandler(EventHandler):
             # Motion sensor
             motion_sensor_info = BinarySensorInfo(
                 name="Motion",
-                unique_id=f"{sanitized_doorbell_name}_motion",
+                unique_id=f"{device.identifiers}-motion",
                 device_class="motion",
                 device=device,
                 object_id=f"{sanitized_doorbell_name}_motion",
                 off_delay=1)
 
-            settings = Settings(mqtt=mqtt_settings, entity=motion_sensor_info, manual_availability=True)
+            settings = Settings(mqtt=self._mqtt_settings, entity=motion_sensor_info, manual_availability=True)
             motion_sensor = BinarySensor(settings)
             motion_sensor.off()
             motion_sensor.set_availability(True)
@@ -93,28 +95,28 @@ class MQTTHandler(EventHandler):
             # Call state
             call_sensor_info = SensorInfo(
                 name="Call state",
-                unique_id=f"{sanitized_doorbell_name}_call_state",
+                unique_id=f"{device.identifiers}-call_state",
                 device=device,
                 object_id=f"{sanitized_doorbell_name}_call_state",
                 icon="mdi:bell")
 
-            settings = Settings(mqtt=mqtt_settings, entity=call_sensor_info, manual_availability=True)
+            settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
             call_sensor = Sensor(settings)
             call_sensor.set_state("idle")
             call_sensor.set_availability(True)
             self._sensors[doorbell]['call'] = call_sensor
             ##################
-            # Create switch for output relays used to open doors
-            # Range function stops before the second parameter, so we add + 1 to include it
+            # Doors
+            # Create switches for output relays used to open doors
             num_doors = doorbell.get_num_outputs()
             logger.debug("Configuring {} door switches", num_doors)
             for door_id in range(num_doors):
                 door_switch_info = SwitchInfo(
                     name=f"Door {door_id+1} relay",
-                    unique_id=f"{sanitized_doorbell_name}_door_relay_{door_id}",
+                    unique_id=f"{device.identifiers}-door_relay_{door_id}",
                     device=device,
                     object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
-                settings = Settings(mqtt=mqtt_settings, entity=door_switch_info, manual_availability=True)
+                settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
                 door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
                 door_switch.off()
                 door_switch.set_availability(True)
@@ -140,6 +142,7 @@ class MQTTHandler(EventHandler):
         motion_sensor = cast(BinarySensor, self._sensors[doorbell]['motion'])
         logger.debug("Updating sensor {}", motion_sensor._entity.name)
         motion_sensor.on()
+   
     @override
     async def isapi_alarm(
             self,
@@ -162,19 +165,23 @@ class MQTTHandler(EventHandler):
             user_pointer: c_void_p):
         if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
             door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
-            control_source = "".join([str(number) for number in alarm_info.uEventInfo.struUnlockRecord.byControlSrc[:]])
+            control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
             door_sensor = cast(Switch, self._sensors[doorbell][f'door_{door_id}'])
             logger.info("Door {} unlocked by {}, updating sensor {}",
                         door_id+1,
                         control_source,
                         door_sensor._entity.name)
+            # TODO: add unlock source as attribute
             # additional_attributes = {
-            #     'Unlock': list(alarm_info.uEventInfo.struUnlockRecord.byControlSrc),
+            #     'Control source': control_source,
             # }
             door_sensor.on()
             # Wait some seconds, then turn off switch (the relay is momentary)
             await asyncio.sleep(2)
             door_sensor.off()
+            # TODO: revert to original attributes
+        else:
+            logger.warning("Unhandled eventType: {}", alarm_info.byEventType)
 
     @override
     async def video_intercom_alarm(
@@ -195,10 +202,68 @@ class MQTTHandler(EventHandler):
             call_sensor.set_state('dismissed')
             # Put sensor back to idle
             call_sensor.set_state('idle')
-        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN or VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
-            logger.info("Alarm {} detected on lock {}", alarm_info.uAlarmInfo, alarm_info.wLockID)
+        elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN or alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED:
+            # Extract the door that caused this alarm
+            door_id = alarm_info.wLockID
+            logger.info("Alarm {} detected on door {}", alarm_info.uAlarmInfo, door_id)
+            
+            # Create the key to extract the entity from the `sensors` dict, depending on the alarm type
+            if alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN:
+                trigger_name, trigger_type = f"door_not_open_{door_id}", "not open"
+            else:
+                trigger_name, trigger_type = f"door_not_closed_{door_id}", "not closed"
+            
+            # Get the alarm from the `sensors` dict, if it exists
+            device_trigger = self._sensors[doorbell].get(trigger_name)
+            
+            if not device_trigger:
+                device_info = extract_device_info(doorbell)
+
+                # This is the first time we encounter this alarm, first create the Python entity
+                device_trigger_info = DeviceTriggerInfo(name=trigger_name, 
+                                                        device=device_info,
+                                                        type=trigger_type, 
+                                                        # Display doors starting from index 1 in the UI
+                                                        subtype=f"Door {door_id+1}",
+                                                        unique_id=f"{device_info.identifiers}-{trigger_name}")
+                settings = Settings(mqtt=self._mqtt_settings, entity=device_trigger_info, manual_availability=True)
+                device_trigger = DeviceTrigger(settings)
+                # Save the entity in the dict for future reference
+                self._sensors[doorbell][trigger_name] = device_trigger
+            
+            # Cast to know type DeviceTrigger
+            device_trigger = cast(DeviceTrigger, device_trigger)
+            # Trigger the event
+            device_trigger.trigger()
+
         elif alarm_info.byAlarmType == VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM:
             logger.info("Tamper alarm detected on {}", doorbell._config.name)
+            trigger_name, trigger_type = "tampering", "Tampering detected"
+
+            # Get the alarm from the `sensors` dict, if it exists
+            device_trigger = self._sensors[doorbell].get(trigger_name)
+            
+            if not device_trigger:
+                device_info = extract_device_info(doorbell)
+
+                # This is the first time we encounter this alarm, first create the Python entity
+                device_trigger_info = DeviceTriggerInfo(name=trigger_name, 
+                                                        device=device_info,
+                                                        type=trigger_type, 
+                                                        subtype="",
+                                                        unique_id=f"{device_info.identifiers}-{trigger_name}")
+                settings = Settings(mqtt=self._mqtt_settings, entity=device_trigger_info, manual_availability=True)
+                device_trigger = DeviceTrigger(settings)
+                # Save the entity in the dict for future reference
+                self._sensors[doorbell][trigger_name] = device_trigger
+            
+            # Cast to know type DeviceTrigger
+            device_trigger = cast(DeviceTrigger, device_trigger)
+            # Trigger the event
+            device_trigger.trigger()
+
+        else:
+            logger.warning("Unhandled alarmType: {}", alarm_info.byAlarmType)
 
     @override
     async def unhandled_event(
