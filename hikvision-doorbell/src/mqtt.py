@@ -19,10 +19,19 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
                           VideoInterComAlarmType)
 from typing_extensions import override
+import xml.etree.ElementTree as ET
+
+from sdk.utils import SDKError
 
 
 def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
-    device_info = doorbell.get_device_info()
+    """Build and instance of DeviceInfo from the ISAPI /deviceinfo endpoint, if available, otherwise skip populating additional fields"""
+    try:
+        device_info = doorbell.get_device_info()
+    except SDKError:
+        # Cannot get device info using ISAPI, fallback to empty `device_info` XML element
+        device_info = ET.Element("")
+
     # Dict to contain the extracted device information
     parsed_device_info: dict[str, Optional[str]] = {}
     model_element = device_info.find('{*}model')
@@ -121,6 +130,7 @@ class MQTTHandler(EventHandler):
             ##################
             # Doors
             # Create switches for output relays used to open doors
+            # TODO: what if this call fails? -> no door switches are created
             num_doors = doorbell.get_num_outputs()
             logger.debug("Configuring {} door switches", num_doors)
             for door_id in range(num_doors):

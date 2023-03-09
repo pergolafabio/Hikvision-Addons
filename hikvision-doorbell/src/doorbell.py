@@ -171,7 +171,7 @@ class Doorbell():
         if not result:
             # The response status is populated only in case of error
             logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8"))
-            raise SDKError(self._sdk, "Error while calling ISAPI endpoint")
+            raise SDKError(self._sdk, f"Error while calling ISAPI {url}")
         
         logger.debug("Response output: {}", outputBuffer.value.decode("utf-8"))
 
@@ -188,10 +188,11 @@ class Doorbell():
         return len(root)
 
     def get_device_info(self):
-        """Retrieve device information (model, sw version, etc) using the ISAPI endpoint. Returned the parsed XML document"""
+        """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.
+        Return the parsed XML document"""
         xml_string = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
         return ET.fromstring(xml_string)
-        
+
     def __del__(self):
         self.logout()
 

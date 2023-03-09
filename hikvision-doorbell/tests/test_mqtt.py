@@ -3,10 +3,12 @@ import pytest
 from pytest_mock import MockerFixture
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
-from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler
+from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler, extract_device_info
 from ha_mqtt_discoverable import DeviceInfo
+import xml.etree.ElementTree as ET
 
 from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VideoInterComAlarmType
+from sdk.utils import SDKError
 
 
 def test_init(mocker: MockerFixture):
@@ -34,6 +36,28 @@ def test_init(mocker: MockerFixture):
 
     handler = MQTTHandler(mqtt_config, registry)
     assert handler is not None
+
+
+def test_extract_device_info(mocker: MockerFixture):
+    # Create a fake doorbell and set the parameters read by the handler
+    attributes = {'_config.name': 'test', '_device_info.serialNumber.return_value': "123"}
+    mocked_doorbell = mocker.patch('doorbell.Doorbell', **attributes)
+    mocked_doorbell.get_device_info.return_value = ET.Element("")
+    info = extract_device_info(mocked_doorbell)
+    assert info is not None
+
+
+def test_extract_device_info_with_exception(mocker: MockerFixture):
+    # Define a subclass of SDKError that does nothing, to be raised during the test
+    class MockSDKError(SDKError):
+        def __init__(self):
+            pass
+
+    # Create a fake doorbell and set the parameters read by the handler
+    attributes = {'_config.name': 'test', '_device_info.serialNumber.return_value': "123", "get_device_info.side_effect": MockSDKError}
+    mocked_doorbell = mocker.patch('doorbell.Doorbell', **attributes)
+    info = extract_device_info(mocked_doorbell)
+    assert info is not None
 
 
 class TestDeviceTrigger:
