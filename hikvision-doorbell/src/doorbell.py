@@ -101,7 +101,7 @@ class Doorbell():
             requestBody = "<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>"
             # Avoid crashing inside the callback, otherwise we lose the MQTT client
             try:
-                doorbell._call_isapi("PUT", url, requestBody)
+                self._call_isapi("PUT", url, requestBody)
             except SDKError as err:
                 logger.error("Error while opening door: {}", err)
 
