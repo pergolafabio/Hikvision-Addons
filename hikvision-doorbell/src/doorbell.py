@@ -86,26 +86,29 @@ class Doorbell():
             logger.debug("SDK logout result {}", logout_result)
 
     def unlock_door(self, lock_id: int):
+        """ Unlock the specified door using the SKD NET_DVR_RemoteControl.
+        If that fails, fallback to ISAPI `/ISAPI/AccessControl/RemoteControl/door/`.
+
+        See #83
+        """
         gw = NET_DVR_CONTROL_GATEWAY()
         gw.dwSize = sizeof(NET_DVR_CONTROL_GATEWAY)
         gw.dwGatewayIndex = 1
         gw.byCommand = 1  # opening command
         gw.byLockType = 0  # this is normal lock not smart lock
-        gw.wLockID = lock_id  # door station
+        gw.wLockID = lock_id  # door ID
         gw.byControlSrc = (c_byte * 32)(*[97, 98, 99, 100])  # anything will do but can't be empty
         gw.byControlType = 1
 
         result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
         if not result:
+            # SDK failed, try via ISAPI
             url = "/ISAPI/AccessControl/RemoteControl/door/" + str(lock_id+1)
             requestBody = "<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>"
-            # Avoid crashing inside the callback, otherwise we lose the MQTT client
-            try:
-                self._call_isapi("PUT", url, requestBody)
-            except SDKError as err:
-                logger.error("Error while opening door: {}", err)
 
-            raise SDKError(self._sdk, "Error while invoking NET_DVR_RemoteControl API. Tried ISAPI method...")
+            logger.debug("NET_DVR_RemoteControl failed with code {}, trying ISAPI", self._sdk.NET_DVR_GetLastError())
+            self._call_isapi("PUT", url, requestBody)
+   
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
     def reboot_device(self):

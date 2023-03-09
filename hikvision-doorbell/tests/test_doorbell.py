@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 from config import AppConfig
 from doorbell import Doorbell
 from sdk.utils import loadSDK, setupSDK, shutdownSDK, SDKConfig, SDKLogLevel
@@ -23,7 +24,7 @@ def sdk(tmp_path: Path):
 
 
 @pytest.mark.skipif(os.environ.get("CI") is not None, reason="Cannot run inside CI pipeline")
-class TestDoorbell:
+class TestRealDoorbell:
 
     @pytest.fixture
     def doorbell(self, sdk):
@@ -70,3 +71,34 @@ class TestDoorbell:
         # This test reboots the doorbell!
         doorbell.authenticate()
         doorbell.reboot_device()
+
+
+def test_unlock_door(mocker: MockerFixture):
+    # Mock SDK and configuration
+    sdk = mocker.patch('ctypes.CDLL')
+    config = mocker.patch('config.AppConfig.Doorbell')
+
+    doorbell = Doorbell(0, config, sdk)
+    # Set user ID to simulate a login
+    doorbell.user_id = 0
+
+    doorbell.unlock_door(0)
+    sdk.NET_DVR_RemoteControl.assert_called_once()
+
+
+def test_unlock_door_isapi(mocker: MockerFixture):
+    """The SDK fails, fallback to ISAPI"""
+    # mock sdk and configuration
+    sdk = mocker.patch('ctypes.CDLL')
+    # Simulate error in NET_DVR_RemoteControl
+    sdk.NET_DVR_RemoteControl.return_value = 0
+    config = mocker.patch('config.AppConfig.Doorbell')
+
+    doorbell = Doorbell(0, config, sdk)
+    # Set user ID to simulate a login
+    doorbell.user_id = 0
+
+    doorbell.unlock_door(0)
+    sdk.NET_DVR_RemoteControl.assert_called_once()
+    # Check that ISAPI call has been made
+    sdk.NET_DVR_STDXMLConfig.assert_called_once()
