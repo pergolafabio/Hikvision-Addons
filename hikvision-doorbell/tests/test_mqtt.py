@@ -66,7 +66,7 @@ class TestDeviceTrigger:
         # Mock the sensors so no MQTT connection is made
         mocker.patch("mqtt.Sensor")
         mocker.patch("mqtt.Switch")
-        # mocker.patch("mqtt.DeviceTrigger")
+        mocker.patch("mqtt.DeviceTrigger")
 
         # Instantiate the handler
         handler = MQTTHandler(mqtt_config, registry)
