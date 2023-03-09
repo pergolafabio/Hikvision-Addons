@@ -16,26 +16,41 @@ Connect your Hikvision IP door stations to Home Assistant to receive events (lik
 
 
 ## Features
-- Capture doorbell events: callstatus/motion detection/door unlocked/tamper alarm/dismissed alarm
-- Open doors connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
-- Remote actions such as answering/rejecting the call, hanging up, etc (via the `ISAPI` API).
-_This can be exploited in HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
-- Reboot the door station
+- Capture doorbell **events**: _doorbell ringing_ /_motion detection_ /_door unlocked_ / _tamper alarm_
+- **Open doors** connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
+- Remote actions such as **answering**/**rejecting** the call, **hanging** up.
+
+   _This can be exploited in an HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
+- **Reboot** the door station
+
+### Example
+
+Here is an example setup showing two doorbells, an indoor and an outdoor unit:
+
+<p align="center">
+   <img src="assets/docs_home_page.png" width="500px">
+</p>
 
 ## Getting started
 
-- Add this repository on your local Home Assistance instance by clicking the following button:
-<p align="center">
-    <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons">
-        <img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.">
-    </a>
-</p>
+**Note**: **Hikvision Doorbell** requires an MQTT broker to function correctly. Refer to the **Documentation** tab of the add-on to learn how to setup the official **Mosquitto add-on**.
 
-- Confirm the **Manage add-on repositories** dialog by clicking **ADD**.
-- **Hikvision Doorbell** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to `Settings` -> `Add-ons` -> `Add-on store`).
+- Click the following button to automatically open the add-on in you Home Assistance UI:
+   <p align="center">
+      <a href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons" target="_blank">
+         <img src="https://my.home-assistant.io/badges/supervisor_addon.svg" alt="Open your Home Assistant instance and show the dashboard of a Supervisor add-on." />
+      </a>
+   </p>
+
+   If you are having problems, here are the manual steps:
+   - Open you Home Assistance interface, and navigate to `Settings` -> `Add-ons` -> `Add-on store` -> `Repositories` (in the upper-right corner)
+   - Paste the following URL in the input field: `https://github.com/pergolafabio/Hikvision-Addons`
+   - Confirm the dialog by clicking **ADD**.
+   - **Hikvision Doorbell** should be available in the `Add-on store` of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to `Settings` -> `Add-ons` -> `Add-on store`).
+
 - Select the **Hikvision Doorbell** add-on, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
-(The documentation can also be browsed online in the [Github repo](DOCS.md)).
+(The documentation can also be browsed online in the [Github repository](DOCS.md)).
 
 ## Supported devices
 This devices has been reported to be working from other HA users.

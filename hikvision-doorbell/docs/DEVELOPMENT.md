@@ -50,7 +50,19 @@ The local instance is accessible under `http://localhost:7123/`.
 
 The addon should be visible in the add-on store.
 
-## Release
+## Internals
+
+The following diagrams provides an high-level overview of the internal software architecture.
+Third-party extension can be easily added by interfacing with the external **MQTT broker**.
+If a more fine-grained approach is required, it is possible to manually implement new **event** and/or **input** handlers.
+
+<p align="center">
+    <img src="../assets/hikvision-addon-architecture.svg" alt="Software architecture">
+</p>
+
+
+## New releases
+
 The release process is automated using Github Actions.
 See the [workflow file](/.github/workflows/deploy.yml) for the definition of the automated steps.
 

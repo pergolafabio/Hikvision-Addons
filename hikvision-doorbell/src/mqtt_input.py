@@ -49,6 +49,7 @@ class MQTTInput():
                 name="Reject call",
                 unique_id=f"{sanitized_doorbell_name}_reject_call",
                 device=device,
+                icon="mdi:phone-cancel",
                 object_id=f"{sanitized_doorbell_name}_reject_call")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             reject_button = Button(settings, self._reject_call_callback, doorbell)
@@ -60,6 +61,7 @@ class MQTTInput():
                 name="Answer call",
                 unique_id=f"{sanitized_doorbell_name}_answer_call",
                 device=device,
+                icon="mdi:phone-check",
                 object_id=f"{sanitized_doorbell_name}_answer_call")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             answer_button = Button(settings, self._answer_call_callback, doorbell)

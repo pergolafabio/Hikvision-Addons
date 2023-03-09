@@ -5,11 +5,6 @@ configuration:
     description: >-
       Configure one or more doorbells to connect to. See the 'Documentation' tab for more details.
 
-  home_assistant:
-    name: Home Assistant integration
-    description: >-
-      Please leave this option untouched, it configures the internal communication with Home Assistant REST API.
-
   system:
     name: "System options"
     description: >-

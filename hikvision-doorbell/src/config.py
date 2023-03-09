@@ -37,8 +37,8 @@ def mqtt_config_from_supervisor():
     service_response = requests.get("http://supervisor/services/mqtt", headers=auth_headers)
     if service_response.status_code == 400:
         # MQTT addon is not configured
-        logger.debug("MQTT service not available")
-        return
+        logger.error("MQTT service not available")
+        raise RuntimeError("This addon need the mosquitto broker to work correctly. Please see the Documentation tab for details.")
 
     if service_response.status_code != 200:
         raise RuntimeError(f"Unexpected response while requesting MQTT service: {service_response.text}")
