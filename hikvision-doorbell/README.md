@@ -28,7 +28,7 @@ Connect your Hikvision IP door stations to Home Assistant to receive events (lik
 Here is an example setup showing two doorbells, an indoor and an outdoor unit:
 
 <p align="center">
-   <img src="assets/docs_home_page.png" width="500px">
+   <img src="assets/docs_sensors.png" width="500px">
 </p>
 
 ## Getting started
