@@ -97,8 +97,15 @@ class Doorbell():
 
         result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
         if not result:
-            raise SDKError(self._sdk, "Error while invoking NET_DVR_RemoteControl API")
+            url = "/ISAPI/AccessControl/RemoteControl/door/" + str(lock_id+1)
+            requestBody = "<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>"
+            # Avoid crashing inside the callback, otherwise we lose the MQTT client
+            try:
+                doorbell._call_isapi("PUT", url, requestBody)
+            except SDKError as err:
+                logger.error("Error while opening door: {}", err)
 
+            raise SDKError(self._sdk, "Error while invoking NET_DVR_RemoteControl API. Tried ISAPI method...")
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
     def reboot_device(self):
