@@ -88,6 +88,7 @@ class MQTTHandler(EventHandler):
             username=config.username,
             password=config.password
         )
+        # Create the sensors for each doorbell:
         for doorbell in doorbells.values():
             # Consider only outdoor units
             if doorbell._type is DeviceType.INDOOR:
@@ -102,22 +103,7 @@ class MQTTHandler(EventHandler):
 
             # Remove spaces and - from doorbell name
             sanitized_doorbell_name = sanitize_doorbell_name(doorbell_name)
-            ##################
-            # Motion sensor
-            motion_sensor_info = BinarySensorInfo(
-                name="Motion",
-                unique_id=f"{device.identifiers}-motion",
-                device_class="motion",
-                device=device,
-                object_id=f"{sanitized_doorbell_name}_motion",
-                off_delay=1)
 
-            settings = Settings(mqtt=self._mqtt_settings, entity=motion_sensor_info, manual_availability=True)
-            motion_sensor = BinarySensor(settings)
-            motion_sensor.off()
-            motion_sensor.set_availability(True)
-
-            self._sensors[doorbell]['motion'] = motion_sensor
             ##################
             # Call state
             call_sensor_info = SensorInfo(
@@ -166,10 +152,9 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_ALARMINFO_V30,
             buffer_length,
             user_pointer: c_void_p):
-        motion_sensor = cast(BinarySensor, self._sensors[doorbell]['motion'])
-        logger.debug("Updating sensor {}", motion_sensor._entity.name)
-        motion_sensor.on()
-   
+        metadata = DeviceTriggerMetadata(name="motion_detection", type="Motion detected", subtype="")
+        self.handle_device_trigger(doorbell, metadata)
+
     @override
     async def isapi_alarm(
             self,

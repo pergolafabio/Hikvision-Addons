@@ -36,7 +36,7 @@ def test_init(mocker: MockerFixture):
     assert handler is not None
 
 
-class TestVideoIntercomAlarm:
+class TestDeviceTrigger:
 
     @classmethod
     @pytest.fixture()
@@ -57,17 +57,16 @@ class TestVideoIntercomAlarm:
 
         # Mock call to get DeviceInfo
         extract_device_info = mocker.patch('mqtt.extract_device_info', autospec=True)
-        dev_info = DeviceInfo(name="test", identifiers="id")
+        dev_info = DeviceInfo(name="Outdoor unit", identifiers="id")
         extract_device_info.return_value = dev_info
 
         # Fake MQTT settings
         mqtt_config = AppConfig.MQTT(host="localhost")
 
         # Mock the sensors so no MQTT connection is made
-        mocker.patch("mqtt.BinarySensor")
         mocker.patch("mqtt.Sensor")
         mocker.patch("mqtt.Switch")
-        mocker.patch("mqtt.DeviceTrigger")
+        # mocker.patch("mqtt.DeviceTrigger")
 
         # Instantiate the handler
         handler = MQTTHandler(mqtt_config, registry)
@@ -111,6 +110,14 @@ class TestVideoIntercomAlarm:
         # Check that the entity is saved in the dict
         assert handler._sensors[doorbell][entity_key_name] is not None
     
+    def test_motion_detection(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        alarm_info = mocker.patch("sdk.hcnetsdk.NET_DVR_ALARMINFO_V30")
+
+        asyncio.run(handler.motion_detection(doorbell, 0, None, alarm_info, 0, None))
+
+        # Check that the entity is saved in the dict
+        assert handler._sensors[doorbell]["motion_detection"] is not None
+
     def test_unknown_alarm_type(self, doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
         video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
         video_intercom_alarm.byAlarmType = 999
