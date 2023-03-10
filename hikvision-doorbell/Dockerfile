@@ -1,4 +1,6 @@
-FROM python:3.10.8-slim
+# TODO: temporarily use non-slim image for pip install with git
+FROM python:3.10.8
+# FROM python:3.10.8-slim
 
 # The build arguments are populated by Home Assistant during the image build
 # Use this build argument to know for which platform we are building

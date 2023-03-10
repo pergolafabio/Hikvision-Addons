@@ -5,7 +5,7 @@ charset-normalizer==3.0.1
 exceptiongroup==1.1.0
 flake8==6.0.0
 goodconf==3.0.0
-ha-mqtt-discoverable==0.7.0
+ha-mqtt-discoverable @ git+https://github.com/mion00/ha-mqtt-discovery@feat/mqtt_input_text  # TODO: use forked version
 idna==3.4
 iniconfig==2.0.0
 loguru==0.6.0
