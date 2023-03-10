@@ -5,7 +5,7 @@ from typing import Optional
 from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
-from sdk.utils import SDKError
+from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
 
 
@@ -124,7 +124,7 @@ class Doorbell():
 
     def _call_isapi(self, http_method: str, url: str, requestBody: str = "") -> str:
         """Call the ISAPI endpoints using the SDK.
-        
+ 
         Args:
             http_method: HTTP method to use (e.g. GET, POST, PUT)
             url: The URL to invoke. Must start with `/ISAPI`
@@ -132,63 +132,45 @@ class Doorbell():
         Returns:
             str: The response message as a string
         """
-        # Build the HTTP request string
-        # e.g.: `GET /ISAPI/System/IO/outputs`
-        inUrl = f"{http_method} {url}"
 
-        logger.debug("Request body: {}", requestBody)
+        # Delegate actual call to helper function
+        output = call_ISAPI(self._sdk, self.user_id, http_method, url, requestBody)
+        outputBuffer = output.lpOutBuffer
 
-        # Input information
-        inputStruct = NET_DVR_XML_CONFIG_INPUT()
+        output_char_p = cast(outputBuffer, c_char_p)
 
-        urlSize = (c_char * 256)()
+        # If there is no response in output (it may have errored out) return empty string
+        response_body = output_char_p.value.decode("utf-8") if output_char_p.value else ""
 
-        requestUrlBuffer = bytes(inUrl, "ascii")
-        inputStruct.lpRequestUrl = cast(c_char_p(requestUrlBuffer), c_void_p)
-        inputStruct.dwRequestUrlLen = len(urlSize)
-
-        inputBuffer = bytes(requestBody, "ascii")
-
-        inputStruct.lpInBuffer = cast(c_char_p(inputBuffer), c_void_p)
-        inputStruct.dwInBufferSize = len(inputBuffer)
-
-        inputStruct.dwSize = sizeof(inputStruct)
-
-        # Output information
-        outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
-        outputBufferSize = 1024 * 1024
-        responseStatusBuffer = (c_char * outputBufferSize)()
-        outputStruct.lpStatusBuffer = cast(responseStatusBuffer, c_void_p)
-        outputStruct.dwStatusSize = outputBufferSize
-
-        outputSize = (1024 * 1024)
-        outputBuffer = (c_char * outputSize)()
-
-        outputStruct.lpOutBuffer = cast(outputBuffer, c_void_p)
-        outputStruct.dwOutBufferSize = outputSize
-        outputStruct.dwSize = sizeof(outputStruct)
-
-        # Invoke the ISAPI API
-        result = self._sdk.NET_DVR_STDXMLConfig(self.user_id, inputStruct, outputStruct)
-
-        if not result:
-            # The response status is populated only in case of error
-            logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8"))
-            raise SDKError(self._sdk, f"Error while calling ISAPI {url}")
-        
-        logger.debug("Response output: {}", outputBuffer.value.decode("utf-8"))
-
-        return outputBuffer.value.decode("utf-8")
+        return response_body
 
     def get_num_outputs(self) -> int:
-        """Get the number of output relays configured for this doorbell"""
-        xml_string = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
+        """Get the number of output relays configured for this doorbell, trying multiple ISAPI endpoints"""
 
-        root = ET.fromstring(xml_string)
-        if 'IOOutputPortList' not in root.tag:
-            raise RuntimeError(f'Unexpected XML response tag: {root.tag}')
+        try:
+            io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
 
-        return len(root)
+            root = ET.fromstring(io_outputs_xml)
+            if 'IOOutputPortList' not in root.tag:
+                # XML does not contain the required tag
+                raise RuntimeError(f'Unexpected XML response: {io_outputs_xml}')
+            door_number = len(root)
+        
+        except SDKError:
+            # Device does not support previous ISAPI endpoint, try another
+            door_capabilities_xml = self._call_isapi("GET", "/ISAPI/AccessControl/RemoteControl/door/capabilities")
+            root = ET.fromstring(door_capabilities_xml)
+
+            door_number_element = root.find('{*}doorNo')
+
+            # Error out if we don't find attribute `max` inside the `doorNo` element
+            if door_number_element is None or 'max' not in door_number_element.attrib:
+                # Print a string representation of the response XML
+                raise RuntimeError(f'Unexpected XML response: {door_capabilities_xml}')
+
+            door_number = int(door_number_element.attrib['max'])
+
+        return door_number
 
     def get_device_info(self):
         """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.

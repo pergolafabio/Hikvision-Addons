@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RemoteControlDoor  version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+    <doorNo min="1" max="2"/>
+    <cmd opt="open,alwaysOpen,resume"/>
+</RemoteControlDoor >
