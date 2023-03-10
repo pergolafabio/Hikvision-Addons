@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
 from ha_mqtt_discoverable import Settings, Discoverable
@@ -73,18 +73,18 @@ class MQTTInput():
             answer_button.set_availability(True)
 
             ###########
-            # ISAPI command input text
+            # ISAPI request input text
             text_info = TextInfo(
-                name="ISAPI endpoint",
-                unique_id=f"{sanitized_doorbell_name}_isapi_endpoint",
+                name="ISAPI request",
+                unique_id=f"{sanitized_doorbell_name}_isapi_request",
                 device=device,
                 enabled_by_default=False,
                 entity_category="diagnostic",
-                object_id=f"{sanitized_doorbell_name}_isapi_endpoint")
+                object_id=f"{sanitized_doorbell_name}_isapi_request")
             settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True)
-            isapi_input = Text(settings, self._isapi_input_callback, doorbell)
-            isapi_input.set_availability(True)
-            self._sensors[doorbell]['isapi_input'] = isapi_input
+            isapi_text = Text(settings, self._isapi_input_callback, doorbell)
+            isapi_text.set_availability(True)
+            self._sensors[doorbell]['isapi_text'] = isapi_text
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received reboot command for doorbell: {}", doorbell._config.name)
@@ -128,19 +128,24 @@ class MQTTInput():
         logger.debug("Received input text for doorbell: {}", doorbell._config.name)
 
         text_string = message.payload.decode('utf-8')
-        self._sensors[doorbell]['isapi_input'].set_text(text_string)
+
+        text_entity = cast(Text, self._sensors[doorbell]['isapi_text'])
+        text_entity.set_text(text_string)
         
-        # Decode the HTTP method and URL by splitting the input string
-        http_method, url = text_string.split()
-        request_body = ""
+        # Decode the HTTP method, URL and request body by splitting the input string
+        http_method, url, *request_body = text_string.split()
+        
+        # If the user has not provided a request body, default to an empty string
+        if not request_body:
+            request_body = [""]
 
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
-            response = doorbell._call_isapi(http_method, url, request_body)
+            response = doorbell._call_isapi(http_method, url, request_body[0])
             attributes = {
                 "request": text_string,
                 "response": response
             }
-            self._sensors[doorbell]['isapi_input'].set_attributes(attributes)
+            text_entity.set_attributes(attributes)
         except SDKError as err:
             logger.error("Error while invoking ISAPI endpoint: {}", err)
