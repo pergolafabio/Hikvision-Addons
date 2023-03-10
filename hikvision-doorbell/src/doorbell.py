@@ -145,8 +145,14 @@ class Doorbell():
         return response_body
 
     def get_num_outputs(self) -> int:
-        """Get the number of output relays configured for this doorbell, trying multiple ISAPI endpoints"""
-
+        """
+        Get the number of output relays configured for this doorbell.
+        If the user has specified the number of relays in the config, use that information, otherwise try to get it from multiple ISAPI endpoints.
+        """
+        if self._config.output_relays is not None:
+            logger.debug("Using the configured number of switches: {}", self._config.output_relays)
+            return self._config.output_relays
+        
         try:
             io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
 

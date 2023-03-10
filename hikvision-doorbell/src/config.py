@@ -69,6 +69,7 @@ class AppConfig(GoodConf):
         ip: str
         username: str
         password: str
+        output_relays: Optional[int] = None   # TODO: validate it is in acceppable range!
 
     class HomeAssistant(BaseModel):
         url: AnyHttpUrl = Field(description="Base url of Home Assistant")

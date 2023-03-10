@@ -14,10 +14,10 @@ from sdk.utils import SDKError, loadSDK, setupSDK, shutdownSDK, SDKConfig, SDKLo
 
 @pytest.fixture
 def mock_doorbell(mocker: MockerFixture) -> Doorbell:
-    # mock SDK and configuration
+    # mock SDK
     sdk = mocker.patch('ctypes.CDLL')
-    config = mocker.patch('config.AppConfig.Doorbell')
-    
+    config = AppConfig.Doorbell(name="test", ip="localhost", username="admin", password="password")
+
     return Doorbell(0, config, sdk)
 
 
@@ -93,6 +93,16 @@ def test_unlock_door_isapi(mock_doorbell: Doorbell):
     mock_doorbell._sdk.NET_DVR_RemoteControl.assert_called_once()  # type: ignore 
     # Check that ISAPI call has been made
     mock_doorbell._sdk.NET_DVR_STDXMLConfig.assert_called_once()   # type: ignore 
+
+
+def test_get_num_outputs_from_user(mock_doorbell: Doorbell, mocker: MockerFixture):
+    '''If the user manually specifies the number of outputs, use it'''
+    # Set user ID to simulate a login
+    mock_doorbell.user_id = 0
+    mock_doorbell._config.output_relays = 1
+
+    outputs = mock_doorbell.get_num_outputs()
+    assert outputs == 1
 
 
 def test_get_num_outputs_io_outputs(mock_doorbell: Doorbell, mocker: MockerFixture):

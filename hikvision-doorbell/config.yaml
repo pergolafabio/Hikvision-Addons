@@ -30,6 +30,7 @@ schema:
       ip: str
       username: str
       password: str
+      output_relays: "int?"
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
