@@ -1,6 +1,43 @@
 # Changelog
 
-## 3.0.0.beta.8 - 2022-03-06
+## 3.0.0-beta.10 - 2022-03-11
+
+### Added
+
+- MQTT integration. 
+  **Note: requires a running MQTT broker**
+- Each doorbell is now visible as a device inside Home Assistant
+- New sensors and entities:
+  - `Call state` sensor: displays the state of the call (idle, ringing, dismissed)
+  - `Buttons` for _accepting_/_rejecting_ the call, _rebooting_ the device
+  - `Switches` for controlling the output switches connected to the doorbell unit (to open gates, doors)
+  - `Device triggers` for receiving alarm events (motion detection, door not closed, tamper alarm, etc..)
+  - Diagnostic `text` entity for testing out ISAPI commands (advanced)
+- New configuration option: `output_relays` (to manually specify the number of relays)
+- If the add-on has trouble connecting to the doorbells, the sensors show up as `unavailable`
+
+### Changed
+
+- Update documentation, add section about **MQTT** broker installation
+- The add-on no longer creates simple `binary_sensor`, but  various entities associated to one or more `device`, each visible in the HA UI
+- Update development documentation with overview on software architecture, add `docker-compose.yml` example.
+- Update `amd64` SDK to version `6.1.9.4_build20220412`
+
+### Deprecated
+
+- The Home Assistant `REST API` integration is no longer recommended in favor of the `MQTT integration`, and no new features will be added to it
+
+### Fixed
+
+- Sensors no longer disappear on HA restart
+
+## 3.0.0-beta.9 - 2022-03-06
+
+## Fixed
+
+- Quickfix for ISAPI alarm #af214751244b732402375adc6401a1fdd230d15d
+
+## 3.0.0-beta.8 - 2022-03-06
 
 ### Changed
 
@@ -10,7 +47,7 @@
 
 - Multiple doorbells no longer conflict with their sensor names #18
 
-## 3.0.0.beta.7 - 2022-03-06
+## 3.0.0-beta.7 - 2022-03-06
 
 ### Added
 
@@ -19,7 +56,7 @@
 - Added alarm sensor for 'door not open/closed' alarm
 - Added Face Access Terminal as supported device
 
-## 3.0.0.beta.1 - 2022-02-23
+## 3.0.0-beta.1 - 2022-02-23
 
 This is the first of the releases made available under the __Beta channel__. Expect some small issues while we iron out the last bugs and get ready for an exiting official release!
 You feedback is very welcome! If you have any doubt, would like to report a bug or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!

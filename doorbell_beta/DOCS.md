@@ -6,82 +6,120 @@
 The following configuration options are available to be setup using the **Configuration** tab of this add-on in the Home Assistant interface:
 
 ### Doorbells
-Configure the connection to the doorbells. If not provided, the default values are used.
-Repeat the following configuration option for each doorbell:
+Configure the connection to the doorbells. If a value is not defined, the default setting is used.
+
+For each of your doorbells, repeat the following configuration:
 
 | Option        | Default       | Description                           |
 | --------      | ----          | ----                                  |
-| name          |               | Custom name for this doorbell
+| name          |               | Custom name for this doorbell (visibile in the HA UI and the sensors names)
 | ip            |               | IP address of the doorbell
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
+| output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
 
 #### Example config
-
+The following configuration setups two doorbells, named `Front door` and `Rear door`:
 ```yaml
-doorbells: 
-  - name: "Front door"
-    ip: 192.168.0.1
-    username: admin
-    password: password  
-  - name: "Rear door"
-    ip: 192.168.0.2
-    username: admin
-    password: password
+- name: "Front door"
+  ip: 192.168.0.1
+  username: admin
+  password: password  
+
+- name: "Rear door"
+  ip: 192.168.0.2
+  username: admin
+  password: password
 ```
 
-### General
-The following settings are also available:
+### System
+The following system settings are available:
 
 | Name              | Default               | Description                           |
 | --------          | ----                  | ----                                  |
 | log_level         | WARNING               | The verbosity of the add-on logs. Available options: _ERROR_ _WARNING_ _INFO_ _DEBUG_
 | sdk_log_level     | NONE               | The verbosity of the Hikvision SDK logs. Available options: _NONE_ _ERROR_ _INFO_ _DEBUG_
+
 #### Example config
 ```yaml
-system:
-  log_level: WARNING
-  sdk_log_level: NONE
+log_level: WARNING
+sdk_log_level: NONE
 ```
 
-## Integrating with Home Assistant
+## Setup
 
-This add-on creates multiple sensors inside Home Assistant, each prefixed with the name of the doorbell it is part of.
-For instance a doorbell named `Front door` creates the sensor having ID `binary_sensor.front_door_callstatus`.
+### Requirements
 
-A basic blueprint showing how to integrate the sensors in you automation is provided as part of this add-on.
-The automation displays a notification inside the Home Assistant UI.
-To import the blueprint in you Home Assistant installation, click the button:
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons%2Fblob%2Fdev%2Fblueprints%2Fdoorbell-ringing.yaml)
+A running MQTT broker.
 
-<!-- ### Advanced configuration
-Create the template sensors in your `configuration.yaml`, following the example below.
+You can use the officially supported __Mosquitto broker__, available in the official add-ons section of your Home Assistant instance. 
+You can quickly set it up by clicking the following button:
+[![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=core_mosquitto), or by manually finding it inside your `Add-on store`.
 
-When triggered, the state of each sensor is `on` for 1 second.
+After you have started the __Mosquitto broker__ add-on, you should be able to automatically connect Home Assistant to the broker by going to `Settings` -> `Devices & Services` -> `MQTT`, and clicking `Configure`.
 
-The `sensor_door` exports as attributes the `door ID` that was opened as well the badge/key used.
+### Getting started
 
-### Example
+After you have setup an MQTT broker, you can start __Hikvision Doorbell__. 
+Each of you defined doorbell should be visible as a device under `Settings` -> `Devices & Services` -> `Devices`.
 
-````yaml
-# configuration.yaml
-template:
-  - sensor:
-      - name: hikvision_door
-        state: "off"
-      - name: hikvision_callstatus
-        state: "off"
-      - name: hikvision_motion
-        state: "off"
-      - name: hikvision_tamper
-        state: "off"
-      - name: hikvision_dismiss
-        state: "off"
-```` -->
+### Sensors, switches and buttons
+For each of your doorbells, the following entities are available:
 
-## Sending commands
+- Sensors
+  - `Call state` (_idle_, _ringing_, _dismissed_)
+- Switches
+  - `Door relays` (one for each available relay, open the door connected to the output relay of the device)
+- Buttons
+  - `Answer call`
+  - `Reject call`
+  - `Reboot`
+- Device triggers (depending on device model)
+  - `Motion detected`
+  - `Tamper alarm`
+  - `Door not closed`
+  - ...
 
-To open a door or reboot the door station, send a text message to the add-on via its `standard input`. You can use the built-in `hassio.addon_stdin` service provided by Home Assistant.
+  The _device triggers_ are used to signal alarms and events generated by the doorbells (the type of events generated depends on the specific model).
+  These are special entities that do not have a state associated to them (therefore are not visible in the list of HA entities, but under each `Device info` page). 
+  
+  **NOTE**: The device triggers are discovered *once the associated event is triggered on the device at least once.*
+  
+  You can use a [device trigger](https://www.home-assistant.io/docs/automation/trigger/#device-triggers) in an automation by using a trigger of type `Device`.
+  Check out the [Automating Home Assistant](https://www.home-assistant.io/getting-started/automation/) guide on automations or the [Automation](https://www.home-assistant.io/docs/automation/) documentation for full details.
+  
+  <p align="center">
+    <img src="assets/docs_device_triggers_automation.png" width="600px" />
+  </p>
+
+<!-- ### REST integration
+DEPRECATED, comment out documentation
+__Automatically enabled__ whenever there is no __MQTT broker__ available. 
+
+This integration, while supported, is discouraged for new installations, but still available whenever you are unable to run an MQTT broker.
+Due to the limitations of the Home Assistant _REST API_, it cannot provide a complete set of features as does the MQTT integration.
+(e.g.: devices and button configurable from the HA UI)
+
+The entities created by this integration are all binary sensors.
+When triggered, the state of each binary sensor is `on` for 5 seconds.
+
+The `door` sensors exports as attributes the `door ID` that was opened as well the badge/key used. -->
+
+
+## Sending commands to the doorbells
+
+There are two ways in which you can interact with your doorbells: 
+- via the automatically created MQTT entities (switches, buttons)
+- manually invoking the add-on `stdin` service
+
+### MQTT entities
+
+This add-on automatically creates [switches](https://www.home-assistant.io/integrations/switch/) and [buttons](https://www.home-assistant.io/integrations/button/) you can toggle and react to from the Home Assistant UI or from your own automations.
+
+### STDIN service (advanced)
+
+There is an advanced method to interact with the devices by sending a text message to the add-on on its `standard input` (STDIN).
+You can use the built-in `hassio.addon_stdin` service provided by Home Assistant.
 
 The input string must be in the format
 ```
@@ -107,14 +145,7 @@ The input string must be in the format
 
 - `<optional_parameter>` can be an additional string, used for instance to specify additional options for a command
 
-### Testing
-To manually call the `hassio.addon_stdin` service (useful for testing and diagnosing issues), you can click the following button:
-
-<a href="https://my.home-assistant.io/redirect/developer_call_service/?service=hassio.addon_stdin" target="_blank"><img src="https://my.home-assistant.io/badges/developer_call_service.svg" alt="Open your Home Assistant instance and show your service developer tools with a specific service selected." /></a>
-
-### Example
-__Note__: In the following examples, `aff2db71_hikvision_doorbell_beta` is the unique add-on ID, check your local Home Assistant instance and substitute it with your own local ID.
-
+#### Example
 For more details see the [official documentation]((https://www.home-assistant.io/integrations/hassio/#service-hassioaddon_stdin)) about the `hassio.addon_stdin` service.
 
 #### Unlock a door
@@ -122,7 +153,7 @@ This service unlocks the door connected to the _1st_ output relay of the door st
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: aff2db71_hikvision_doorbell_beta
+  addon: aff2db71_hikvision_doorbell
   input: unlock front_door 1
 ````
 
@@ -131,7 +162,7 @@ To reboot the doorbell named `Rear door`:
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: aff2db71_hikvision_doorbell_beta
+  addon: aff2db71_hikvision_doorbell
   input: reboot rear_door
 ````
 
@@ -145,13 +176,13 @@ This type of command must be sent to an indoor station only.
 ````yaml
 service: hassio.addon_stdin
 data:
-  addon: aff2db71_hikvision_doorbell_beta
+  addon: aff2db71_hikvision_doorbell
   input: reject indoor_unit
 ````
 
 ## Support
 If you find a bug or need support [open an issue here](https://github.com/pergolafabio/Hikvision-Addons/issues/new) on GitHub.
-If required by the developers, please attach a copy of your logs in the issue to help us better diagnose the problem!
+If possible, please provide a copy of your logs in the issue form to help us better diagnose the problem!
 
 ### Troubleshooting
 Have a look at the **Log** tab of the add-on in the Home Assistant UI.

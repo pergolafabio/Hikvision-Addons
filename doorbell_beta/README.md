@@ -17,19 +17,31 @@ Connect your Hikvision IP door stations to Home Assistant to receive events (lik
 __NOTE__: This is the pre-release version of the addon. Bear in mind that it may have unexpected issues.
 You feedback is very welcome! If you have any doubt, would like to report an issue or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!
 
+
 ## Features
-- Capture doorbell events: callstatus/motion detection/door unlocked/tamper alarm/dismissed alarm
-- Open doors connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
-- Remote actions such as answering/rejecting the call, hanging up, etc (via the `ISAPI` API).
-_This can be exploited in HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
-- Reboot the door station
+- Capture doorbell **events**: _doorbell ringing_ /_motion detection_ /_door unlocked_ / _tamper alarm_
+- **Open doors** connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
+- Remote actions such as **answering**/**rejecting** the call, **hanging** up.
+
+   _This can be exploited in an HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
+- **Reboot** the door station
+
+### Example
+
+Here is an example setup showing two doorbells, an indoor and an outdoor unit:
+
+<p align="center">
+   <img src="assets/docs_sensors.png" width="500px">
+</p>
 
 ## Getting started
 
-- __NOTE__: To use this _beta_ version, enable __Advanced mode__ in you Home Assistant profile:
+**Note**: **Hikvision Doorbell** requires an MQTT broker to function correctly. Refer to the **Documentation** tab of the add-on to learn how to setup the official **Mosquitto add-on**.
+
+__NOTE__: To use this _beta_ version, enable __Advanced mode__ in you Home Assistant profile:
    - Click on you user name (in the lower-left corner of Home Assistant UI)
    - Scroll down the profile page and toggle __Advanced Mode__
-     <p>
+     <p align="center">
      <img src="https://user-images.githubusercontent.com/4510647/221361317-a9076a72-9762-4320-8302-24414e6019f2.png" width="600">
      </p>
 - Click the following button to automatically open the add-on in you Home Assistance UI:
@@ -38,26 +50,28 @@ _This can be exploited in HA automation. When for example a Zigbee door sensor s
          <img src="https://my.home-assistant.io/badges/supervisor_addon.svg" alt="Open your Home Assistant instance and show the dashboard of a Supervisor add-on." />
       </a>
    </p>
-   
+
    If you are having problems, here are the manual steps:
-   - Open you Home Assistance interface, and navigate to _Settings_ -> _Add-ons_ -> _Add-on store_ -> _Repositories_ (in the upper-right corner)
+   - Open you Home Assistance interface, and navigate to `Settings` -> `Add-ons` -> `Add-on store` -> `Repositories` (in the upper-right corner)
    - Paste the following URL in the input field: `https://github.com/pergolafabio/Hikvision-Addons`
    - Confirm the dialog by clicking **ADD**.
    - **Hikvision Doorbell (Beta)** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
 - Select the **Hikvision Doorbell (Beta)** add-on, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
-(The documentation can also be browsed online in the [Github repo](DOCS.md)).
-- When you have setup the required configuration options, click **START** to start the add-on
+(The documentation can also be browsed online in the [Github repository](DOCS.md)).
 
 ## Supported devices
 This devices has been reported to be working from other HA users.
 If your device is not on the list, we are happy to include it. Just [open an issue here](https://github.com/pergolafabio/Hikvision-Addons/issues) on GitHub and let us know the kind of device you have.
 
 - DS-KV8413
-- KD8003
+- DS-KD8003
 - DS-KV8113
-- KV8213
+- DS-KV8213
 - DS-KV6113
+- ...
+- DS-KV8102-IM (First generation not supported)
+
 
 ## Additional resources
 - [Add-on documentation](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell_beta/DOCS.md)
