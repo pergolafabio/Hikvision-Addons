@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sys
+from typing import Callable
 from loguru import logger
 
 from doorbell import Doorbell, Registry
@@ -112,5 +113,21 @@ class InputReader():
             case "reboot":
                 logger.info("Rebooting door station")
                 doorbell.reboot_device()
+            case "debug":
+                # This is a special command that accept the name of a method,
+                # calls the method on the doorbell instance and outputs the result
+                if not len(arguments) >= 3:
+                    return
+                method = arguments[2]
+                try:
+                    doorbell_method: Callable = getattr(doorbell, method)
+                    if not callable(doorbell_method):
+                        logger.error("Method {} is not a valid instance method", method)
+                        return
+                    logger.info("Invoking instance method {}", method)
+                    result = doorbell_method()
+                    logger.info("Method returned {}", result)
+                except AttributeError:
+                    logger.error("Instance method {} not found", method)
             case _:
                 logger.error("Command not recognized: `{}`. Please see the documentation for the list of supported commands.", command)

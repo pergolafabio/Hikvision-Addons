@@ -53,6 +53,17 @@ def test_reboot_command(mocker: MockerFixture):
     mocked_doorbell.reboot_device.assert_called_once()
 
 
+def test_debug_command(mocker: MockerFixture):
+    mocked_registry = mocker.patch('doorbell.Registry', autospec=True)
+    reader = InputReader(mocked_registry)
+    command = "debug doorbell get_test"
+    reader.execute_command(command)
+
+    mocked_registry.getByName.assert_called_once_with("doorbell")
+    mocked_doorbell = mocked_registry.getByName('doorbell')
+    mocked_doorbell.get_test.assert_called_once()
+
+
 def test_not_raise_exception(mocker: MockerFixture):
     """If there is an SDKError, the program should catch it and not crash"""
     mocked_registry = mocker.patch('doorbell.Registry', autospec=True)
