@@ -188,7 +188,16 @@ class MQTTHandler(EventHandler):
         if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
             door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
             control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
-            door_sensor = cast(Switch, self._sensors[doorbell][f'door_{door_id}'])
+            # Name of the entity inside the dict array
+            entity_id = f'door_{door_id}'
+            # Extract the entity from the dict and cast to know type
+            door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
+            # If the SDK returns a lock ID that is not starting from 0, 
+            # we don't know what switch to update in HA, so do nothing
+            if not door_sensor:
+                logger.warning("Received unknown lockID: {}", door_id)
+                return
+   
             logger.info("Door {} unlocked by {}, updating sensor {}",
                         door_id+1,
                         control_source,

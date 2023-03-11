@@ -71,6 +71,7 @@ class TestRealDoorbell:
 
     def test_get_call_status(self, doorbell: Doorbell):
         doorbell.authenticate()
+        pytest.skip("This API is still experimental")
         logger.info("Getting the call status")
         status = doorbell.get_call_status()
         logger.info("Call status {}", status)
