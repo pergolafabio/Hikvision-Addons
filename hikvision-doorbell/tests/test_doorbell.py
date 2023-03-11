@@ -76,8 +76,10 @@ class TestRealDoorbell:
         logger.info("Call status {}", status)
 
     def test_reboot(self, doorbell: Doorbell):
-        # This test reboots the doorbell!
+        '''This test reboots the doorbell!'''
         doorbell.authenticate()
+        pytest.skip("This will reboot the doorbell!")
+
         doorbell.reboot_device()
 
 
