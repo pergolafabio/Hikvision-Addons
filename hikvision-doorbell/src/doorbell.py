@@ -1,10 +1,11 @@
-from ctypes import CDLL, byref, c_byte, c_char, c_char_p, c_void_p, sizeof, cast
+from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_int, c_uint, c_void_p, pointer, sizeof, cast
 from enum import IntEnum
 import re
-from typing import Optional
+from typing import Callable, Optional
 from loguru import logger
 from config import AppConfig
-from sdk.hcnetsdk import NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_XML_CONFIG_INPUT, NET_DVR_XML_CONFIG_OUTPUT
+from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_CALL_STATUS, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
+
 from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
 
@@ -147,22 +148,56 @@ class Doorbell():
     def get_num_outputs(self) -> int:
         """
         Get the number of output relays configured for this doorbell.
-        If the user has specified the number of relays in the config, use that information, otherwise try to get it from multiple ISAPI endpoints.
-        """
-        if self._config.output_relays is not None:
-            logger.debug("Using the configured number of switches: {}", self._config.output_relays)
-            return self._config.output_relays
+
+        Use the following methods, and return the first one that succeeds:
         
-        try:
+        - Manual configuration by the user
+        - SDK NET_DVR_GetDeviceAbility
+        - /ISAPI/System/IO/outputs
+        - /ISAPI/AccessControl/RemoteControl/door/capabilities
+
+        """
+
+        # Define various functions, each using a different method to gather this information
+        def user_config() -> int:
+            if self._config.output_relays is not None:
+                logger.debug("Using the configured number of switches: {}", self._config.output_relays)
+                return self._config.output_relays
+            raise RuntimeError("No user configuration specified")
+
+        def sdk_device_ability() -> int:
+            """Use SDK method GetDeviceAbility"""
+            output_buffer = (c_char * 4096)()
+            result = self._sdk.NET_DVR_GetDeviceAbility(
+                self.user_id,
+                DeviceAbilityType.IP_VIEW_DEV_ABILITY,
+                None,
+                0,
+                output_buffer,
+                len(output_buffer)
+            )
+            if not result:
+                raise SDKError(self._sdk, "Error while getting device ability")
+            response_xml = output_buffer.value.decode('utf-8')
+
+            # Parse the XML response
+            response = ET.fromstring(response_xml)
+            # Use XPath to find a node named `IOOutNo` having attribute `@max`
+            ioout_element = response.find(".//IOOutNo[@max]")
+            if ioout_element is None:
+                raise RuntimeError('Cannot find `IOOutNo` node in XML response')
+            return int(ioout_element.attrib['max'])
+
+        def isapi_io_outputs() -> int:
             io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
 
             root = ET.fromstring(io_outputs_xml)
             if 'IOOutputPortList' not in root.tag:
                 # XML does not contain the required tag
                 raise RuntimeError(f'Unexpected XML response: {io_outputs_xml}')
-            door_number = len(root)
-        
-        except SDKError:
+            return len(root)
+
+        def isapi_remote_control() -> int:
             # Device does not support previous ISAPI endpoint, try another
             door_capabilities_xml = self._call_isapi("GET", "/ISAPI/AccessControl/RemoteControl/door/capabilities")
             root = ET.fromstring(door_capabilities_xml)
@@ -174,15 +209,40 @@ class Doorbell():
                 # Print a string representation of the response XML
                 raise RuntimeError(f'Unexpected XML response: {door_capabilities_xml}')
 
-            door_number = int(door_number_element.attrib['max'])
+            return int(door_number_element.attrib['max'])
 
-        return door_number
+        # Define the list of available endpoints to try
+        available_endpoints: list[Callable] = [user_config, sdk_device_ability, isapi_io_outputs, isapi_remote_control]
+        for endpoint in available_endpoints:
+            # Invoke the endpoint, if it errors out try another one
+            try:
+                return endpoint()
+            except RuntimeError:
+                # This endpoint failed, try the next one
+                pass
+
+        # We have run out of available endpoints to call
+        raise RuntimeError("Unable to get the number of doors")
 
     def get_device_info(self):
         """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.
         Return the parsed XML document"""
         xml_string = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
         return ET.fromstring(xml_string)
+
+    def get_call_status(self) -> int:
+        """Get the current status of the call."""
+        call_status = NET_DVR_CALL_STATUS()
+        call_status.dwSize = sizeof(call_status)
+        call_status.byRes = (c_byte * 127)()
+
+        ip_status_list = (BYTE * 1)()
+        result = self._sdk.NET_DVR_GetDeviceStatus(self.user_id, 16034, 1, None, 0, ip_status_list, byref(call_status), call_status.dwSize)
+
+        if not result:
+            raise SDKError(self._sdk, "Error while calling GetDeviceStatus")
+
+        return call_status.byCallStatus
 
     def __del__(self):
         self.logout()

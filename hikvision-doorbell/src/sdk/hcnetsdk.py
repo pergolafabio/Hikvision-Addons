@@ -152,6 +152,9 @@ VIDEO_INTERCOM_EVENT_EVENTTYPE_AUTHENTICATION_LOG = 3
 VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT = 5
 VIDEO_INTERCOM_EVENT_EVENTTYPE_DOOR_STATION_ISSUED_CARD_LOG = 6
 
+###########################################
+# Enums
+
 
 class VideoInterComAlarmType(IntEnum):
     ZONE_ALARM = 1
@@ -179,6 +182,13 @@ class DeviceCapabilityType(Enum):
     DEVICE_NETAPP_ABILITY = 0x00d
     DEVICE_ABILITY_INFO = 0x011
 
+
+class DeviceAbilityType(IntEnum):
+    IP_VIEW_DEV_ABILITY = 0x014
+
+
+###########################
+# Struct
 
 class LPNET_DVR_DEVICE_INFO(Structure):
     _fields_ = [
@@ -561,5 +571,7 @@ class MessageCallbackAlarmInfoUnion(Union):
         ("NET_DVR_ALARM_ISAPI_INFO", NET_DVR_ALARM_ISAPI_INFO)
     ]
 
+
 fMessageCallBack = CFUNCTYPE(BOOL, LONG, POINTER(
     NET_DVR_ALARMER), POINTER(MessageCallbackAlarmInfoUnion), DWORD, c_void_p)
+
