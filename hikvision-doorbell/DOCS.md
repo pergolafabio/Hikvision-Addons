@@ -16,6 +16,7 @@ For each of your doorbells, repeat the following configuration:
 | ip            |               | IP address of the doorbell
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
+| output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
 
 #### Example config
 The following configuration setups two doorbells, named `Front door` and `Rear door`:
