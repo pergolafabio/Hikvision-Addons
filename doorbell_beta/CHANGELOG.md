@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.13 - 2022-03-11
+
+### Changed
+
+- Revert `amd64` SDK update
+
 ## 3.0.0-beta.10 - 2022-03-11
 
 ### Added
