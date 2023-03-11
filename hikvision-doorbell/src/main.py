@@ -5,6 +5,8 @@ from config import AppConfig
 from doorbell import Doorbell, Registry
 from event import ConsoleHandler, EventManager
 from home_assistant import HomeAssistantAPI
+from mqtt import MQTTHandler
+from mqtt_input import MQTTInput
 from sdk.utils import SDKConfig, SDKError, loadSDK, setupSDK, shutdownSDK
 from loguru import logger
 
@@ -14,7 +16,7 @@ from input import InputReader
 async def main():
     """Main entrypoint of the application"""
 
-    # Disable type warnings since the object is populated at runtime using goodconfig library
+    # Disable type warnings since the object is populated at runtime using goodconf library
     config = AppConfig()  # type:ignore
     config.load()
 
@@ -45,9 +47,12 @@ async def main():
     console = ConsoleHandler()
     event_manager.register_handler(console)
 
-    if config.home_assistant:
-        ha_api = HomeAssistantAPI(config.home_assistant, doorbell_registry)
-        event_manager.register_handler(ha_api)
+    # If MQTT configuration is defined, register its event handler and its input manager
+    if config.mqtt:
+        mqtt = MQTTHandler(config.mqtt, doorbell_registry)
+        event_manager.register_handler(mqtt)
+        # Create the MQTT input to manage commands coming from HA
+        _ = MQTTInput(config.mqtt, doorbell_registry)
 
     # Start listening for events
     event_manager.start()
@@ -56,6 +61,7 @@ async def main():
     for _, doorbell in doorbell_registry.items():
         doorbell.setup_alarm()
 
+    # Create reader to receive commands from STDIN
     input_reader = InputReader(doorbell_registry)
 
     input_task = asyncio.create_task(input_reader.loop_forever(), name="Input reader")

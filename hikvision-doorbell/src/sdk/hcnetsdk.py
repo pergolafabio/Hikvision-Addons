@@ -1,5 +1,5 @@
 from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
-from enum import Enum
+from enum import Enum, IntEnum
 import re
 
 BOOL = c_bool
@@ -135,7 +135,7 @@ VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN = 5
 VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED = 6
 VIDEO_INTERCOM_ALARM_ALARMTYPE_PANIC_ALARM = 7
 VIDEO_INTERCOM_ALARM_ALARMTYPE_INTERCOM_ALARM = 8
-VIDEO_INTERCOM_ALARM_ALARMTYPE_SMART_LOCK_DURESS_ALARM_FINGERPRINT=  9
+VIDEO_INTERCOM_ALARM_ALARMTYPE_SMART_LOCK_DURESS_ALARM_FINGERPRINT = 9
 VIDEO_INTERCOM_ALARM_ALARMTYPE_SMART_LOCK_DURESS_ALARM_PASSWORD = 10
 VIDEO_INTERCOM_ALARM_ALARMTYPE_SMART_LOCK_TAMPERING_ALARM = 11
 VIDEO_INTERCOM_ALARM_ALARMTYPE_SMART_LOCK_LOCK_UP_ALARM = 12
@@ -152,12 +152,43 @@ VIDEO_INTERCOM_EVENT_EVENTTYPE_AUTHENTICATION_LOG = 3
 VIDEO_INTERCOM_EVENT_EVENTTYPE_ILLEGAL_CARD_SWIPING_EVENT = 5
 VIDEO_INTERCOM_EVENT_EVENTTYPE_DOOR_STATION_ISSUED_CARD_LOG = 6
 
+###########################################
+# Enums
+
+
+class VideoInterComAlarmType(IntEnum):
+    ZONE_ALARM = 1
+    TAMPERING_ALARM = 2
+    HIJACKING_ALARM = 3
+    MULTIPLE_PASSWORD_UNLOCK_FAILURE_ALARM = 4
+    DOOR_NOT_OPEN = 5
+    DOOR_NOT_CLOSED = 6
+    SOS = 7
+    INTERCOM = 8
+    SMART_LOCK_FINGERPRINT_ALARM = 9    # fingerprint alarm for smart lock hijacking
+    SMART_LOCK_PASSWORD_ALARM = 10      # password alarm for smart lock hijacking
+    SMART_LOCK_DOOR_PRYING_ALARM = 11   # door prying alarm for smart lock
+    SMART_LOCK_DOOR_LOCK_ALARM = 12     # door lock lock alarm for smart lock
+    SMART_LOCK_LOW_BATTERY_ALARM = 13   # low battery alarm for smart lock
+    BLACKLIST_ALARM = 14
+    SMART_LOCK_DISCONNECTED = 15
+    ACCESS_CONTROL_TAMPERING_ALARM = 16  # Access control security module tamper alarm
+    DOORBELL_RINGING = 17
+    DISMISS_INCOMING_CALL = 18
+
 
 class DeviceCapabilityType(Enum):
     DEVICE_VIDEOPIC_ABILITY = 0x00e
     DEVICE_NETAPP_ABILITY = 0x00d
     DEVICE_ABILITY_INFO = 0x011
 
+
+class DeviceAbilityType(IntEnum):
+    IP_VIEW_DEV_ABILITY = 0x014
+
+
+###########################
+# Struct
 
 class LPNET_DVR_DEVICE_INFO(Structure):
     _fields_ = [
@@ -540,5 +571,7 @@ class MessageCallbackAlarmInfoUnion(Union):
         ("NET_DVR_ALARM_ISAPI_INFO", NET_DVR_ALARM_ISAPI_INFO)
     ]
 
+
 fMessageCallBack = CFUNCTYPE(BOOL, LONG, POINTER(
     NET_DVR_ALARMER), POINTER(MessageCallbackAlarmInfoUnion), DWORD, c_void_p)
+

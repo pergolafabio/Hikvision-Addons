@@ -1,0 +1,118 @@
+<IpViewDevAbility version="2.0">
+	<LocalAbility>
+		<inputVolume min="0" max="10"/>
+		<outputVolume min="0" max="10"/>
+		<talkVolume min="0" max="10"/>
+	</LocalAbility>
+	<VideoIntercom>
+		<DeviceID>
+			<enabled>true</enabled>
+			<supportUnitType opt="OutDoorDevice,OutDoorFenceDevice"/>
+			<OutDoorDevice>
+				<period min="1" max="9"/>
+				<buildingNum min="1" max="999"/>
+				<unitNum min="1" max="99"/>
+				<floorNum min="-10" max="10"/>
+				<devIndex min="0" max="16"/>
+			</OutDoorDevice>
+			<OutDoorFenceDevice>
+				<period min="1" max="9"/>
+				<devIndex min="1" max="99"/>
+			</OutDoorFenceDevice>
+		</DeviceID>
+		<PrivilegePwd>
+			<pwdType opt="public1,public2,public3,public4,public5,public6,public7,public8,public9,public10,public11,public12,public13,public14,public15,public16"/>
+			<pwdLen min="4" max="6"/>
+		</PrivilegePwd>
+		<OperationTime>
+			<messageTime min="30" max="60"/>
+			<talkTime min="90" max="120"/>
+			<maxRingTime min="65" max="255"/>
+		</OperationTime>
+		<RelateDevice>
+			<manageUnitIP opt="ipv4"/>
+			<sipServerIP opt="ipv4"/>
+			<centerIP opt="ipv4"/>
+			<centerPort min="0" max="65535"/>
+		</RelateDevice>
+		<ControlGateway>
+			<gatewayIndex min="1"/>
+			<command opt="open,normalOpen,resume"/>
+			<controlSrc>true</controlSrc>
+			<controlType opt="monitor,calling"/>
+			<lockType opt="normal"/>
+		</ControlGateway>
+		<IOIn>
+			<IOInNo attri="readonly" min="1" max="4"/>
+			<useType opt="magneticStatus"/>
+			<NodeList>
+				<Node>
+					<id>1</id>
+					<name>AI1</name>
+					<useType opt="magneticStatus"/>
+				</Node>
+				<Node>
+					<id>2</id>
+					<name>AI2</name>
+					<useType opt="magneticStatus"/>
+				</Node>
+				<Node>
+					<id>3</id>
+					<name>AI3</name>
+					<useType opt="openDoorBtn"/>
+				</Node>
+				<Node>
+					<id>4</id>
+					<name>AI4</name>
+					<useType opt="openDoorBtn"/>
+				</Node>
+			</NodeList>
+		</IOIn>
+		<IOOut>
+			<IOOutNo attri="readonly" min="1" max="2"/>
+			<useType opt="electricLock"/>
+			<NodeList>
+				<Node>
+					<id>1</id>
+					<name>DOOR1</name>
+					<useType opt="electricLock"/>
+				</Node>
+				<Node>
+					<id>2</id>
+					<name>DOOR2</name>
+					<useType opt="disabled,electricLock"/>
+				</Node>
+			</NodeList>
+		</IOOut>
+		<ElevatorControl>
+			<elevatorNo attri="readonly" min="1" max="4"/>
+			<interfaceType opt="network"/>
+			<networkProtocol opt="private,custom"/>
+			<serverIP opt="ipv4,ipv6"/>
+			<serverPort min="0" max="65535"/>
+			<negativeFloor min="0" max="10"/>
+			<elevatorControlType opt="DS-K2210"/>
+			<userName min="1" max="63"/>
+			<password min="1" max="63"/>
+			<isSupportNetWork opt="DS-K2210"/>
+			<isSupportNegativeFloor opt="DS-K2210"/>
+		</ElevatorControl>
+		<VideoCall>
+			<enabled opt="true"/>
+			<supportCmd opt="Request,Cancel,Answer,Decline,Timeout,Bye,DeviceIsBusy,ClientIsBusy"/>
+		</VideoCall>
+		<supportVideoFormat opt="P,N"/>
+		<CallRoomConfig>
+			<keyNo min="1" max="1"/>
+			<roomNo min="1" max="9999"/>
+			<callManageCenter opt="true,false"/>
+		</CallRoomConfig>
+	</VideoIntercom>
+	<UploadAlarmCfg>
+		<UploadDoorNotCloseAlarm opt="true,false"/>
+	</UploadAlarmCfg>
+	<NoNeedReboot>
+		<videoResolutionChange opt="true"/>
+		<videoFrameRateChange opt="true"/>
+	</NoNeedReboot>
+</IpViewDevAbility>

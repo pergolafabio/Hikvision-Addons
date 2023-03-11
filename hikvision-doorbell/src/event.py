@@ -232,3 +232,7 @@ class EventManager:
             None)
         if not result:
             raise SDKError(self._sdk, "Error while setting up event manager")
+
+        # Warn if there are no handlers defined (apart from ConsoleHandler, that is only useful for troubleshooting)
+        if not any([not isinstance(handler, ConsoleHandler) for handler in self._handlers]):
+            logger.warning("No handler defined!")

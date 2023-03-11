@@ -1,5 +1,5 @@
 
-from ctypes import CDLL, POINTER, c_char_p, c_int, c_long, c_void_p, cdll
+from ctypes import CDLL, POINTER, c_char, c_char_p, c_int, c_long, c_void_p, cast, cdll, sizeof
 from ctypes.wintypes import LPVOID
 from enum import IntEnum
 import os
@@ -72,6 +72,7 @@ def setupFunctionTypes(lib: CDLL):
     lib.NET_DVR_RemoteControl.argtypes = [LONG, DWORD, c_void_p, DWORD]
     lib.NET_DVR_STDXMLConfig.argtypes = [LONG, POINTER(NET_DVR_XML_CONFIG_INPUT), POINTER(NET_DVR_XML_CONFIG_OUTPUT)]
     lib.NET_DVR_GetDeviceAbility.argtypes = [LONG, DWORD, c_char_p, DWORD, c_char_p, DWORD]
+
     # Return types
     lib.NET_DVR_GetErrorMsg.restype = c_char_p
 
@@ -103,6 +104,67 @@ def shutdownSDK(sdk: CDLL):
     """Release the resources held by the SDK"""
     logger.debug("Shutting down SDK")
     sdk.NET_DVR_Cleanup()
+
+
+def call_ISAPI(sdk: CDLL, user_id: int, http_method: str, url: str, requestBody: str = "") -> NET_DVR_XML_CONFIG_OUTPUT:
+    """Call the specified ISAPI endpoint using the SDK.
+
+    Args:
+        sdk: an instance of Hikvision SDK
+        user_id: the logged in user ID returned by the SDK
+        http_method: HTTP method to use (e.g. GET, POST, PUT)
+        url: The URL to invoke. Must start with `/ISAPI`
+        requestBody: optional request body
+    Returns:
+        NET_DVR_XML_CONFIG_OUTPUT: The response struct
+    """
+    # Build the HTTP request string
+    # e.g.: `GET /ISAPI/System/IO/outputs`
+    inUrl = f"{http_method} {url}"
+
+    logger.debug("Request body: {}", requestBody)
+
+    # Input information
+    inputStruct = NET_DVR_XML_CONFIG_INPUT()
+
+    urlSize = (c_char * 256)()
+
+    requestUrlBuffer = bytes(inUrl, "ascii")
+    inputStruct.lpRequestUrl = cast(c_char_p(requestUrlBuffer), c_void_p)
+    inputStruct.dwRequestUrlLen = len(urlSize)
+
+    inputBuffer = bytes(requestBody, "ascii")
+
+    inputStruct.lpInBuffer = cast(c_char_p(inputBuffer), c_void_p)
+    inputStruct.dwInBufferSize = len(inputBuffer)
+
+    inputStruct.dwSize = sizeof(inputStruct)
+
+    # Output information
+    outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
+    outputBufferSize = 1024 * 1024
+    responseStatusBuffer = (c_char * outputBufferSize)()
+    outputStruct.lpStatusBuffer = cast(responseStatusBuffer, c_void_p)
+    outputStruct.dwStatusSize = outputBufferSize
+
+    outputSize = (1024 * 1024)
+    outputBuffer = (c_char * outputSize)()
+
+    outputStruct.lpOutBuffer = cast(outputBuffer, c_void_p)
+    outputStruct.dwOutBufferSize = outputSize
+    outputStruct.dwSize = sizeof(outputStruct)
+
+    # Do the actual call
+    result = sdk.NET_DVR_STDXMLConfig(user_id, inputStruct, outputStruct)
+
+    if not result:
+        # The response status is populated only in case of error
+        logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8"))
+        raise SDKError(sdk, f"Error while calling ISAPI {url}")
+
+    logger.debug("Response output: {}", outputBuffer.value.decode("utf-8"))
+
+    return outputStruct
 
 
 class SDKError(RuntimeError):

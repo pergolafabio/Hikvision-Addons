@@ -41,6 +41,7 @@ class HomeAssistantAPI(EventHandler):
     def __init__(self, config: AppConfig.HomeAssistant, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: Home Assistant API")
+        logger.warning("This integration is deprecated!")
 
         self._config = config
         self._doorbells = doorbells

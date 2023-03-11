@@ -17,3 +17,8 @@ def test_load_config_missing_token():
     with pytest.raises(ValidationError):
         config = AppConfig()  # type: ignore
         config.load("tests/assets/test_config_wrong.json")
+
+
+def test_load_config_mqtt():
+    config = AppConfig()  # type: ignore
+    config.load("tests/assets/test_config_mqtt.json")
