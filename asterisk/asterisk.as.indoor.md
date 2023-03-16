@@ -88,7 +88,7 @@ On some indoor panels you are not able to add the SN with ivms, when registering
 The script needs to be running the whole time, so start it with an automation upon boot HA, and use this shell_command below.. its doing an reregister every 900 sec.
 
 
-![hikvision_register.py](hikvision_register.py)
+[hikvision_register.py](hikvision_register.py)
 
 Try it fist from a putty console, to see it it works, afterwards you can use below shellcommand with an automation.
 
