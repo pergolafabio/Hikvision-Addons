@@ -177,7 +177,8 @@ exten => 10000000005,1,NoOp()
 ```
  
 #### Example 2: 
-The problem was "no video", so i created a workaround using the "RTSP-APP". I now use the AMI (agi.php script) from Asterisk to make an originate from "RTSP-APP" to Linphone... Son in this example 2, the calls comes in, then i send a command to AMI, to make the "RTSP-APP" call me... this provides early-video (as RTSP Stream) to Linphone... When i answer a Confbridge will be started, '10000000005' checks when the bridge is started and will join the call too 
+The problem was "no video", so i created a workaround using the "RTSP-APP". I now use the AMI (agi.php script) from Asterisk to make an originate from "RTSP-APP" to Linphone... In this example 2, the call comes in, then i send a command to AMI, to make the "RTSP-APP" call me... this provides early-video (as RTSP Stream) to Linphone... When i answer a Confbridge will be started, '10000000005' checks when the bridge is started and will join the call too.
+The clue is here to use the AMI script, this is the only way an originate can work with early media, there is also an Originate app in Asterisk itself, but is has no option to  turn on early media!!
 
 ```
 #### Setup this in extensions.conf in the [default] section, make sure to change the rtsp url below, and also the USER1@sip.lonphone.com. 
