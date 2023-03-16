@@ -180,7 +180,8 @@ exten => 10000000005,1,NoOp()
 The problem was "no video", so i created a workaround using the "RTSP-APP". I now use the AMI (agi.php script) from Asterisk to make an originate from "RTSP-APP" to Linphone... Son in this example 2, the calls comes in, then i send a command to AMI, to make the "RTSP-APP" call me... this provides early-video (as RTSP Stream) to Linphone... When i answer a Confbridge will be started, '10000000005' checks when the bridge is started and will join the call too 
 
 ```
-#### Setup this in extensions.conf in the [default] section, make sure to change the rtsp url below, and also the USER1@sip.lonphone.com. You see i make use of local channels 9000 and 9001 , this is to make it possible to todo a hangup (finishcall) on all incoming/outcgoing calls.
+#### Setup this in extensions.conf in the [default] section, make sure to change the rtsp url below, and also the USER1@sip.lonphone.com. 
+You see i make use of local channels 9000 and 9001 , this is to make it possible to todo a hangup (finishcall) on all incoming/outcgoing calls.
 
 exten => 10000000005,1,NoOp()
  same => n,Progress()
@@ -240,7 +241,9 @@ exten => finishcall,1,NoOp()
 ``` 
  
 ```
-#### Create an agi.php in your config folder, this script is launched in the '10000000005' dialplan, make sure to change the username/secret, this is the AMI password thats being setup during the Asterisk Addon. The AMI script is doing the originage from  extension 'rtsp' to a local channel '9000', and it can be defined as early media
+#### Create an agi.php in your config folder, this script is launched in the '10000000005' dialplan, make sure to change the username/secret, 
+this is the AMI password thats being setup during the Asterisk Addon. The AMI script is doing the originage from  extension 'rtsp' to a 
+local channel '9000', and it can be defined as early media
 
 <?php 
 $socket = fsockopen("127.0.0.1","5038", $errno, $errstr); 
@@ -263,7 +266,8 @@ $wrets=fgets($socket,128);
 ```
 
 ```
-#### Setup this in confbrifge.conf, the  "RTSP-APP" is joining the confbridge as marked user, with video_mode=first_marked, but also as muted, to prevent echo, cause there is also sound coming from RTSP stream.
+#### Setup this in confbrifge.conf, the  "RTSP-APP" is joining the confbridge as marked user, with video_mode=first_marked, but also as muted, to 
+prevent echo, cause there is also sound coming from RTSP stream.
 
 [admin_user]
 type=user
@@ -303,7 +307,8 @@ video_mode=first_marked
 
 ```
 ```
-#### Setup this in features.conf, Here you can define dtmf buttons, like turning on a light using CURL command, or open a door. You see i use this feature code in local channel 9001, where i actually call the Linphone user. So when pressing 9 during the call, i can open the door.
+#### Setup this in features.conf, Here you can define dtmf buttons, like turning on a light using CURL command, or open a door. You see i use this 
+feature code in local channel 9001, where i actually call the Linphone user. So when pressing 9 during the call, i can open the door.
 
 [applicationmap]
 door => 9,self,Set,CURL_RESULT=${SHELL(curl -i --digest -u admin:XXX -X PUT -d '<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>' http://192.168.0.70/ISAPI/AccessControl/RemoteControl/door/1)}
