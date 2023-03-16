@@ -37,12 +37,6 @@ __NOTE__: This version is not recommended for general use, but may be of interes
 To quickly get started, click the following button:
 [![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell_beta&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
 
-## [Hikvision Baresip client](hikvision-baresip/README.md)
-
-Inject an RTSP video feed into an Asterisk conference.
-
-To quickly get started, click the following button:
-[![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_baresip&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
 
 ## Donations
  Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
