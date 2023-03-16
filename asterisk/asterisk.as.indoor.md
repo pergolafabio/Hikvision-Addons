@@ -1,5 +1,5 @@
-# Home Assistant Add-on: Hikvision Baresip client for injecting RTSP video feed into an Asterisk conference (deprecated)
-## N.B.: This addon is deprecated, a new script will be uploaded 
+# Setup Asterisk as inbound trunk like an Hikvision indoor extension
+
 
 ## Background info:
 
@@ -12,65 +12,23 @@ Hikvision intercom devices have the ability to register on a PBX, but the disadv
 There is another way!!!
 
 In asterisk you can define an TRUNK, to register on the primary indoor station, Asterisk will act then as an indoor extension just like a real indoor device... so the call comes in, your first indoor stations starts ringing, and will forward the call to Asterisk.
-For some reason the video is not forwarded... no idea why ... that's why I created this addon to have video in the call on the softphones...
+For some reason the video is not forwarded... no idea why ... that's why I created this workaround to have video in the call on the softphones...
 
 Advantages:
 
 - Hikconnect cloud, still works!
-- Still video on your indoor panels!!! Most important one
-- If this addon is down, the intercom still works as we register it as an extension
+- Still video on your indoor panels! Most important one
+- If Asterisk is down, the intercom + indoor station still works as we register it as an extension
 - You dont need access to the outdoor station, usefull for people living in appartment with no access to outdoor station.
-- You dont need to use the Hikconnect app anymore, you can use your own softphone
-- All local
+- You dont need to use the Hikconnect app anymore, you can use your own softphone of choice
+- All local!
 - Verry nice intergations possible, you can even pickup/answer the call with a Lovelace SIP card!! Freaking nice! :-)  https://github.com/TECH7Fox/sip-hass-card
-- Opening door also works by sending '#' during call with a softphone (enable "dtmf sip-info" on your softphone client)
+- Opening door also works by sending '#' during call with a softphone (enable "dtmf sip-info" on your softphone client), or use feature codes, see more below
 
-## Get started
+## Get started:
 
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
-
-## Installations notes:
-
-Create a directory "baresip" in your "config" folder, copy over the files below "config" and "account" to "/config/baresip" , then start the addon, it will probably tell you that the extension 7000 is unable to register.. quite normal because you dont have a PBX yet...
-https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/config  
-https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-baresip/accounts
-
-In the file "config" change line 52, thats the url for your RTSP stream...  In the file "account" change line 1, if you want to change the extension username/password...
-
-Setup Asterisk or a PBX of your choise, i use this one: https://github.com/TECH7Fox/asterisk-hass-addons, create 2 extensions, one for this addon and one for testing. Below is an example how to create extension 7000, use the same template for your second one, use a softphone like linphone desktop for testing
-
-```
-#### Add in pjsip_custom.conf:
-[7000]
-type=endpoint
-context=default
-disallow=all
-allow=ulaw,alaw
-allow=h264
-auth=auth7000
-aors=7000
-rtp_symmetric=yes
-force_rport=yes
-rewrite_contact=yes
-direct_media=no
-max_audio_streams=10
-max_video_streams=10
-from_domain=asterisk.com
-
-[auth7000]
-type=auth
-auth_type=userpass
-password=1234
-username=7000
- 
-[7000]
-type=aor
-max_contacts=1
-remove_existing=yes
-remove_unavailable=yes
-```
-
-Now restart this addon, make sure 7000 is now registered, and then make a video call to 7000, auto answer is enabled, so you should see the RTSP video feed!!!
+Setup an asterisk PBX, i use the one from Techfox, it already includes the RTSP App, that we need in this approach. https://github.com/TECH7Fox/asterisk-hass-addons
+If you want to compile your onw Asterisk, make sure to include this app: https://github.com/tommyjlong/app_rtsp_sip
 
 ## Asterisk configuration
 
@@ -129,9 +87,9 @@ match=192.168.0.71
 On some indoor panels you are not able to add the SN with ivms, when registering the trunk you get an 404/401 error... the SN is mandatory, and Asterisk is not able to send the XML.. Use below script instead...it will send the regXML part, it runs on port 5061, but the invite on indoor panel is always hardcoded, so it goes back to port 5060, where yo u have asterisk running. 
 The script needs to be running the whole time, so start it with an automation upon boot HA, and use this shell_command below.. its doing an reregister every 900 sec.
 
-https://gist.github.com/pergolafabio/9964ff2c2750fba447c5ca63382f4600
+(hikvision_register.py)
 
-Try it fist from a console, to see it it works, afterwards you can use below shellcommand with an automation.
+Try it fist from a putty console, to see it it works, afterwards you can use below shellcommand with an automation.
 
 
 ```
@@ -189,97 +147,123 @@ match=192.168.0.71
 
 ```
 
-## Dialplan for Asterisk
+## Simple Dialplan for Asterisk
 
 #### Example 1: 
-With use of regular softphones: make for example 2 extensions, on incoming call of the trunk, the group will be called with members 6000 and 6001, but no video injected with this example
+Using Linphone as a free service, the call comes in on '10000000005' and is forwarded to USER1@sip.linphone.com, the 'outgoing' is needed to specify the endpoint and codecs.
 
 ```
+#### Setup this in pjsip_custom.conf:
 
-#### Setup this in extensions.conf:
+[outgoing]
+type=endpoint
+disallow=all
+allow=ulaw
+allow=h264
+from_domain=YOURDOMAIN.com
+```
+
+```
+#### Setup this in extensions.conf in the [default] section
 
 exten => 10000000005,1,NoOp() 
  same => n,Progress()
- same => n,Set(CALLERID(num)=8003)
- same => n,Set(CALLERID(name)=DS-KD8003) 
- same => n,Set(DIALGROUP(mygroup,add)=PJSIP/6000)
- same => n,Set(DIALGROUP(mygroup,add)=PJSIP/6001)  
+ same => n,Set(CALLERID(num)=Doorbell)
+ same => n,Set(CALLERID(name)=Doorbell) 
+ same => n,Dial(PJSIP/outgoing/sip:USER1@sip.linphone.org)  
  same => n,Dial(${DIALGROUP(mygroup)},40)
  same => n,Hangup()
- ```
+```
  
 #### Example 2: 
-The problem was no video! Well, i made a workaround, the baresip client is a command line softphone...! So what i do, on an incoming call to 10000000005, i do a CURL command to the baresip client, telling to execute dialplan "7001" 
-In the dialplan below you see i have created a while loop... Before the loop i do the curl command, the curl command fires the baresip softphone client to call me (dialplan 7001) ...so when i actually pickup with linhome/linphone, the conference is started... Afterwards 10000000005 will enter the conference too because the loop checks if there are members active in the conference...
-
-I use linhome in example below, you can also use linphone, they both do early media... they also have a free flexisip server, so no need to open ports in your router to Asterisk... Another advantage, flexisip allows multiple contacts on the same account, so you have early video on all of them...! Linhome is easy to setup, everything is preconfigured, if you use linphone, make sure to enable push and early media in the settings...
+The problem was "no video", so i created a workaround using the "RTSP-APP". I now use the AMI (agi.php script) from Asterisk to make an originate from "RTSP-APP" to Linphone... Son in this example 2, the calls comes in, then i send a command to AMI, to make the "RTSP-APP" call me... this provides early-video (as RTSP Stream) to Linphone... When i answer a Confbridge will be started, '10000000005' checks when the bridge is started and will join the call too 
 
 ```
-#### Setup this in extensions.conf, make sure to add it in the [default] section!
+#### Setup this in extensions.conf in the [default] section, make sure to change the rtsp url below, and also the USER1@sip.lonphone.com. You see i make use of local channels 9000 and 9001 , this is to make it possible to todo a hangup (finishcall) on all incoming/outcgoing calls.
 
 exten => 10000000005,1,NoOp()
  same => n,Progress()
- same => n,Set(CHANNEL(hangup_handler_push)=finish_call,k,1(args))   
- same => n,Set(CURL_RESULT=${SHELL(curl http://localhost:8000/?d%207001)})  
+ same => n,Set(CHANNEL(hangup_handler_push)=default,finishcall,1(args)) 
+ same => n,Set(GLOBAL(CHANNEL-IN)=${CHANNEL})
+ same => n,System(/usr/bin/php "/config/asterisk/agi.php")
  same => n,Set(i=1)
- same => n,While($[${i} < 40])
+ same => n,While($[${i} < 300])
  same => n,NoOp(Confbridge number of participants : ${CONFBRIDGE_INFO(parties,1)})
  same => n,GotoIf($["${CONFBRIDGE_INFO(parties,1)}" >= "1"]?startconf) 
  same => n,Wait(1) 
  same => n,Set(i=$[${i} + 1]
  same => n,EndWhile()
+ same => n(startconf),ConfBridge(1,myconferenceroom,default_user) 
  same => n,Hangup() 
- same => n(startconf),ConfBridge(1,myconferenceroom,default_user)  
+
+exten = rtsp,1,Answer()
+ same => n,RTSP-SIP(rtsp://admin:XXX@192.168.0.70:554/Streaming/Channels/102,0,asterisk,5060)
+ same => n,Hangup() 
  
-exten => 7001,1,NoOp()
- same => n,Set(GLOBAL(CHANNEL7001)=${CHANNEL}) 
- same => n,Dial(Local/7002@default,,G(join_caller))
- same => n(join_caller),ConfBridge(1,myconferenceroom,marked_user)
- same => n(join_callee),ConfBridge(1,myconferenceroom,admin_user) 
+exten => 9000,1,NoOp()
+ same => n,Progress()
+ same => n,Set(CHANNEL(hangup_handler_push)=default,finishcall,1(args))  
+ same => n,Set(GLOBAL(CHANNEL-9000)=${CHANNEL}) 
+ same => n,Dial(Local/9001@default,,G(join_caller))
+ same => n(join_caller),ConfBridge(1,myconferenceroom,marked_user) 
+ same => n,ConfBridge(1,myconferenceroom,admin_user)
+ same => n,Hangup()  
  
-exten => 7002,1,NoOp() 
- same => n,Set(CHANNEL(hangup_handler_push)=finish_call,k,1(args))
- same => n,Set(GLOBAL(CHANNEL7002)=${CHANNEL}) 
- same => n,Set(CALLERID(num)=8003)
- same => n,Set(CALLERID(name)=DS-KD8003) 
+exten => 9001,1,NoOp() 
+ same => n,Progress()
+ same => n,Set(CHANNEL(hangup_handler_push)=default,finishcall,1(args))  
+ same => n,Set(GLOBAL(CHANNEL-9001)=${CHANNEL})
+ same => n,Set(__DYNAMIC_FEATURES=door)
+ same => n,Set(CALLERID(num)=Doorbell)
+ same => n,Set(CALLERID(name)=Doorbell)
  same => n,Set(COUNT=1)
- same => n,While($[ ${COUNT} < 60 ])
- same => n,Dial(PJSIP/outgoing/sip:USER1@sip.linhome.org)  
+ same => n,While($[ ${COUNT} < 60 ]) 
+ same => n,Dial(PJSIP/outgoing/sip:USER1@sip.linphone.org)
  same => n,Set(HANGUPCAUSEKEYS=${HANGUPCAUSE_KEYS()})
  same => n,Set(HANGUP_CAUSE=${HANGUPCAUSE})
  same => n,Verbose(2, HANGUP_CAUSE=${HANGUPCAUSE})
  same => n,GotoIf($["${HANGUP_CAUSE}" == "21"]?exitdialplan)
- same => n,Wait(5) 
+ same => n,Wait(3) 
  same => n,SET(COUNT=$[${COUNT} + 1]
  same => n,EndWhile()
  same => n(exitdialplan),NoOp(Exiting dialplan: HANGUP_CAUSE=${HANGUPCAUSE}) 
- same => n,Hangup()
+ same => n,Hangup() 
  
-[finish_call]
-exten => k,1,NoOp()
+exten => finishcall,1,NoOp() 
  same => n,System(/usr/sbin/asterisk -rx "confbridge kick 1 all")
- same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL7001}")  
- same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL7002}") 
- same => n,Return()  
+ same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL-IN}")  
+ same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL-9000}")
+ same => n,System(/usr/sbin/asterisk -rx "hangup request ${CHANNEL-9001}")  
+ same => n,Return() 
  
 ``` 
-
-```
-#### Setup this in pjsip_custom.conf:
-
-# Used for outgoing calling to linphone/linhome services
-[outgoing]
-type=endpoint
-disallow=all
-allow=ulaw,alaw
-allow=h264
-from_domain=asterisk.com
-```
  
 ```
-#### Setup this in confbrifge.conf:
-# Extension 7000 (RTSP extension) is the marked user, i have video_mode enabed to the first marked user, and i muted that extension
+#### Create an agi.php in your config folder, this script is launched in the '10000000005' dialplan, make sure to change the username/secret, this is the AMI password thats being setup during the Asterisk Addon. The AMI script is doing the originage from  extension 'rtsp' to a local channel '9000', and it can be defined as early media
 
+<?php 
+$socket = fsockopen("127.0.0.1","5038", $errno, $errstr); 
+fputs($socket, "Action: Login\r\n"); 
+fputs($socket, "UserName: admin\r\n"); 
+fputs($socket, "Secret: XXXX\r\n\r\n"); 
+$wrets=fgets($socket,128); 
+echo $wrets; 
+fputs($socket, "Action: Originate\r\n" ); 
+fputs($socket, "Channel: Local/9000@default\r\n" );
+fputs($socket, "Exten: rtsp\r\n" ); 
+fputs($socket, "Context: default\r\n" ); 
+fputs($socket, "Priority: 1\r\n" );
+//fputs($socket, "Callerid: Deurbel\r\n" );  
+fputs($socket, "Async: yes\r\n" );
+fputs($socket, "EarlyMedia: true\r\n" ); 
+fputs($socket, "Codecs: ulaw,h264\r\n\r\n");
+$wrets=fgets($socket,128); 
+?>
+
+```
+
+```
+#### Setup this in confbrifge.conf, the  "RTSP-APP" is joining the confbridge as marked user, with video_mode=first_marked, but also as muted, to prevent echo, cause there is also sound coming from RTSP stream.
 
 [admin_user]
 type=user
@@ -318,23 +302,12 @@ max_members=10
 video_mode=first_marked
 
 ```
+```
+#### Setup this in features.conf, Here you can define dtmf buttons, like turning on a light using CURL command, or open a door. You see i use this feature code in local channel 9001, where i actually call the Linphone user. So when pressing 9 during the call, i can open the door.
 
-## NOTES: Multiple doorbells? Multiple cameras?
-In the 10000000005 dialplan i send a command to the baresip console client to call 70001. In the config file as described above, the rtsp stream configured... But if you want tos etup multiple trunks, for multiple doorbells, and you have another incoming call, we need to change the rtsp source... The httpd module has an optio to send /vidsrc... So in 10000000005 dialplan, right before the curl to 7001, add another curl to change source
-
-This needs to be sended:
+[applicationmap]
+door => 9,self,Set,CURL_RESULT=${SHELL(curl -i --digest -u admin:XXX -X PUT -d '<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>' http://192.168.0.70/ISAPI/AccessControl/RemoteControl/door/1)}
 
 ```
-/vidsrc avformat,rtsp://admin:XXX@192.168.0.70:554/Streaming/Channels/101
-```
-
-But it needs to be encoded, use this link for it: https://www.url-encode-decode.com/ 
-
-So the curl becomes:
-```
-curl http://localhost:8000/?%2Fvidsrc%20avformat%2Crtsp%3A%2F%2Fadmin%3AXXX%40192.168.0.70%3A554%2FStreaming%2FChannels%2F101
-```
-
-
 
 Like my work? You can always send me a donation: https://paypal.me/pergolafabio
