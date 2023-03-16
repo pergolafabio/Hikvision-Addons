@@ -159,7 +159,7 @@ Using Linphone as a free service, the call comes in on '10000000005' and is forw
 [outgoing]
 type=endpoint
 disallow=all
-allow=ulaw
+allow=ulaw,alaw
 allow=h264
 from_domain=YOURDOMAIN.com
 ```
@@ -254,7 +254,6 @@ fputs($socket, "Channel: Local/9000@default\r\n" );
 fputs($socket, "Exten: rtsp\r\n" ); 
 fputs($socket, "Context: default\r\n" ); 
 fputs($socket, "Priority: 1\r\n" );
-//fputs($socket, "Callerid: Deurbel\r\n" );  
 fputs($socket, "Async: yes\r\n" );
 fputs($socket, "EarlyMedia: true\r\n" ); 
 fputs($socket, "Codecs: ulaw,h264\r\n\r\n");
