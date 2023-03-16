@@ -177,12 +177,13 @@ exten => 10000000005,1,NoOp()
 ```
  
 #### Example 2: 
-The problem was "no video", so i created a workaround using the "RTSP-APP". I now use the AMI (agi.php script) from Asterisk to make an originate from "RTSP-APP" to Linphone... In this example 2, the call comes in, then i send a command to AMI, to make the "RTSP-APP" call me... this provides early-video (as RTSP Stream) to Linphone... When i answer a Confbridge will be started, '10000000005' checks when the bridge is started and will join the call too.
+The problem was "no video", so i created a workaround using the "RTSP-APP". I now use the AMI (agi.php script) from Asterisk to make an originate from "RTSP-APP" to Linphone... In this example 2, the call comes in, then i send a command to AMI using php, to make the "RTSP-APP" call me... this provides early-video (as RTSP Stream) to Linphone... When i answer a Confbridge will be started, '10000000005' checks when the bridge is started and will join the bridge too.
 The clue is here to use the AMI script, this is the only way an originate can work with early media, there is also an Originate app in Asterisk itself, but is has no option to  turn on early media!!
 
 ```
-#### Setup this in extensions.conf in the [default] section, make sure to change the rtsp url below, and also the USER1@sip.lonphone.com. 
-You see i make use of local channels 9000 and 9001 , this is to make it possible to todo a hangup (finishcall) on all incoming/outcgoing calls.
+#### Setup this in extensions.conf in the [default] section, make sure to change the rtsp url below, and also the USER1@sip.linphone.com.
+You see i make use of local channels 9000 and 9001 , this is to make it possible to todo a hangup (finishcall) on all incoming/outcgoing calls. So whoever leaves
+the bridge, all parties will be hungup. In channel 9001 i also make use of a while loop to retry for 60 sec... When USER1@sip.linphone.com is unreachable for whatever reason, the trunk call gets an hangup, but also the Hikvision indoor panels stop ringing, thats something we dont want to happen, otherwise they dont ring at all!
 
 exten => 10000000005,1,NoOp()
  same => n,Progress()
@@ -243,7 +244,7 @@ exten => finishcall,1,NoOp()
  
 ```
 #### Create an agi.php in your config folder, this script is launched in the '10000000005' dialplan, make sure to change the username/secret, 
-this is the AMI password thats being setup during the Asterisk Addon. The AMI script is doing the originage from  extension 'rtsp' to a 
+this is the AMI password thats being setup during the Asterisk Addon. The AMI script is doing the originate from  extension 'rtsp' to a 
 local channel '9000', and it can be defined as early media
 
 <?php 
