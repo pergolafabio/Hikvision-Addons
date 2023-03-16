@@ -1,5 +1,7 @@
 # Home Assistant Add-on: Hikvision Baresip client for injecting RTSP video feed into an Asterisk conference (deprecated)
-## N.B.: This addon is deprecated, a new script will be uploaded 
+## N.B.: This addon is deprecated, here is a new and better approach
+
+https://github.com/pergolafabio/Hikvision-Addons/blob/dev/asterisk/asterisk.as.indoor.md
 
 ## Background info:
 
