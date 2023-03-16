@@ -27,10 +27,6 @@ Connect to you Hikvision IP doorbells to receive events (motion detection, incom
 
 __Note__: This add-on can also run as a standalone Docker container, for HA installations without the add-on store. For more details see the relevant [documentation](hikvision-doorbell/docs/docker.md).
 
-## [Hikvision Baresip client](hikvision-baresip/README.md)
-
-Inject an RTSP video feed into an Asterisk conference.
-
 
 ## Donations
  Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
