@@ -100,8 +100,7 @@ class MQTTHandler(EventHandler):
         # Create the sensors for each doorbell:
         for doorbell in doorbells.values():
             # Consider only outdoor units
-            if doorbell._type is DeviceType.INDOOR:
-                continue
+
 
             logger.debug("Setting up entities for {}", doorbell._config.name)
             # Create an empty dict to hold the sensors
@@ -112,22 +111,23 @@ class MQTTHandler(EventHandler):
 
             # Remove spaces and - from doorbell name
             sanitized_doorbell_name = sanitize_doorbell_name(doorbell_name)
+            if not doorbell._type is DeviceType.INDOOR:
+                
+                ##################
+                # Call state
+                call_sensor_info = SensorInfo(
+                    name="Call state",
+                    unique_id=f"{device.identifiers}-call_state",
+                    device=device,
+                    object_id=f"{sanitized_doorbell_name}_call_state",
+                    icon="mdi:bell")
 
-            ##################
-            # Call state
-            call_sensor_info = SensorInfo(
-                name="Call state",
-                unique_id=f"{device.identifiers}-call_state",
-                device=device,
-                object_id=f"{sanitized_doorbell_name}_call_state",
-                icon="mdi:bell")
-
-            settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
-            call_sensor = Sensor(settings)
-            call_sensor.set_state("idle")
-            call_sensor.set_availability(True)
-            self._sensors[doorbell]['call'] = call_sensor
-            ##################
+                settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
+                call_sensor = Sensor(settings)
+                call_sensor.set_state("idle")
+                call_sensor.set_availability(True)
+                self._sensors[doorbell]['call'] = call_sensor
+                ##################
             # Doors
             # Create switches for output relays used to open doors
             # TODO: what if this call fails? -> no door switches are created
