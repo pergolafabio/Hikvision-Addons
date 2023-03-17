@@ -222,7 +222,9 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_VIDEO_INTERCOM_ALARM,
             buffer_length,
             user_pointer: c_void_p):
-        call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
+        
+        if not doorbell._type is DeviceType.INDOOR:
+            call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
 
         # Extract the type of alarm as a Python enum
         try:
