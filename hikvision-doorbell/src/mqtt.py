@@ -99,8 +99,6 @@ class MQTTHandler(EventHandler):
         )
         # Create the sensors for each doorbell:
         for doorbell in doorbells.values():
-            # Consider only outdoor units
-
 
             logger.debug("Setting up entities for {}", doorbell._config.name)
             # Create an empty dict to hold the sensors
@@ -111,6 +109,8 @@ class MQTTHandler(EventHandler):
 
             # Remove spaces and - from doorbell name
             sanitized_doorbell_name = sanitize_doorbell_name(doorbell_name)
+
+            # No Callsensor for indoor
             if not doorbell._type is DeviceType.INDOOR:
                 
                 ##################
