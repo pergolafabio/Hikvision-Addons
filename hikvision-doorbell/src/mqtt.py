@@ -244,7 +244,7 @@ class MQTTHandler(EventHandler):
                 door_id = alarm_info.wLockID
                 logger.info("Alarm {} detected on doorbell {} on input {}", alarm_info.uAlarmInfo, doorbell._config.name, door_id)
                 trigger = DeviceTriggerMetadata(name=f"zone_alarm_{door_id}", type="alarm", subtype=f"Zone {door_id+1}")
-                self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS[alarm_type])
+                self.handle_device_trigger(doorbell, trigger)
             case VideoInterComAlarmType.DOOR_NOT_OPEN | VideoInterComAlarmType.DOOR_NOT_CLOSED:
                 # Get information about the door that caused this alarm
                 door_id = alarm_info.wLockID
