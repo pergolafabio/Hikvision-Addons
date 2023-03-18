@@ -146,6 +146,7 @@ class TestDeviceTrigger:
     def test_all_alarm_types(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture, alarm_type: VideoInterComAlarmType):
         if alarm_type in (VideoInterComAlarmType.DOOR_NOT_OPEN, 
                           VideoInterComAlarmType.DOOR_NOT_CLOSED,
+                          VideoInterComAlarmType.ZONE_ALARM,
                           VideoInterComAlarmType.DOORBELL_RINGING,
                           VideoInterComAlarmType.DISMISS_INCOMING_CALL
                           ):
