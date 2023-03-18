@@ -8,7 +8,7 @@ from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler, extract_device_info
 from ha_mqtt_discoverable import DeviceInfo
 import xml.etree.ElementTree as ET
 
-from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VideoInterComAlarmType
+from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VideoInterComAlarmType
 from sdk.utils import SDKError
 
 
@@ -111,6 +111,16 @@ def test_video_intercom_event_non_existing_id(mocker: MockerFixture, mocked_door
 
 
 class TestDeviceTrigger:
+
+    def test_zone_alarm(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
+        video_intercom_alarm.byAlarmType = VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM
+        video_intercom_alarm.wLockID = 0
+        
+        asyncio.run(handler.video_intercom_alarm(mocked_doorbell, 0, None, video_intercom_alarm, 0, None))
+
+        # Check that the entity is saved in the dict
+        assert handler._sensors[mocked_doorbell]["zone_alarm_0"] is not None
  
     def test_door_not_open(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
         video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
