@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.16 - 2022-03-18
+
+### Added
+
+- Zone alarm device trigger for indoor and outdoor
+
 ## 3.0.0-beta.13 - 2022-03-11
 
 ### Changed
