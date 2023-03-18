@@ -64,7 +64,6 @@ class DeviceTriggerMetadata(TypedDict):
 
 
 DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata] = {
-    VideoInterComAlarmType.ZONE_ALARM: DeviceTriggerMetadata(name='zone_alarm', type='alarm', subtype='zone'),
     VideoInterComAlarmType.TAMPERING_ALARM: DeviceTriggerMetadata(name='tampering_alarm', type='alarm', subtype='tampering'),
     VideoInterComAlarmType.HIJACKING_ALARM: DeviceTriggerMetadata(name='hijacking_alarm', type='alarm', subtype='hijacking'),
     VideoInterComAlarmType.MULTIPLE_PASSWORD_UNLOCK_FAILURE_ALARM: DeviceTriggerMetadata(name='multiple_passwords_unlock_failure', type='alarm', subtype='password unlock failures'),
@@ -110,7 +109,7 @@ class MQTTHandler(EventHandler):
             # Remove spaces and - from doorbell name
             sanitized_doorbell_name = sanitize_doorbell_name(doorbell_name)
 
-            # No Callsensor for indoor
+            # No Callsensor and relays for indoor
             if not doorbell._type is DeviceType.INDOOR:
                 
                 ##################
@@ -128,22 +127,21 @@ class MQTTHandler(EventHandler):
                 call_sensor.set_availability(True)
                 self._sensors[doorbell]['call'] = call_sensor
                 ##################
-            # Doors
-            # Create switches for output relays used to open doors
-            # TODO: what if this call fails? -> no door switches are created
-            num_doors = doorbell.get_num_outputs()
-            logger.debug("Configuring {} door switches", num_doors)
-            for door_id in range(num_doors):
-                door_switch_info = SwitchInfo(
-                    name=f"Door {door_id+1} relay",
-                    unique_id=f"{device.identifiers}-door_relay_{door_id}",
-                    device=device,
-                    object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
-                settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
-                door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
-                door_switch.off()
-                door_switch.set_availability(True)
-                self._sensors[doorbell][f'door_{door_id}'] = door_switch
+                # Doors
+                # Create switches for output relays used to open doors
+                num_doors = doorbell.get_num_outputs()
+                logger.debug("Configuring {} door switches", num_doors)
+                for door_id in range(num_doors):
+                    door_switch_info = SwitchInfo(
+                        name=f"Door {door_id+1} relay",
+                        unique_id=f"{device.identifiers}-door_relay_{door_id}",
+                        device=device,
+                        object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
+                    settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
+                    door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
+                    door_switch.off()
+                    door_switch.set_availability(True)
+                    self._sensors[doorbell][f'door_{door_id}'] = door_switch
 
     def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, door_id = user_data
@@ -242,6 +240,11 @@ class MQTTHandler(EventHandler):
                 call_sensor.set_state('dismissed')
                 # Put sensor back to idle
                 call_sensor.set_state('idle')
+            case VideoInterComAlarmType.ZONE_ALARM:
+                door_id = alarm_info.wLockID
+                logger.info("Alarm {} detected on doorbell {} on input {}", alarm_info.uAlarmInfo, doorbell._config.name, door_id)
+                trigger = DeviceTriggerMetadata(name=f"zone_alarm_{door_id}", type="alarm", subtype=f"Zone {door_id+1}")
+                self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS[alarm_type])
             case VideoInterComAlarmType.DOOR_NOT_OPEN | VideoInterComAlarmType.DOOR_NOT_CLOSED:
                 # Get information about the door that caused this alarm
                 door_id = alarm_info.wLockID
