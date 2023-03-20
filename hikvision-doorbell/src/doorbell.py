@@ -74,6 +74,7 @@ class Doorbell():
         alarm_param.byLevel = 1
         alarm_param.byAlarmInfoType = 1
         alarm_param.byFaceAlarmmDetection = 1
+        alarm_param.byDeployType= 1
 
         logger.debug("Arming the device via SDK")
         alarm_handle = self._sdk.NET_DVR_SetupAlarmChan_V50(
