@@ -393,9 +393,18 @@ class NET_DVR_TIME_EX(Structure):
         ("byRes", BYTE)
     ]
 
+class NET_DVR_ZONE_ALARM_INFO(Structure):
+    _fields_ = [
+        ("byZoneName", BYTE * NAME_LEN),
+        ("dwZonendex", DWORD),
+        ("byZoneType", BYTE),
+        ("byRes", BYTE * 219), 
+    ]
+
 class NET_DVR_VIDEO_INTERCOM_ALARM_INFO_UNION(Structure):
     _fields_ = [
-        ("byLen", BYTE * 256)
+        ("byLen", BYTE * 256),
+        ("struZoneAlarm", NET_DVR_ZONE_ALARM_INFO),
     ]
 
 class NET_DVR_VIDEO_INTERCOM_ALARM(Structure):
@@ -405,7 +414,7 @@ class NET_DVR_VIDEO_INTERCOM_ALARM(Structure):
         ("byDevNumber", BYTE * MAX_DEV_NUMBER_LEN),
         ("byAlarmType", BYTE),
         ("byRes1", BYTE * 3),
-        ("uAlarmInfo", POINTER(NET_DVR_VIDEO_INTERCOM_ALARM_INFO_UNION)),
+        ("uAlarmInfo", NET_DVR_VIDEO_INTERCOM_ALARM_INFO_UNION),
         ("wLockID", BYTE),
         ("byRes2", BYTE)
     ]

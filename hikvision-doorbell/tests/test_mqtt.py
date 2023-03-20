@@ -115,7 +115,8 @@ class TestDeviceTrigger:
     def test_zone_alarm(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
         video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
         video_intercom_alarm.byAlarmType = VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM
-        video_intercom_alarm.wLockID = 0
+        video_intercom_alarm.uAlarmInfo.struZoneAlarm.byZoneType = 0
+        video_intercom_alarm.uAlarmInfo.struZoneAlarm.dwZonendex = 0
         
         asyncio.run(handler.video_intercom_alarm(mocked_doorbell, 0, None, video_intercom_alarm, 0, None))
 

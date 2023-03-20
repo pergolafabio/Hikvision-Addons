@@ -241,9 +241,11 @@ class MQTTHandler(EventHandler):
                 # Put sensor back to idle
                 call_sensor.set_state('idle')
             case VideoInterComAlarmType.ZONE_ALARM:
-                door_id = alarm_info.wLockID
-                logger.info("Alarm {} detected on doorbell {} on input {}", alarm_info.uAlarmInfo, doorbell._config.name, door_id)
-                trigger = DeviceTriggerMetadata(name=f"zone_alarm_{door_id}", type="alarm", subtype=f"Zone {door_id+1}")
+                #zone_name = alarm_info.uAlarmInfo.struZoneAlarm.byZoneName
+                zone_type = alarm_info.uAlarmInfo.struZoneAlarm.byZoneType
+                zone_number = alarm_info.uAlarmInfo.struZoneAlarm.dwZonendex
+                logger.info("Zone Alarm detected on doorbell {} type {} number {} ", doorbell._config.name, zone_type, zone_number)
+                trigger = DeviceTriggerMetadata(name=f"zone_alarm_{zone_type}", type="alarm", subtype=f"Zone {zone_number}")
                 self.handle_device_trigger(doorbell, trigger)
             case VideoInterComAlarmType.DOOR_NOT_OPEN | VideoInterComAlarmType.DOOR_NOT_CLOSED:
                 # Get information about the door that caused this alarm
