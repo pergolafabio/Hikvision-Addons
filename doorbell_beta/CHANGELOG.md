@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.17 - 2022-03-21
+
+### Added
+
+- Testing Alarm input for zones/types
+- Changed login method to offline event uploading, preventing backlog om some devices?
+
 ## 3.0.0-beta.16 - 2022-03-18
 
 ### Added
