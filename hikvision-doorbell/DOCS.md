@@ -19,7 +19,7 @@ For each of your doorbells, repeat the following configuration:
 | output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
 
 #### Example config
-The following configuration setups two doorbells, named `Front door` and `Rear door` and an indoor station:
+The following configuration setups two doorbells, named `Front door` and `Rear door` and an `indoor` station:
 ```yaml
 - name: "Front door"
   ip: 192.168.0.1
