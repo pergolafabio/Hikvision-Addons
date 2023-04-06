@@ -228,7 +228,7 @@ exten => 9001,1,NoOp()
  same => n,Verbose(2, HANGUP_CAUSE=${HANGUPCAUSE})
  same => n,GotoIf($["${HANGUP_CAUSE}" == "21"]?exitdialplan)
  same => n,Wait(3) 
- same => n,SET(COUNT=$[${COUNT} + 1]
+ same => n,SET(COUNT=$[${COUNT} + 1])
  same => n,EndWhile()
  same => n(exitdialplan),NoOp(Exiting dialplan: HANGUP_CAUSE=${HANGUPCAUSE}) 
  same => n,Hangup() 
