@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.18 - 2022-04-11
+
+### Added
+
+- Added support for DS-HD series?
+
 ## 3.0.0-beta.17 - 2022-03-21
 
 ### Added
