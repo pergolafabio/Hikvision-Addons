@@ -61,6 +61,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-KV8113
 - DS-KV8213
 - DS-KV6113
+- DS-HD
 - DS-KV8102-IM (Only open door supported)
 
 
