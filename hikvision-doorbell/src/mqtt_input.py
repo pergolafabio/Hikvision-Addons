@@ -61,6 +61,18 @@ class MQTTInput():
             reject_button.set_availability(True)
 
             ###########
+            # Hangup call button
+            button_info = ButtonInfo(
+                name="Hangup call",
+                unique_id=f"{sanitized_doorbell_name}_hangup_call",
+                device=device,
+                icon="mdi:phone-cancel",
+                object_id=f"{sanitized_doorbell_name}_hangup_call")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            hangup_button = Button(settings, self._hangup_call_callback, doorbell)
+            hangup_button.set_availability(True)
+            
+            ###########
             # Answer call button
             button_info = ButtonInfo(
                 name="Answer call",
@@ -108,6 +120,21 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
             logger.error("Error while rejecting call: {}", err)
+
+    def _hangup_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received hangup command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/callSignal?format=json"
+        requestBody = {
+            "CallSignal": {
+                "cmdType": "hangup"
+            }
+        }
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+        except SDKError as err:
+            logger.error("Error while hanging up call: {}", err)            
 
     def _answer_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received answer command for doorbell: {}", doorbell._config.name)
