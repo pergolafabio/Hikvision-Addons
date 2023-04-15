@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.19 - 2022-04-15
+
+### Added
+
+- Added hangup button
+- Changed unlock record attribute for switch relay to "00" when it was empty when using Isapi/... for open door
+
 ## 3.0.0-beta.18 - 2022-04-11
 
 ### Added
