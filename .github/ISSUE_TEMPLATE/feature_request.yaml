@@ -16,7 +16,6 @@ body:
       description: What add-on are you referring to?
       options:
         - Doorbell
-        - Baresip
   - type: textarea
     id: feature
     attributes:
