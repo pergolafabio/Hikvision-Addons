@@ -22,7 +22,6 @@ body:
       description: What is the add-on that is causing the issue?
       options:
         - Hikvision Doorbell
-        - Hikvision Baresip
     validations:
       required: true
   - type: input
