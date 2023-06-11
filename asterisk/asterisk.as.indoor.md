@@ -171,8 +171,8 @@ exten => 10000000005,1,NoOp()
  same => n,Progress()
  same => n,Set(CALLERID(num)=Doorbell)
  same => n,Set(CALLERID(name)=Doorbell) 
- same => n,Set(DIALGROUP(mygroup,add)=PJSIP/outgoing/sip:USER1@sip.linhome.org) 
- same => n,Set(DIALGROUP(mygroup,add)=PJSIP/outgoing/sip:USER2@sip.linhome.org)  
+ same => n,Set(DIALGROUP(mygroup,add)=PJSIP/outgoing/sip:USER1@sip.linphone.org) 
+ same => n,Set(DIALGROUP(mygroup,add)=PJSIP/outgoing/sip:USER2@sip.linphone.org)  
  same => n,Dial(${DIALGROUP(mygroup)},40)
  same => n,Hangup()
 ```
@@ -269,7 +269,17 @@ $wrets=fgets($socket,128);
 ```
 
 ```
-#### Setup this in confbrifge.conf, the  "RTSP-APP" is joining the confbridge as marked user, with video_mode=first_marked, but also as muted, to 
+#### Setup this in pjsip_custom.conf:
+
+[outgoing]
+type=endpoint
+disallow=all
+allow=ulaw,alaw
+allow=h264
+from_domain=YOURDOMAIN.com
+```
+```
+#### Setup this in confbridge.conf, the  "RTSP-APP" is joining the confbridge as marked user, with video_mode=first_marked, but also as muted, to 
 prevent echo, cause there is also sound coming from RTSP stream.
 
 [admin_user]
