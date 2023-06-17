@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.20 - 2022-06-23
+
+### Added
+
+- Added support for DS-K1T501SF
+
 ## 3.0.0-beta.19 - 2022-04-15
 
 ### Added
