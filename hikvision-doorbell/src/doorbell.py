@@ -16,6 +16,7 @@ class DeviceType(IntEnum):
     VillaVTO = 605
     FaceAccessTerminal = 10510
     HD = 31
+    AccessControlTerminal = 861
 
 
 class Doorbell():
