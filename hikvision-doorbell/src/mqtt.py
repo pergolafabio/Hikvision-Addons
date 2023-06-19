@@ -192,8 +192,20 @@ class MQTTHandler(EventHandler):
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             # If the SDK returns a lock ID that is not starting from 0, 
             # we don't know what switch to update in HA, so do nothing
+            # Make sure the switch is back in "OFF" position in case it was trigger by the switch
             if not door_sensor:
                 logger.warning("Received unknown lockID: {}", door_id)
+                logger.debug("Changing switches back to OFF position")
+                num_doors = doorbell.get_num_outputs()
+                await asyncio.sleep(2)
+                for door_id in range(num_doors):
+                    entity_id = f'door_{door_id}'
+                    door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
+                    door_sensor.on()
+                    door_sensor.set_attributes(attributes)
+                    # Wait some seconds, then turn off the switch entity (since the relay is momentary)
+                    await asyncio.sleep(2)
+                    door_sensor.off()
                 return
    
             logger.info("Door {} unlocked by {}, updating sensor {}",
