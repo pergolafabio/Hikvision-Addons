@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.21 - 2022-06-19
+
+### Fixed
+
+- Fix for 8102 owners, where the output relay doesnt trigger on intercom event
+
 ## 3.0.0-beta.20 - 2022-06-23
 
 ### Added
