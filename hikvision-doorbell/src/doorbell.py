@@ -225,7 +225,7 @@ class Doorbell():
                 pass
 
         # We have run out of available endpoints to call
-        raise RuntimeError("Unable to get the number of doors, please configure the relays manualli whti this option in the config : output_relays")
+        raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
     def get_device_info(self):
         """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.
