@@ -202,6 +202,9 @@ class MQTTHandler(EventHandler):
                     entity_id = f'door_{door_id}'
                     door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
                     door_sensor.on()
+                    attributes = {
+                        'control source': control_source,
+                    }                    
                     door_sensor.set_attributes(attributes)
                     # Wait some seconds, then turn off the switch entity (since the relay is momentary)
                     await asyncio.sleep(2)
