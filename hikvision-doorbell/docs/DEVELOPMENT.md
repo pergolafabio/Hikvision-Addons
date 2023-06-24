@@ -28,18 +28,14 @@ python src/main.py
 ```
 
 ## VSCode
-If using VSCode, there is a run configuration already provided.
-First create a `development.env` file with your own values
-```bash
-cp development.env.example development.env
-```
 
 - If using VSCode, there is a run configuration already provided.
-First create a `development.env` file with your own values, then run the application using the integrated VSCode debugger.
-```bash
-cp development.env.example development.env
-```
-Run the application using the integrated VSCode runner (under `Run and Debug`).
+    
+    First create a `development.env` file with your own values, then run the application using the integrated VSCode debugger.
+    ```bash
+    cp development.env.example development.env
+    ```
+- Run the application using the integrated VSCode runner (under `Run and Debug`).
 
 ## Testing the addon locally (VSCode devcontainer)
 For more information see the official HA [guide](https://developers.home-assistant.io/docs/add-ons/testing).

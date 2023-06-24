@@ -38,7 +38,7 @@ def mqtt_config_from_supervisor():
     if service_response.status_code == 400:
         # MQTT addon is not configured
         logger.error("MQTT service not available")
-        raise RuntimeError("This addon need the mosquitto broker to work correctly. Please see the Documentation tab for details.")
+        raise RuntimeError("This addon needs the Mosquitto broker to work correctly. Please see the Documentation tab for details.")
 
     if service_response.status_code != 200:
         raise RuntimeError(f"Unexpected response while requesting MQTT service: {service_response.text}")
@@ -109,6 +109,23 @@ class AppConfig(GoodConf):
     # Use a factory function to automatically load the MQTT configuration using the supervisor API, if MQTT is available
     mqtt: Optional[MQTT] = Field(default_factory=mqtt_config_from_supervisor)
     system: System
+
+    @validator('mqtt', pre=True)
+    def load_mqtt_config(cls, v):
+        '''
+        Load the MQTT configuration from the user-supplied values, if provided, or fallback to asking the HA supervisor for the integrated MQTT add-on
+        '''
+
+        # If the user supplied some configuration values, ues them
+        if v:
+            return v
+
+        # Try to load configuration from the HA supervisor, if running as an add-on
+        logger.debug("Loading MQTT configuration from supervisor")
+        config = mqtt_config_from_supervisor()
+        if not config:
+            raise ValueError("Cannot load MQTT configuration from supervisor")
+        return config
 
     class Config:
         env_nested_delimiter = "__"
