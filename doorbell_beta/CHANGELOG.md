@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.23 - 2022-06-28
+
+### Added
+
+- Device trigger automation for door open events, to capture the control source (swipe/key number)
+
 ## 3.0.0-beta.22 - 2022-06-28
 
 ### Fixed
