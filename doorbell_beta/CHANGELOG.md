@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.22 - 2022-06-28
+
+### Fixed
+
+- Fix for Zone Alarm Inputs, its now possible to see device triggers for Alarms like Gas, Water, Panic...
+
 ## 3.0.0-beta.21 - 2022-06-19
 
 ### Fixed
