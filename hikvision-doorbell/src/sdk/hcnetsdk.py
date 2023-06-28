@@ -401,7 +401,7 @@ class NET_DVR_ZONE_ALARM_INFO(Structure):
         ("byRes", BYTE * 219), 
     ]
 
-class NET_DVR_VIDEO_INTERCOM_ALARM_INFO_UNION(Structure):
+class NET_DVR_VIDEO_INTERCOM_ALARM_INFO_UNION(Union):
     _fields_ = [
         ("byLen", BYTE * 256),
         ("struZoneAlarm", NET_DVR_ZONE_ALARM_INFO),
