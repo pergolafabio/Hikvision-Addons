@@ -1,5 +1,6 @@
 import asyncio
 import signal
+import socket
 import sys
 from config import AppConfig
 from doorbell import Doorbell, Registry
@@ -94,4 +95,8 @@ if __name__ == "__main__":
         # <user_message> <sdk_message> <sdk_code>
         user_message, sdk_code, sdk_message = e.args
         logger.error("{}: {} Error code:{}", user_message, sdk_message, sdk_code)
+        sys.exit(1)
+    except (ConnectionRefusedError, socket.gaierror) as e:
+        # Connection to MQTT broker failed
+        logger.error("Error while connecting to MQTT broker: {}", e.strerror)
         sys.exit(1)
