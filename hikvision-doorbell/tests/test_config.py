@@ -22,3 +22,5 @@ def test_load_config_missing_token():
 def test_load_config_mqtt():
     config = AppConfig()  # type: ignore
     config.load("tests/assets/test_config_mqtt.json")
+    assert config.mqtt.host is not None
+    assert config.mqtt.port is not None

@@ -115,7 +115,10 @@ class AppConfig(GoodConf):
         '''
         Load the MQTT configuration from the user-supplied values, if provided, or fallback to asking the HA supervisor for the integrated MQTT add-on
         '''
-
+        # If we have no value in input, skip validation
+        if not v:
+            return
+        
         # If the user supplied some configuration values, ues them
         if v:
             return v
