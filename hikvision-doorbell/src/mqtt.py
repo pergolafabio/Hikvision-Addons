@@ -1,5 +1,6 @@
 import asyncio
 from ctypes import c_void_p
+import json
 from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
 
@@ -53,14 +54,18 @@ def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
 
 
 class DeviceTriggerMetadata(TypedDict):
-    """Helper subclass defining the information of a device trigger.
-    Used when building the DeviceTrigger entity"""
+    """
+    Helper dict class defining the information of a device trigger.
+    Used when building the DeviceTrigger entity
+    """
     name: str
     """Name of this device trigger"""
     type: str
     """Displayed in the HA UI"""
     subtype: str
     """Displayed in the HA UI"""
+    payload: dict[str, str]
+    """Optional payload sent in the trigger"""
 
 
 DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata] = {
@@ -183,50 +188,49 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_VIDEO_INTERCOM_EVENT,
             buffer_length,
             user_pointer: c_void_p):
+        
+        async def update_door_entities(door_id: str, control_source: str):
+            """
+            Helper function to update the sensor and device trigger of a given door
+            """
+            logger.info("Door {} unlocked by {}, updating sensor and device trigger", door_id+1, control_source)
+            
+            entity_id = f'door_{door_id}'
+            door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
+            attributes = {
+                'control_source': control_source,
+            }                    
+            door_sensor.on()
+            door_sensor.set_attributes(attributes)
+            trigger = DeviceTriggerMetadata(name=f"Door unlocked", type="door open", subtype=f"door {door_id}", payload=attributes)
+            self.handle_device_trigger(doorbell, trigger)
+            
+            # Wait some seconds, then turn off the switch entity (since the door relay in the doorbell is momentary)
+            await asyncio.sleep(2)
+            door_sensor.off()
+
         if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
             door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
             control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
-            # Name of the entity inside the dict array
+            
+            # Name of the entity inside the dict array containing all the sensors
             entity_id = f'door_{door_id}'
-            # Extract the entity from the dict and cast to know type
+            # Extract the sensor entity from the dict and cast to know type
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
+            
             # If the SDK returns a lock ID that is not starting from 0, 
-            # we don't know what switch to update in HA, so do nothing
+            # we don't know what switch to update in HA -> trigger both of them
             # Make sure the switch is back in "OFF" position in case it was trigger by the switch
             if not door_sensor:
                 logger.warning("Received unknown lockID: {}", door_id)
-                logger.debug("Changing switches back to OFF position")
+                # logger.debug("Changing switches back to OFF position")
                 num_doors = doorbell.get_num_outputs()
-                await asyncio.sleep(2)
                 for door_id in range(num_doors):
-                    entity_id = f'door_{door_id}'
-                    door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
-                    door_sensor.on()
-                    attributes = {
-                        'control source': control_source,
-                    }                    
-                    door_sensor.set_attributes(attributes)
-                    trigger = DeviceTriggerMetadata(name=f"door_open_{door_id+1}", type="door open", subtype=f"Control Source {control_source}")
-                    self.handle_device_trigger(doorbell, trigger)
-                    # Wait some seconds, then turn off the switch entity (since the relay is momentary)
-                    await asyncio.sleep(2)
-                    door_sensor.off()
+                    await update_door_entities(door_id, control_source)
                 return
-   
-            logger.info("Door {} unlocked by {}, updating sensor {}",
-                        door_id+1,
-                        control_source,
-                        door_sensor._entity.name)
-            attributes = {
-                'control source': control_source,
-            }
-            door_sensor.on()
-            door_sensor.set_attributes(attributes)
-            trigger = DeviceTriggerMetadata(name=f"door_open_{door_id+1}", type="door open", subtype=f"Control Source {control_source}")
-            self.handle_device_trigger(doorbell, trigger)
-            # Wait some seconds, then turn off the switch entity (since the relay is momentary)
-            await asyncio.sleep(2)
-            door_sensor.off()
+            
+            await update_door_entities(door_id, control_source)
+
         else:
             logger.warning("Unhandled eventType: {}", alarm_info.byEventType)
 
@@ -339,4 +343,6 @@ class MQTTHandler(EventHandler):
         device_trigger = cast(DeviceTrigger, device_trigger)
         # Trigger the event
         logger.debug("Invoking device trigger {}", trigger)
-        device_trigger.trigger()
+        # Serialize the payload, if provided as part of the trigger
+        json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
+        device_trigger.trigger(json_payload)

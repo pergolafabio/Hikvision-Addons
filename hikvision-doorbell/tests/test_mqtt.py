@@ -95,6 +95,7 @@ def test_video_intercom_event(mocker: MockerFixture, mocked_doorbell: Doorbell, 
     video_intercom_event = mocker.patch('sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_EVENT')
     video_intercom_event.byEventType = VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
     video_intercom_event.uEventInfo.struUnlockRecord.wLockID = 0
+    video_intercom_event.uEventInfo.struUnlockRecord.controlSource = lambda: "test_source"
     
     asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, alarmer, video_intercom_event, 0, c_void_p(None)))
 
