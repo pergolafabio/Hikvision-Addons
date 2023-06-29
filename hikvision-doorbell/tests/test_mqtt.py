@@ -107,7 +107,8 @@ def test_video_intercom_event_non_existing_id(mocker: MockerFixture, mocked_door
     video_intercom_event.byEventType = VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
     # Set to return a "strange" door ID
     video_intercom_event.uEventInfo.struUnlockRecord.wLockID = 24322
-    
+    video_intercom_event.uEventInfo.struUnlockRecord.controlSource = lambda: "test_source"
+
     asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, alarmer, video_intercom_event, 0, c_void_p(None)))
 
 
