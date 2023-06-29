@@ -201,13 +201,13 @@ class MQTTHandler(EventHandler):
                 for door_id in range(num_doors):
                     entity_id = f'door_{door_id}'
                     door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
-                    door_sensor.on()
                     attributes = {
                         'control source': control_source,
                     }                    
                     door_sensor.set_attributes(attributes)
-                    trigger = DeviceTriggerMetadata(name=f"door_open_{door_id+1}", type="door open", subtype=f"Control Source {control_source}")
-                    self.handle_device_trigger(doorbell, trigger)
+                    door_sensor.on()
+                    #trigger = DeviceTriggerMetadata(name=f"door_open_{door_id+1}", type="door open", subtype=f"Control Source {control_source}")
+                    #self.handle_device_trigger(doorbell, trigger)
                     # Wait some seconds, then turn off the switch entity (since the relay is momentary)
                     await asyncio.sleep(2)
                     door_sensor.off()
@@ -220,10 +220,10 @@ class MQTTHandler(EventHandler):
             attributes = {
                 'control source': control_source,
             }
-            door_sensor.on()
             door_sensor.set_attributes(attributes)
-            trigger = DeviceTriggerMetadata(name=f"door_open_{door_id+1}", type="door open", subtype=f"Control Source {control_source}")
-            self.handle_device_trigger(doorbell, trigger)
+            door_sensor.on()
+            #trigger = DeviceTriggerMetadata(name=f"door_open_{door_id+1}", type="door open", subtype=f"Control Source {control_source}")
+            #self.handle_device_trigger(doorbell, trigger)
             # Wait some seconds, then turn off the switch entity (since the relay is momentary)
             await asyncio.sleep(2)
             door_sensor.off()
