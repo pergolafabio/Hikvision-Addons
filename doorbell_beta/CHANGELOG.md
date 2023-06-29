@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.24 - 2022-06-29
+
+### Change
+
+- Revert Device trigger automation for door open events
+- Set attribute control source first (key/badge numer), before turning on door relay switch (test)
+
 ## 3.0.0-beta.23 - 2022-06-28
 
 ### Added
