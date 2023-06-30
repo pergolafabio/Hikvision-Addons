@@ -282,7 +282,7 @@ class MQTTHandler(EventHandler):
                         zone_type= f"Unknown type {zone_type_id}"
                 
                 logger.info("Zone alarm detected on doorbell {}, zone type: {}, zone number: {} ", doorbell._config.name, zone_type, (zone_number+1))
-                trigger = DeviceTriggerMetadata(name=f"Zone alarm {zone_type}", type="alarm", subtype=f"zone_{zone_number+1}")
+                trigger = DeviceTriggerMetadata(name=f"Zone {zone_number+1}", type="alarm", subtype=f"alarm_{zone_type}")
                 self.handle_device_trigger(doorbell, trigger)
             case VideoInterComAlarmType.DOOR_NOT_OPEN | VideoInterComAlarmType.DOOR_NOT_CLOSED:
                 # Get information about the door that caused this alarm
