@@ -17,9 +17,13 @@ from input import InputReader
 async def main():
     """Main entrypoint of the application"""
 
-    # Disable type warnings since the object is populated at runtime using goodconf library
-    config = AppConfig()  # type:ignore
-    config.load()
+    try:
+        # Disable type warnings since the object is populated at runtime using goodconf library
+        config = AppConfig()  # type:ignore
+        config.load()
+    except RuntimeError as e:
+        logger.error("Configuration error: {}", e)
+        sys.exit(1)
 
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
@@ -96,7 +100,7 @@ if __name__ == "__main__":
         user_message, sdk_code, sdk_message = e.args
         logger.error("{}: {} Error code:{}", user_message, sdk_message, sdk_code)
         sys.exit(1)
-    except (ConnectionRefusedError, socket.gaierror) as e:
+    except (OSError, ConnectionRefusedError) as e:
         # Connection to MQTT broker failed
         logger.error("Error while connecting to MQTT broker: {}", e.strerror)
         sys.exit(1)
