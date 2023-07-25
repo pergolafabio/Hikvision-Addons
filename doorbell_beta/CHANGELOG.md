@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.25 - 2023-07-25
+
+### Added
+
+- Possibilty to define an external broker in the add-on config
+
 ## 3.0.0-beta.24 - 2022-06-29
 
 ### Change
