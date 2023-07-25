@@ -1,6 +1,6 @@
 name: Hikvision Doorbell (Beta)
 description: Connect your Hikvision doorbells to Home Assistant (Beta version)
-version: '3.0.0-beta.24'
+version: '3.0.0-beta.25'
 image: ghcr.io/pergolafabio/hikvision-doorbell
 slug: hikvision_doorbell_beta
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell_beta
@@ -24,6 +24,7 @@ options:
   system:
     log_level: INFO
     sdk_log_level: NONE
+  mqtt: {}
 
 # Schema for the options above
 schema:
@@ -36,6 +37,12 @@ schema:
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
+  mqtt:
+    host: "str?"
+    port: "int?"
+    ssl: "bool?"
+    username: "str?"
+    password: "str?"    
 
 # To request MQTT configuration using the supervisor API
 services:
