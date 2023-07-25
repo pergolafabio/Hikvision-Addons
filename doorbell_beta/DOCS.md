@@ -58,6 +58,17 @@ You can quickly set it up by clicking the following button:
 
 After you have started the __Mosquitto broker__ add-on, you should be able to automatically connect Home Assistant to the broker by going to `Settings` -> `Devices & Services` -> `MQTT`, and clicking `Configure`.
 
+If you have an external MQTT broker, you can define it the add-on config too:
+
+#### Example config
+```yaml
+host: 192.168.0.17
+port: 1883
+ssl: false
+username: user
+password: pass
+```
+
 ### Getting started
 
 After you have setup an MQTT broker, you can start __Hikvision Doorbell__. 
