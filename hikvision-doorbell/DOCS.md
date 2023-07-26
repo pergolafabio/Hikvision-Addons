@@ -31,6 +31,11 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
   ip: 192.168.0.2
   username: admin
   password: password
+
+- name: "Indoor"
+  ip: 192.168.0.3
+  username: admin
+  password: password
 ```
 
 ### System
