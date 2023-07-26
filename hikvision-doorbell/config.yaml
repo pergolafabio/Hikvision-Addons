@@ -29,6 +29,7 @@ schema:
   doorbells:
     - name: str
       ip: str
+      port: "int?"
       username: str
       password: str
       output_relays: "int?"

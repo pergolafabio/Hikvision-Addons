@@ -93,6 +93,7 @@ class MQTTHandler(EventHandler):
         # Save the MQTT settings as an attribute
         self._mqtt_settings = Settings.MQTT(
             host=config.host,
+            port=config.port,
             username=config.username,
             password=config.password
         )

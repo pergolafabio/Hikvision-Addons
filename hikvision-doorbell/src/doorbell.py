@@ -51,7 +51,7 @@ class Doorbell():
         self._device_info = NET_DVR_DEVICEINFO_V30()
         self.user_id = self._sdk.NET_DVR_Login_V30(
             bytes(self._config.ip, 'utf8'),
-            8000,
+            self._config.port,
             bytes(self._config.username, 'utf8'),
             bytes(self._config.password, 'utf8'),
             self._device_info
