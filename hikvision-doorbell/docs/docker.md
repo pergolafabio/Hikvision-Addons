@@ -16,11 +16,12 @@ services:
     tty: true   # To receive commands on STDIN
     env:
         # JSON string with the list of doorbells
-        DOORBELLS: '[{"name":"outdoor", "ip": "192.168.0.1", "username": "user", "password": "password"}]'
+        DOORBELLS: '[{"name":"outdoor", "ip": "192.168.0.1", "port": 8000, "username": "user", "password": "password"}]'
         
         # Connection to the MQTT broker
         MQTT__HOST: <hostname_of_broker>
         # Optionals
+        MQTT__PORT: 1883
         MQTT__USERNAME: <broker_username>
         MQTT__PASSWORD: <broker_password>
         

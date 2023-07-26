@@ -67,6 +67,7 @@ class AppConfig(GoodConf):
     class Doorbell(BaseModel):
         name: str = Field(description="Custom name of the doorbell")
         ip: str
+        port: Optional[int] = 8000
         username: str
         password: str
         output_relays: Optional[int] = None   # TODO: validate it is in acceppable range!
@@ -86,7 +87,7 @@ class AppConfig(GoodConf):
 
     class MQTT(BaseModel):
         host: str
-        port: int = 1883
+        port: Optional[int] = 1883
         ssl: Optional[bool] = Field(default=False, description="Set to true to enable SSL")
         username: Optional[str] = None
         password: Optional[str] = None
