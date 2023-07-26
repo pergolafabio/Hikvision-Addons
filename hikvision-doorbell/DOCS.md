@@ -14,12 +14,13 @@ For each of your doorbells, repeat the following configuration:
 | --------      | ----          | ----                                  |
 | name          |               | Custom name for this doorbell (visibile in the HA UI and the sensors names)
 | ip            |               | IP address of the doorbell
+| port          | 8000          | (Optional) Port of the doorbell
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
 | output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
 
 #### Example config
-The following configuration setups two doorbells, named `Front door` and `Rear door` and an `indoor` station:
+The following configuration setups two doorbells, named `Front door` and `Rear door`:
 ```yaml
 - name: "Front door"
   ip: 192.168.0.1
@@ -28,11 +29,6 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
 
 - name: "Rear door"
   ip: 192.168.0.2
-  username: admin
-  password: password
-
-- name: "Indoor"
-  ip: 192.168.0.3
   username: admin
   password: password
 ```
@@ -62,6 +58,17 @@ You can quickly set it up by clicking the following button:
 [![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=core_mosquitto), or by manually finding it inside your `Add-on store`.
 
 After you have started the __Mosquitto broker__ add-on, you should be able to automatically connect Home Assistant to the broker by going to `Settings` -> `Devices & Services` -> `MQTT`, and clicking `Configure`.
+
+(Optional) If you have an external MQTT broker, you can define it the add-on config too:
+
+#### Example config
+```yaml
+host: 192.168.0.17
+port: 1883
+ssl: false
+username: user
+password: pass
+```
 
 ### Getting started
 
@@ -94,7 +101,7 @@ For each of your doorbells, the following entities are available:
   Check out the [Automating Home Assistant](https://www.home-assistant.io/getting-started/automation/) guide on automations or the [Automation](https://www.home-assistant.io/docs/automation/) documentation for full details.
   
   <p align="center">
-    <img src="assets/docs_device_triggers_automation.png" width="600px" />
+    <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/dev/hikvision-doorbell/assets/docs_device_triggers_automation.png" width="600px" />
   </p>
 
 <!-- ### REST integration
