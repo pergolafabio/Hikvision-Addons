@@ -5,7 +5,7 @@
 ### Added
 
 - Possibilty to change port 8000 in the add-on config for the hikvision devices 
-- 
+
 ## 3.0.0-beta.25 - 2023-07-25
 
 ### Added
