@@ -14,6 +14,7 @@ For each of your doorbells, repeat the following configuration:
 | --------      | ----          | ----                                  |
 | name          |               | Custom name for this doorbell (visibile in the HA UI and the sensors names)
 | ip            |               | IP address of the doorbell
+| port          | 8000          | (Optional) Port of the doorbell
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
 | output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
@@ -58,7 +59,7 @@ You can quickly set it up by clicking the following button:
 
 After you have started the __Mosquitto broker__ add-on, you should be able to automatically connect Home Assistant to the broker by going to `Settings` -> `Devices & Services` -> `MQTT`, and clicking `Configure`.
 
-If you have an external MQTT broker, you can define it the add-on config too:
+(Optional) If you have an external MQTT broker, you can define it the add-on config too:
 
 #### Example config
 ```yaml
