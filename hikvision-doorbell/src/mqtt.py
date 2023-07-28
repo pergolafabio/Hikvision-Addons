@@ -262,27 +262,28 @@ class MQTTHandler(EventHandler):
                 call_sensor.set_state('idle')
             case VideoInterComAlarmType.ZONE_ALARM:
                 #zone_name = str(alarm_info.uAlarmInfo.struZoneAlarm.byZoneName,'UTF-8')
-                zone_type = alarm_info.uAlarmInfo.struZoneAlarm.byZoneType
+                zone_type_id = alarm_info.uAlarmInfo.struZoneAlarm.byZoneType
                 zone_number = alarm_info.uAlarmInfo.struZoneAlarm.dwZonendex
-                match zone_type:
+                match zone_type_id:
                     case 0:
-                        zone_type= "Panic Button"
+                        zone_type= "Panic button"
                     case 1:
-                        zone_type= "Door Magnetic"
+                        zone_type= "Door magnetic"
                     case 2:
-                        zone_type= "Smoke Detector"
+                        zone_type= "Smoke detector"
                     case 3:
-                        zone_type= "Active Infared"
+                        zone_type= "Active infrared"
                     case 4:
-                        zone_type= "Passive Infared"
+                        zone_type= "Passive infrared"
                     case 11:
-                        zone_type= "Gas Detector"
+                        zone_type= "Gas detector"
                     case 21:
                         zone_type= "Doorbell"                                                                                                 
                     case _:
-                        zone_type= "Unknown type: " + str(zone_type)
-                logger.info("Zone Alarm detected on doorbell {} type {} on zone {} ", doorbell._config.name, zone_type, (zone_number+1))
-                trigger = DeviceTriggerMetadata(name=f"zone_alarm_{zone_type}", type="alarm", subtype=f"Zone {zone_number+1}")
+                        zone_type= f"Unknown type {zone_type_id}"
+                
+                logger.info("Zone alarm detected on doorbell {}, zone type: {}, zone number: {} ", doorbell._config.name, zone_type, (zone_number+1))
+                trigger = DeviceTriggerMetadata(name=f"Zone {zone_number+1}", type="alarm", subtype=f"alarm_{zone_number+1}")
                 self.handle_device_trigger(doorbell, trigger)
             case VideoInterComAlarmType.DOOR_NOT_OPEN | VideoInterComAlarmType.DOOR_NOT_CLOSED:
                 # Get information about the door that caused this alarm
