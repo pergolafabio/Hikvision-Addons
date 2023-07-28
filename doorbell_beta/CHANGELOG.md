@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.27 - 2023-07-28
+
+### Fixed
+
+- Fix for zone as device triggers, they are all visible now
+
 ## 3.0.0-beta.26 - 2023-07-26
 
 ### Added
