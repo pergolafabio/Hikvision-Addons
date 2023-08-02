@@ -233,6 +233,12 @@ class Doorbell():
         xml_string = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
         return ET.fromstring(xml_string)
 
+    def caller_info(self):
+        """Retrieve caller information from the outdoor device, when multiple buttons are present.
+        Return the parsed XML document"""
+        json_string = self._call_isapi("GET", "/ISAPI/VideoIntercom/callerInfo?format=json")
+        return json_string
+
     def get_call_status(self) -> int:
         """Get the current status of the call."""
         call_status = NET_DVR_CALL_STATUS()
