@@ -20,6 +20,7 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           VideoInterComAlarmType)
 from typing_extensions import override
 import xml.etree.ElementTree as ET
+import json
 
 from sdk.utils import SDKError
 
@@ -254,6 +255,14 @@ class MQTTHandler(EventHandler):
         match alarm_type:
             case VideoInterComAlarmType.DOORBELL_RINGING:
                 logger.info("Doorbell ringing, updating sensor {}", call_sensor)
+                if doorbell._config.caller_info is True:
+                    try:
+                        attributes = json.loads(doorbell.caller_info())
+                        call_sensor.set_attributes(attributes)
+                        logger.info("Callerinfo: {} ", attributes)
+                    except SDKError:
+                    # Cannot get caller info info using ISAPI
+                        logger.info("Get Callerinfo failed:")
                 call_sensor.set_state('ringing')
             case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
                 logger.info("Call dismissed, updating sensor {}", call_sensor)
