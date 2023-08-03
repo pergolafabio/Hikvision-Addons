@@ -98,6 +98,57 @@ class MQTTInput():
             isapi_text.set_availability(True)
             self._sensors[doorbell]['isapi_text'] = isapi_text
 
+            if doorbell._config.scenes is True:
+                # Define scene buttons for indoor stations: "atHome", "goOut", "goToBed", "custom"
+
+                ###########
+                # atHome Button
+                button_info = ButtonInfo(
+                    name="At Home",
+                    unique_id=f"{sanitized_doorbell_name}_at_home",
+                    device=device,
+                    icon="mdi:shield-home",
+                    object_id=f"{sanitized_doorbell_name}_at_home")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                at_home_button = Button(settings, self._at_home_callback, doorbell)
+                at_home_button.set_availability(True)
+
+                ###########
+                # goOut Button
+                button_info = ButtonInfo(
+                    name="Go Out",
+                    unique_id=f"{sanitized_doorbell_name}_go_out",
+                    device=device,
+                    icon="mdi:shield-lock",
+                    object_id=f"{sanitized_doorbell_name}_go_out")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                go_out_button = Button(settings, self._go_out_callback, doorbell)
+                go_out_button.set_availability(True)
+
+                ###########
+                # goToBed Button
+                button_info = ButtonInfo(
+                    name="Go To Bed",
+                    unique_id=f"{sanitized_doorbell_name}_go_to_bed",
+                    device=device,
+                    icon="mdi:shield-moon",
+                    object_id=f"{sanitized_doorbell_name}_go_to_bed")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                go_to_bed_button = Button(settings, self._go_to_bed_callback, doorbell)
+                go_to_bed_button.set_availability(True)
+
+                ###########
+                # custom Button
+                button_info = ButtonInfo(
+                    name="Custom",
+                    unique_id=f"{sanitized_doorbell_name}_custom",
+                    device=device,
+                    icon="mdi:shield-star",
+                    object_id=f"{sanitized_doorbell_name}_custom")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                custom_button = Button(settings, self._custom_callback, doorbell)
+                custom_button.set_availability(True)
+
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received reboot command for doorbell: {}", doorbell._config.name)
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
@@ -150,6 +201,50 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
             logger.error("Error while answering call: {}", err)
+
+    def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received at home command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/scene/nowMode"
+        requestBody = "<SceneNowMode><nowMode>atHome</nowMode></SceneNowMode>"
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _go_out_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received go out command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/scene/nowMode"
+        requestBody = "<SceneNowMode><nowMode>goOut</nowMode></SceneNowMode>"
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _go_to_bed_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received go to bed command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/scene/nowMode"
+        requestBody = "<SceneNowMode><nowMode>goToBed</nowMode></SceneNowMode>"
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _custom_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received custom command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/scene/nowMode"
+        requestBody = "<SceneNowMode><nowMode>custom</nowMode></SceneNowMode>"
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
 
     def _isapi_input_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.debug("Received input text for doorbell: {}", doorbell._config.name)
