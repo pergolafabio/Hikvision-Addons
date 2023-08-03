@@ -35,6 +35,8 @@ schema:
       username: str
       password: str
       output_relays: "int?"
+      caller_info: "bool?"
+      scenes: "bool?"
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
