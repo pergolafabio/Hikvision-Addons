@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.26 - 2023-08-03
+
+### Added
+
+- Optional scenes support for indoor devices, there is a new config option to enable it, so you enable scenes like: “atHome”, “goOut”, “goToBed”, “custom”
+- Optional callerinfo for outdoor devices, usefull for intercoms with multiple buttons, the callsensor does now have an new attribute, there is a new config option to enable it
+
 ## 3.0.0-beta.27 - 2023-07-28
 
 ### Fixed
