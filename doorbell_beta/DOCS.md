@@ -18,9 +18,11 @@ For each of your doorbells, repeat the following configuration:
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
 | output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
+| caller_info   | false         | (optional) If you want to see the button prssed as an atribute on the call sensor, usefull for intercoms with multiple buttons.
+| scenes        | false         | (optional) Extra Scene buttons for indoor panels 
 
 #### Example config
-The following configuration setups two doorbells, named `Front door` and `Rear door`:
+The following configuration setups two doorbells, named `Front door` and `Rear door` and an `Indoor` panel
 ```yaml
 - name: "Front door"
   ip: 192.168.0.1
@@ -31,9 +33,16 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
   ip: 192.168.0.2
   username: admin
   password: password
+  caller_info: true
 
 - name: "Indoor"
   ip: 192.168.0.3
+  username: admin
+  password: password
+  scenes: true
+
+- name: "Indoor Extension"
+  ip: 192.168.0.4
   username: admin
   password: password
 ```
