@@ -22,6 +22,7 @@ Connect your Hikvision IP door stations to Home Assistant to receive events (lik
 
    _This can be exploited in an HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
 - **Reboot** the door station
+- Remote scenes support such as **atHome**/**goOut**/**goToBed**/**custom**
 
 ### Example
 
