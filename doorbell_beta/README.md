@@ -22,10 +22,10 @@ You feedback is very welcome! If you have any doubt, would like to report an iss
 - Capture doorbell **events**: _doorbell ringing_ /_motion detection_ /_door unlocked_ / _tamper alarm_
 - **Open doors** connected to the doorbell (_useful for older devices where port 80 is blocked and `ISAPI` is not available_)
 - Remote actions such as **answering**/**rejecting** the call, **hanging** up.
-- Remote scenes support such as **atHome**/**goOut**/**goToBed**/**custom**
 
    _This can be exploited in an HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
 - **Reboot** the door station
+- Remote scenes support such as **atHome**/**goOut**/**goToBed**/**custom**
 
 ### Example
 
