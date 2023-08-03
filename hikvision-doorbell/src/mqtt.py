@@ -350,5 +350,7 @@ class MQTTHandler(EventHandler):
         # Trigger the event
         logger.debug("Invoking device trigger {}", trigger)
         # Serialize the payload, if provided as part of the trigger
-        json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
-        device_trigger.trigger(json_payload)
+        device_trigger.trigger()
+        # Getting error here?
+        # json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
+        # device_trigger.trigger(json_payload)
