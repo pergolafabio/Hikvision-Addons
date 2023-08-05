@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.29 - 2023-08-05
+
+### Fixed
+
+- Make sure control_source is updated before changing the door sensor
+
 ## 3.0.0-beta.28 - 2023-08-03
 
 ### Added
