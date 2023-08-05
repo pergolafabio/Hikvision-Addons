@@ -200,9 +200,9 @@ class MQTTHandler(EventHandler):
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             attributes = {
                 'control_source': control_source,
-            }                    
-            door_sensor.on()
+            }
             door_sensor.set_attributes(attributes)
+            door_sensor.on()
             trigger = DeviceTriggerMetadata(name=f"Door unlocked", type="door open", subtype=f"door {door_id}", payload=attributes)
             self.handle_device_trigger(doorbell, trigger)
 
