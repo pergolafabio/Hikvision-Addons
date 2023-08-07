@@ -55,6 +55,24 @@ class InputReader():
             # Ignore error to avoid crashing application
             pass
 
+    def _send_scene(self, doorbell: Doorbell, command: str):
+        url = "/ISAPI/VideoIntercom/scene/nowMode"
+        requestBody = "<SceneNowMode><nowMode>" + command  + "</nowMode></SceneNowMode>"
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except RuntimeError:
+            # Ignore error to avoid crashing application
+            pass       
+
+    def _send_alarm(self, doorbell: Doorbell, command: str):
+        url = "/ISAPI/SecurityCP/AlarmControlByPhone"
+        requestBody = "<AlarmControlByPhoneCfg><commandType>" + command + "</commandType></AlarmControlByPhoneCfg>"
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except RuntimeError:
+            # Ignore error to avoid crashing application
+            pass
+
     def execute_command(self, command: str):
         # Split the input string in various parts
         # Expected input:
@@ -110,6 +128,24 @@ class InputReader():
             case "deviceOnCall":
                 logger.info("Device on call")
                 self._send_callsignal(doorbell, "deviceOnCall")
+            case "atHome":
+                logger.info("At home")
+                self._send_scene(doorbell, "atHome")
+            case "goOut":
+                logger.info("Go out")
+                self._send_scene(doorbell, "goOut")
+            case "goToBed":
+                logger.info("Go to bed")
+                self._send_scene(doorbell, "goToBed")
+            case "custom":
+                logger.info("Custom")
+                self._send_scene(doorbell, "custom")
+            case "setupAlarm":
+                logger.info("Alarm on")
+                self._send_alarm(doorbell, "setupAlarm")
+            case "closeAlarm":
+                logger.info("Alarm off")
+                self._send_alarm(doorbell, "closeAlarm")                
             case "reboot":
                 logger.info("Rebooting door station")
                 doorbell.reboot_device()

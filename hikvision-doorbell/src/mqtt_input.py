@@ -104,7 +104,7 @@ class MQTTInput():
                 ###########
                 # atHome Button
                 button_info = ButtonInfo(
-                    name="At Home",
+                    name="At home",
                     unique_id=f"{sanitized_doorbell_name}_at_home",
                     device=device,
                     icon="mdi:shield-home",
@@ -116,7 +116,7 @@ class MQTTInput():
                 ###########
                 # goOut Button
                 button_info = ButtonInfo(
-                    name="Go Out",
+                    name="Go out",
                     unique_id=f"{sanitized_doorbell_name}_go_out",
                     device=device,
                     icon="mdi:shield-lock",
@@ -128,7 +128,7 @@ class MQTTInput():
                 ###########
                 # goToBed Button
                 button_info = ButtonInfo(
-                    name="Go To Bed",
+                    name="Go to bed",
                     unique_id=f"{sanitized_doorbell_name}_go_to_bed",
                     device=device,
                     icon="mdi:shield-moon",
@@ -152,7 +152,7 @@ class MQTTInput():
                 ###########
                 # setupAlarm Button
                 button_info = ButtonInfo(
-                    name="Alarm On",
+                    name="Alarm on",
                     unique_id=f"{sanitized_doorbell_name}_setupAlarm",
                     device=device,
                     icon="mdi:alarm",
@@ -164,7 +164,7 @@ class MQTTInput():
                 ###########
                 # closeAlarm Button
                 button_info = ButtonInfo(
-                    name="Alarm Off",
+                    name="Alarm off",
                     unique_id=f"{sanitized_doorbell_name}_closeAlarm",
                     device=device,
                     icon="mdi:alarm-off",
