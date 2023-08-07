@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.30 - 2023-08-07
+
+### Added
+
+- Added 2 extra buttons for arm/disarm indoor panels, this can be enabled with "scenes: true" in the config
+
 ## 3.0.0-beta.29 - 2023-08-05
 
 ### Fixed
