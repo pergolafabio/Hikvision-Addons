@@ -100,6 +100,7 @@ For each of your doorbells, the following entities are available:
   - `Answer call`
   - `Reject call`
   - `Reboot`
+  - ...
 - Device triggers (depending on device model)
   - `Motion detected`
   - `Tamper alarm`
@@ -165,6 +166,12 @@ The input string must be in the format
   | bellTimeout | Unknown
   | hangUp      | Unknown
   | deviceOnCall| Unknown
+  | atHome      | Sending scene "At home" for indoor panels
+  | goOut       | Sending scene "Go out" for indoor panels
+  | goToBed     | Sending scene "Go to bed" for indoor panels
+  | custom      | Sending scene "custom" for indoor panels
+  | setupAlarm  | Turn on the alarm on the indoor panel
+  | closeAlarm  | Turn off the alarm on the indoor panel
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 
   E.G.: If the doorbell is named `Front door`, the input string must reference it as `front_door`.
