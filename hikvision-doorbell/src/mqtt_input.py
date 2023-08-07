@@ -99,7 +99,7 @@ class MQTTInput():
             self._sensors[doorbell]['isapi_text'] = isapi_text
 
             if doorbell._config.scenes is True:
-                # Define scene buttons for indoor stations: "atHome", "goOut", "goToBed", "custom"
+                # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom"
 
                 ###########
                 # atHome Button
@@ -148,6 +148,30 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 custom_button = Button(settings, self._custom_callback, doorbell)
                 custom_button.set_availability(True)
+
+                ###########
+                # setupAlarm Button
+                button_info = ButtonInfo(
+                    name="Alarm On",
+                    unique_id=f"{sanitized_doorbell_name}_setupAlarm",
+                    device=device,
+                    icon="mdi:alarm",
+                    object_id=f"{sanitized_doorbell_name}_setupAlarm")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                setupAlarm_button = Button(settings, self._setupAlarm_callback, doorbell)
+                setupAlarm_button.set_availability(True)
+
+                ###########
+                # closeAlarm Button
+                button_info = ButtonInfo(
+                    name="Alarm Off",
+                    unique_id=f"{sanitized_doorbell_name}_closeAlarm",
+                    device=device,
+                    icon="mdi:alarm-off",
+                    object_id=f"{sanitized_doorbell_name}_closeAlarm")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                closeAlarm_button = Button(settings, self._closeAlarm_callback, doorbell)
+                closeAlarm_button.set_availability(True)
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received reboot command for doorbell: {}", doorbell._config.name)
@@ -240,6 +264,28 @@ class MQTTInput():
 
         url = "/ISAPI/VideoIntercom/scene/nowMode"
         requestBody = "<SceneNowMode><nowMode>custom</nowMode></SceneNowMode>"
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _setupAlarm_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received setupAlarm command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/SecurityCP/AlarmControlByPhone"
+        requestBody = "<AlarmControlByPhoneCfg><commandType>setupAlarm</commandType></AlarmControlByPhoneCfg>"
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            doorbell._call_isapi("PUT", url, requestBody)
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _closeAlarm_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received closeAlarm command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/SecurityCP/AlarmControlByPhone"
+        requestBody = "<AlarmControlByPhoneCfg><commandType>closeAlarm</commandType></AlarmControlByPhoneCfg>"
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)

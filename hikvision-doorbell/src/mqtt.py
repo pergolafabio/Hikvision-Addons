@@ -194,8 +194,8 @@ class MQTTHandler(EventHandler):
             """
             Helper function to update the sensor and device trigger of a given door
             """
-            logger.info("Door {} unlocked by {}, updating sensor and device trigger", door_id+1, control_source)
-
+            logger.info("Door {} unlocked by {} , updating sensor and device trigger", door_id+1, control_source)
+            
             entity_id = f'door_{door_id}'
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             attributes = {
@@ -213,6 +213,9 @@ class MQTTHandler(EventHandler):
         if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
             door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
             control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
+            # unlock_type = alarm_info.uEventInfo.struUnlockRecord.byUnlockType
+            # card_number = str(alarm_info.uEventInfo.struAuthInfo.byCardNo
+            
             # Name of the entity inside the dict array containing all the sensors
             entity_id = f'door_{door_id}'
             # Extract the sensor entity from the dict and cast to know type
@@ -350,7 +353,5 @@ class MQTTHandler(EventHandler):
         # Trigger the event
         logger.debug("Invoking device trigger {}", trigger)
         # Serialize the payload, if provided as part of the trigger
-        device_trigger.trigger()
-        # Getting error here?
-        # json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
-        # device_trigger.trigger(json_payload)
+        json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
+        device_trigger.trigger(json_payload)
