@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.31 - 2023-08-09
+
+### Added
+
+- Added 2 extra sensors to poll scene and alarm, when you have enabled scenes support on your indoor device (for testing)
+
 ## 3.0.0-beta.30 - 2023-08-07
 
 ### Added
