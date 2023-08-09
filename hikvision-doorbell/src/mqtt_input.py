@@ -1,13 +1,15 @@
 import json
+import asyncio
 from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
 from ha_mqtt_discoverable import Settings, Discoverable
-from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo
+from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor
 from home_assistant import sanitize_doorbell_name
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
+import xml.etree.ElementTree as ET
 
 from sdk.utils import SDKError
 
@@ -99,7 +101,79 @@ class MQTTInput():
             self._sensors[doorbell]['isapi_text'] = isapi_text
 
             if doorbell._config.scenes is True:
-                # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom"
+                # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
+
+                ##################
+                # Scene state poll sensor
+                scene_sensor_info = SensorInfo(
+                    name="Scene",
+                    unique_id=f"{device.identifiers}-scene",
+                    device=device,
+                    object_id=f"{sanitized_doorbell_name}_scene",
+                    icon="mdi:shield")
+
+                settings = Settings(mqtt=mqtt_settings, entity=scene_sensor_info, manual_availability=True)
+                global scene_sensor
+                scene_sensor = Sensor(settings)
+                scene_sensor.set_availability(True)
+                self._sensors[doorbell]['scene'] = scene_sensor
+
+                async def poll_scene_sensor():
+                    while True:
+                        try:
+                            xml_string = doorbell._call_isapi("GET", "/ISAPI/VideoIntercom/scene/nowMode")
+                            root = ET.fromstring(xml_string)
+                            element = root[0].text
+                            # Error out if we don't find attribute
+                            if element is None:
+                                # Print a string representation of the response XML
+                                raise RuntimeError(f'Unexpected XML response: {xml_string}')
+                            scene_sensor.set_state(element)
+                            logger.info("Scene sensor changed to {}", element)
+                        except RuntimeError:
+                            # Ignore error to avoid crashing application
+                            pass
+                        await asyncio.sleep(15)
+                        logger.debug("Polling scene sensor every 15 sec")
+                        
+                loop = asyncio.get_event_loop()
+                scene_sensor_task = loop.create_task(poll_scene_sensor())
+
+                ##################
+                # alarm state poll sensor
+                alarm_sensor_info = SensorInfo(
+                    name="Alarm",
+                    unique_id=f"{device.identifiers}-alarm",
+                    device=device,
+                    object_id=f"{sanitized_doorbell_name}_alarm",
+                    icon="mdi:alarm-check")
+
+                settings = Settings(mqtt=mqtt_settings, entity=alarm_sensor_info, manual_availability=True)
+                global alarm_sensor 
+                alarm_sensor = Sensor(settings)
+                alarm_sensor.set_availability(True)
+                self._sensors[doorbell]['alarm'] = alarm_sensor
+
+                async def poll_alarm_sensor():
+                    while True:
+                        try:
+                            xml_string = doorbell._call_isapi("GET", "/ISAPI/SecurityCP/AlarmControlByPhone")
+                            root = ET.fromstring(xml_string)
+                            element = root[0].text
+                            # Error out if we don't find attribute
+                            if element is None:
+                                # Print a string representation of the response XML
+                                raise RuntimeError(f'Unexpected XML response: {xml_string}')
+                            alarm_sensor.set_state(element)
+                            logger.info("Alarm sensor changed to {}", element)
+                        except RuntimeError:
+                            # Ignore error to avoid crashing application
+                            pass
+                        await asyncio.sleep(15)
+                        logger.debug("Polling alarm sensor every 15 sec")
+                        
+                loop = asyncio.get_event_loop()
+                alarm_sensor_task = loop.create_task(poll_alarm_sensor())
 
                 ###########
                 # atHome Button
@@ -234,6 +308,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor.set_state("atHome")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
@@ -245,6 +320,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor.set_state("goOut")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
@@ -256,6 +332,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor.set_state("goToBed")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
@@ -267,6 +344,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor.set_state("custom")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
@@ -278,6 +356,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            alarm_sensor.set_state("setupAlarm")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
@@ -289,6 +368,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            alarm_sensor.set_state("closeAlarm")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
