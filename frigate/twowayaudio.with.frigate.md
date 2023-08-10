@@ -77,6 +77,7 @@ Step 1 was the hardest, now the easy part, I quickly created a card configuratio
 
 IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio!
 With my Hikvision Add-On you can first "answer" the call, and then start talking, you can see i added an "element" section below, where i added an extra "phone" button. 
+
 The phone buttons activates 2 services, first it answers the call, and then it unmutes the microphone! Offcourse change the entity in the elements section
 
 ![Ivms](frigate.png)
