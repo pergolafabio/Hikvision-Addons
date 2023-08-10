@@ -88,8 +88,6 @@ The phone buttons activates 2 services, first it answers the call, and then it u
 
 ![Ivms](frigate.png)
 
-Have FUN :-)
-
 ```
         - type: custom:frigate-card
           cameras:
@@ -151,5 +149,6 @@ Have FUN :-)
             aspect_ratio: '16:9'
 ```
 
+Have FUN :-)
 
-
+Like my work? You can always send me a donation: https://paypal.me/pergolafabio
