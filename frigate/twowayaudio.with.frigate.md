@@ -73,7 +73,11 @@ https://stackoverflow.com/questions/52759992/how-to-access-camera-and-microphone
 
 OR you can also use this button: "external WebRTC viewer", that one creates a valid https link for you
 
-## Step 2: Frigate card configuration
+## Step 2: Frigate integration
+
+When the Add-on is running and all working well, install the Frigate integration, MQTT is necessary. After the integration is finished, the camera entity will be created in HA, that you need to use with the Frigate Hass Card
+
+## Step 3: Frigate card configuration
 
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
