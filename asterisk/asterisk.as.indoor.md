@@ -331,4 +331,5 @@ door => 9,self,Set,CURL_RESULT=${SHELL(curl -i --digest -u admin:XXX -X PUT -d '
 NOTE: If you have multiple outdoor stations, registered to same indoor, you can use this dialplan, to capture the door who is calling and change the RTSP with an attribiute, thnx for sharing!
 https://github.com/pergolafabio/Hikvision-Addons/issues/114#issuecomment-1591179075
 
-Like my work? You can always send me a donation: https://paypal.me/pergolafabio
+## Donations
+ Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
