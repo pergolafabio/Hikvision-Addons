@@ -5,6 +5,7 @@
 # For example to set system.log_level to DEBUG use the env variable SYSTEM__LOG_LEVEL=DEBUG
 
 # By default no doorbells are defined
+# For a full list of options, have a look at the docs
 doorbells: []
 # Uncomment the following lines and define each doorbell by repeating the example config:
 #   - name: "Front porch"
@@ -12,11 +13,6 @@ doorbells: []
 #     port: 8000
 #     username: admin
 #     password: password
-
-# Define the following options to enable the Home Assistant REST API integration
-# home_assistant:
-#   url: http://localhost:8123
-#  token: <secret_token>
 
 # Define the following options to enable the MQTT integration
 # mqtt:
