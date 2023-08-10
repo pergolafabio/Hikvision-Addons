@@ -15,7 +15,7 @@ services:
     image: ghcr.io/pergolafabio/hikvision-doorbell
     tty: true   # To receive commands on STDIN
     env:
-        # JSON string with the list of doorbells
+        # JSON string with the list of doorbells, for all options, have a look at the docs
         DOORBELLS: '[{"name":"outdoor", "ip": "192.168.0.1", "port": 8000, "username": "user", "password": "password"}]'
         
         # Connection to the MQTT broker
