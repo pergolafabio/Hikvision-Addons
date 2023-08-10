@@ -41,7 +41,7 @@ To quickly get started, click the following button:
 
 __NOTE__: This is not an add-on, just an alternate way to setup Asterisk without setting up SIP on the devices!
 
-## [Use Frigate with Two Audio Support and a Loveca Hass Card]([frigate/twowayaudio.with.frigate.md](https://github.com/pergolafabio/Hikvision-Addons/blob/dev/frigate/twowayaudio.with.frigate.md))
+## [Use Frigate with Two Audio Support and a Loveca Hass Card](https://github.com/pergolafabio/Hikvision-Addons/blob/dev/frigate/twowayaudio.with.frigate.md)
 
 __NOTE__: This is not an add-on, just an alternate way to answers calls using Home Assistant with Two Way Audio ISAPI support!
 
