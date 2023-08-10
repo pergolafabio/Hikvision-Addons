@@ -34,7 +34,7 @@ If you want to compile your onw Asterisk, make sure to include this app: https:/
 
 As I told before, you can use Asterisk to register as a trunk on your primary indoor panel... 
 
-#### Option 1 based on newer indoor panels
+#### Option 1 based on newer indoor panels (ONLY works with 9310-9510 rev B)
 On same indoor panels you can already the extension with a SN.. for serial use: Q12345678, for No: 5, enter a password, the the IP is your Asterisk  instance running the addon... 
 In below example, 192.168.0.71 is my primary indoor panel, 10000000005 is actually the number 5 you entered in IVMS, 192.168.0.17 is HA running Asterisk
 Some indoor panels dont have the option to add extensions, then try without it, just use the trunk setup below... if you receive an 404 or 401 error when debugging sip, proceed to option 2, and skip this trunk setup... I always use the tool "sngrep", you can install it in the SSH addon with the command "apk add sngrep"
