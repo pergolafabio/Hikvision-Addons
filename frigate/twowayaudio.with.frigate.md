@@ -86,7 +86,7 @@ With my Hikvision Add-On you can first "answer" the call, and then start talking
 
 The phone buttons activates 2 services, first it answers the call, and then it unmutes the microphone! Offcourse change the entity in the elements section
 
-![Ivms](frigate.png)
+![Ivms](frigate-card.png)
 
 ```
         - type: custom:frigate-card
@@ -135,6 +135,16 @@ The phone buttons activates 2 services, first it answers the call, and then it u
               fit: fill
           elements:
             - type: custom:frigate-card-menu-icon
+              icon: mdi:volume-high
+              tap_action:
+                - action: custom:frigate-card-action
+                  frigate_card_action: unmute
+            - type: custom:frigate-card-menu-icon
+              icon: mdi:volume-off
+              tap_action:
+                - action: custom:frigate-card-action
+                  frigate_card_action: mute
+            - type: custom:frigate-card-menu-icon
               icon: mdi:phone
               tap_action:
                 - action: call-service
@@ -142,7 +152,14 @@ The phone buttons activates 2 services, first it answers the call, and then it u
                   service_data:
                     entity_id: button.ds_kh9510_answer_call
                 - action: custom:frigate-card-action
+                  frigate_card_action: unmute
+                - action: custom:frigate-card-action
                   frigate_card_action: microphone_unmute
+            - type: custom:frigate-card-menu-icon
+              icon: mdi:phone-hangup
+              tap_action:
+                - action: custom:frigate-card-action
+                  frigate_card_action: microphone_mute
 
           dimensions:
             aspect_ratio_mode: static
