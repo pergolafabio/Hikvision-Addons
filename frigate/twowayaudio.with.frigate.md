@@ -28,7 +28,8 @@ Advantages:
 
 ## Get started:
 
-Install the Frigate Addon, as i told earlier, this Frigate addon uses in background the go2rtc addon. BUT, the version included is still 1.2, ISAPI was introduced in go2rtc since version 1.3.2, so we need to configure the Frigate Addon to use the latest version of go2rtc, this time of writing i used 1.6.2. 
+Install the Frigate Addon, as i told earlier, this Frigate addon uses in background the go2rtc addon. BUT, the version included is still 1.2, ISAPI was introduced in go2rtc since version 1.3.2, so we need to configure the Frigate Addon to use the latest version of go2rtc, this time of writing i used 1.6.2
+
 Here are the instructions to use a custom version of go2rtc: https://docs.frigate.video/configuration/advanced/#custom-go2rtc-version
 
 When starting the Frigate Add-on you should see this if you configured it correctly:
