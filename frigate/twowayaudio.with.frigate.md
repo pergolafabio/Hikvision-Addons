@@ -3,7 +3,7 @@
 
 ## Background info:
 
-Our hikvision devices do support SIP, but SIP knowledge is neccasry, its not always easy to setup a PBX like Asterisk, but there is another away!
+Our hikvision devices do support SIP, but SIP knowledge is necessary, its not always easy to setup a PBX like Asterisk, but there is another away!
 Most cameras/doorbells do have a speaker/microphone, so two way audio (talk-back) can be activated, they all use a different protocol, in case of Hikvision its ISAPI
 Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, Frigate is an NVR system that can be used in combination with the go2rtc addon... 
 Frigate also offers an lovelace sip card, and YES, with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
