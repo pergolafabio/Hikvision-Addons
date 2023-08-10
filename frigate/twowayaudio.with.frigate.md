@@ -41,7 +41,7 @@ When starting the Frigate Add-on you should see this if you configured it correc
 2023-08-10 12:51:48.311927197  14:51:48.311 INF go2rtc version 1.6.2 linux/amd64
 ```
 
-## Step 1: Frigate configuration
+## Step 1: Frigate Add-On configuration
 
 A simple frigate.yml configuration to add the doorbell with ISAPI support:
 
@@ -73,11 +73,11 @@ https://stackoverflow.com/questions/52759992/how-to-access-camera-and-microphone
 
 OR you can also use this button: "external WebRTC viewer", that one creates a valid https link for you
 
-## Step 2: Frigate integration
+## Step 2: Frigate Hass Integration
 
 When the Add-on is running and all working well, install the Frigate integration, MQTT is necessary. After the integration is finished, the camera entity will be created in HA, that you need to use with the Frigate Hass Card
 
-## Step 3: Frigate card configuration
+## Step 3: Frigate Hass Card configuration
 
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
