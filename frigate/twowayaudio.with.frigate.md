@@ -20,16 +20,17 @@ Advantages:
 - ....
 
 ## Prerequisites:
-Home Assistant! :-)
-Frigate Add-on: https://github.com/blakeblackshear/frigate-hass-addons
-Frigate Hass Integration: https://github.com/blakeblackshear/frigate-hass-integration
-Frigate Hass Card: https://github.com/dermotduffy/frigate-hass-card
-MQTT Broker
+- Home Assistant! :-)
+- Frigate Add-on: https://github.com/blakeblackshear/frigate-hass-addons
+- Frigate Hass Integration: https://github.com/blakeblackshear/frigate-hass-integration
+- Frigate Hass Card: https://github.com/dermotduffy/frigate-hass-card
+- MQTT Broker
 
 ## Get started:
 
 Install the Frigate Addon, as i told earlier, this Frigate addon uses in background the go2rtc addon. BUT, the version included is still 1.2, ISAPI was introduced in go2rtc since version 1.3.2, so we need to configure the Frigate Addon to use the latest version of go2rtc, this time of writing i used 1.6.2. 
 Here are the instructions to use a custom version of go2rtc: https://docs.frigate.video/configuration/advanced/#custom-go2rtc-version
+
 When starting the Frigate Add-on you should see this if you configured it correctly:
 
 ```
@@ -77,6 +78,8 @@ Step 1 was the hardest, now the easy part, I quickly created a card configuratio
 IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio!
 With my Hikvision Add-On you can first "answer" the call, and then start talking, you can see i added an "element" section below, where i added an extra "phone" button. 
 The phone buttons activates 2 services, first it answers the call, and then it unmutes the microphone! Offcourse change the entity in the elements section
+
+![Ivms](frigate.png)
 
 Have FUN :-)
 
@@ -141,5 +144,5 @@ Have FUN :-)
             aspect_ratio: '16:9'
 ```
 
-![Ivms](frigate.png)
+
 
