@@ -8,7 +8,7 @@ Most cameras/doorbells do have a speaker/microphone, so two way audio (talk-back
 
 Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, Frigate is an NVR system that can be used in combination with the go2rtc addon... 
 Frigate also offers an lovelace sip card, and YES, with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
-I think this Frigate card is the first card, that has microphone support 
+I think this Frigate card is the first card with microphone support! 
 
 
 Advantages:
