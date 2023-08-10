@@ -11,7 +11,7 @@ Frigate also offers an lovelace sip card, and YES, with microphone support!! So 
 I think this Frigate card is the first card with microphone support! 
 
 
-Advantages:
+## Advantages:
 
 - No need to setup complex SIP
 - Aswner the call with HA companion app
