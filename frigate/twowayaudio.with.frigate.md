@@ -128,7 +128,7 @@ The phone buttons activates 2 services, first it answers the call, and then it u
           live:
             auto_mute: never
             controls:
-              builtin: false
+              builtin: true
               title:
                 mode: none
             layout:
