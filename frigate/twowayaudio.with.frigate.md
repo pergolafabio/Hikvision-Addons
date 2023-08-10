@@ -151,4 +151,5 @@ The phone buttons activates 2 services, first it answers the call, and then it u
 
 Have FUN :-)
 
-Like my work? You can always send me a donation: https://paypal.me/pergolafabio
+## Donations
+ Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
