@@ -28,7 +28,7 @@ Connect to you Hikvision IP doorbells to receive events (motion detection, incom
 To quickly get started, click the following button:
 [![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_sdk&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
 
-### [Hikvision Doorbell (Beta)](doorbell_beta/README.md)
+## [Hikvision Doorbell (Beta)](doorbell_beta/README.md)
 
 Pre-release version, containing new features and additions that are being actively developed and tested, to be released in the next stable version.
 
