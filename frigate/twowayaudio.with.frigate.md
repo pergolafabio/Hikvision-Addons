@@ -14,7 +14,7 @@ I think this Frigate card is the first card with microphone support!
 ## Advantages:
 
 - No need to setup complex SIP
-- Aswner the call with HA companion app
+- Answer the call with HA or companion app
 - Talk to the person at the doorbell, whenever you want, no need to initiate a call first
 - With go2rtc you can send streams/music to your Doorbell :-)
 - Frigate supports person detection, so you can already start talking before the postman actually pressed the doorbutton! :-)
