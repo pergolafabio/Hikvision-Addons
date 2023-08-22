@@ -99,6 +99,22 @@ class MQTTInput():
             isapi_text = Text(settings, self._isapi_input_callback, doorbell)
             isapi_text.set_availability(True)
             self._sensors[doorbell]['isapi_text'] = isapi_text
+            
+            if doorbell._config.caller_info is True:
+                # Optional: Define a caller_info button to know what indoor station is ringinhg
+                
+                ###########
+                # Caller_info call button
+                button_info = ButtonInfo(
+                    name="Caller info",
+                    unique_id=f"{sanitized_doorbell_name}_caller_info",
+                    device=device,
+                    icon="mdi:phone-log",
+                    object_id=f"{sanitized_doorbell_name}_caller_info")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+                caller_info_button = Button(settings, self._caller_info_callback, doorbell)
+                caller_info_button.set_availability(True)
+                self._sensors[doorbell]['caller_info'] = caller_info_button
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -113,10 +129,9 @@ class MQTTInput():
                     icon="mdi:shield")
 
                 settings = Settings(mqtt=mqtt_settings, entity=scene_sensor_info, manual_availability=True)
-                global scene_sensor
                 scene_sensor = Sensor(settings)
                 scene_sensor.set_availability(True)
-                self._sensors[doorbell]['scene'] = scene_sensor
+                self._sensors[doorbell]['scene_sensor'] = scene_sensor
 
                 async def poll_scene_sensor():
                     while True:
@@ -149,10 +164,9 @@ class MQTTInput():
                     icon="mdi:alarm-check")
 
                 settings = Settings(mqtt=mqtt_settings, entity=alarm_sensor_info, manual_availability=True)
-                global alarm_sensor 
                 alarm_sensor = Sensor(settings)
                 alarm_sensor.set_availability(True)
-                self._sensors[doorbell]['alarm'] = alarm_sensor
+                self._sensors[doorbell]['alarm_sensor'] = alarm_sensor
 
                 async def poll_alarm_sensor():
                     while True:
@@ -299,6 +313,22 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
             logger.error("Error while answering call: {}", err)
+           
+    def _caller_info_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received caller info command for doorbell: {}", doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/callerInfo?format=json"
+        requestBody = ""
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            response = doorbell._call_isapi("GET", url, json.dumps(requestBody))
+            attributes = {
+                "response": response
+            }
+            caller_info_button = cast(Button, self._sensors[doorbell]['caller_info'])
+            caller_info_button.set_attributes(attributes)
+        except Exception as err:
+            logger.error("Error while getting caller info: {}", err)           
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)
@@ -308,6 +338,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor = cast(Sensor, self._sensors[doorbell]['scene_sensor'])
             scene_sensor.set_state("atHome")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
@@ -320,6 +351,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor = cast(Sensor, self._sensors[doorbell]['scene_sensor'])
             scene_sensor.set_state("goOut")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
@@ -332,6 +364,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor = cast(Sensor, self._sensors[doorbell]['scene_sensor'])
             scene_sensor.set_state("goToBed")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
@@ -344,6 +377,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            scene_sensor = cast(Sensor, self._sensors[doorbell]['scene_sensor'])
             scene_sensor.set_state("custom")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
@@ -356,6 +390,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            alarm_sensor = cast(Sensor, self._sensors[doorbell]['alarm_sensor'])
             alarm_sensor.set_state("setupAlarm")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
@@ -368,6 +403,7 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, requestBody)
+            alarm_sensor = cast(Sensor, self._sensors[doorbell]['alarm_sensor'])
             alarm_sensor.set_state("closeAlarm")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)

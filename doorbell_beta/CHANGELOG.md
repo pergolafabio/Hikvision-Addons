@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.32 - 2023-08-22
+
+### Changed
+
+- When caller_info is enabled in the config, it will now create an extra button, people with multiple buttons on outdoor, you can now build an automation to retrieve the caller_info on indoor station on incoming "ringing" event, so you know what indoor device is ringing...
+
 ## 3.0.0-beta.31 - 2023-08-09
 
 ### Added
