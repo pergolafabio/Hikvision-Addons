@@ -17,7 +17,7 @@ For each of your doorbells, repeat the following configuration:
 | port          | 8000          | (Optional) Port of the doorbell
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
-| output_relays |               | (optional) Set this option if you don't see the correct number of door switches inside HA
+| output_relays |               | (optional) Set this option if you don't see the correct number of door switche or if you have attached an secure door control module on your indoor
 | caller_info   | false         | (optional) If you want to see the button prssed as an atribute on the call sensor, usefull for intercoms with multiple buttons.
 | scenes        | false         | (optional) Extra Scene buttons for indoor panels 
 
@@ -33,12 +33,12 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
   ip: 192.168.0.2
   username: admin
   password: password
-  caller_info: true
 
 - name: "Indoor"
   ip: 192.168.0.3
   username: admin
   password: password
+  caller_info: true
   scenes: true
 
 - name: "Indoor Extension"

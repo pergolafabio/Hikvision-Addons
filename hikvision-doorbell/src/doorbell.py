@@ -1,6 +1,7 @@
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_int, c_uint, c_void_p, pointer, sizeof, cast
 from enum import IntEnum
 import re
+import json
 from typing import Callable, Optional
 from loguru import logger
 from config import AppConfig
@@ -89,30 +90,49 @@ class Doorbell():
         if not logout_result:
             logger.debug("SDK logout result {}", logout_result)
 
+    def unlock_com(self, com_id: int):
+
+        url = "/ISAPI/SecurityCP/control/outputs/" + str(com_id) + "?format=json"
+        requestBody = {
+            "OutputsCtrl": {
+                "switch": "open"
+            }
+        }
+        self._call_isapi("PUT", url, json.dumps(requestBody))
+        logger.info(" Com {} unlocked by ISAPI", com_id +1)
+
     def unlock_door(self, lock_id: int):
-        """ Unlock the specified door using the SKD NET_DVR_RemoteControl.
-        If that fails, fallback to ISAPI `/ISAPI/AccessControl/RemoteControl/door/`.
+        if not self._type is DeviceType.INDOOR:
+            """ Unlock the specified door using the SKD NET_DVR_RemoteControl.
+            If that fails, fallback to ISAPI `/ISAPI/AccessControl/RemoteControl/door/`.
 
-        See #83
-        """
-        gw = NET_DVR_CONTROL_GATEWAY()
-        gw.dwSize = sizeof(NET_DVR_CONTROL_GATEWAY)
-        gw.dwGatewayIndex = 1
-        gw.byCommand = 1  # opening command
-        gw.byLockType = 0  # this is normal lock not smart lock
-        gw.wLockID = lock_id  # door ID
-        gw.byControlSrc = (c_byte * 32)(*[97, 98, 99, 100])  # anything will do but can't be empty
-        gw.byControlType = 1
+            See #83
+            """
+            gw = NET_DVR_CONTROL_GATEWAY()
+            gw.dwSize = sizeof(NET_DVR_CONTROL_GATEWAY)
+            gw.dwGatewayIndex = 1
+            gw.byCommand = 1  # opening command
+            gw.byLockType = 0  # this is normal lock not smart lock
+            gw.wLockID = lock_id  # door ID
+            gw.byControlSrc = (c_byte * 32)(*[97, 98, 99, 100])  # anything will do but can't be empty
+            gw.byControlType = 1
 
-        result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
-        if not result:
-            # SDK failed, try via ISAPI
+            result = self._sdk.NET_DVR_RemoteControl(self.user_id, 16009, byref(gw), gw.dwSize)
+            if not result:
+                # SDK failed, try via ISAPI
+                url = "/ISAPI/AccessControl/RemoteControl/door/" + str(lock_id+1)
+                requestBody = "<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>"
+
+                logger.debug("NET_DVR_RemoteControl failed with code {}, trying ISAPI", self._sdk.NET_DVR_GetLastError())
+                self._call_isapi("PUT", url, requestBody)
+        else:
+                # ISAPI command for indoor
             url = "/ISAPI/AccessControl/RemoteControl/door/" + str(lock_id+1)
-            requestBody = "<RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>"
+            requestBody = "<RemoteControlDoor><channelNo>1</channelNo><cmd>open</cmd><controlType>monitor</controlType></RemoteControlDoor>"
 
             logger.debug("NET_DVR_RemoteControl failed with code {}, trying ISAPI", self._sdk.NET_DVR_GetLastError())
             self._call_isapi("PUT", url, requestBody)
-   
+
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
     def reboot_device(self):
@@ -147,6 +167,31 @@ class Doorbell():
         response_body = output_char_p.value.decode("utf-8") if output_char_p.value else ""
 
         return response_body
+
+    def get_num_outputs_indoor(self) -> int:
+        """
+        Get the number of output relays configured for the indoor station, manually only.
+        """
+
+        # Define various functions, each using a different method to gather this information
+        def user_config() -> int:
+            if self._config.output_relays is not None:
+                logger.debug("Using the configured number of switches: {}", self._config.output_relays)
+                return self._config.output_relays
+            raise RuntimeError("No user configuration specified")
+        
+        # Define the list of available endpoints to try
+        available_endpoints: list[Callable] = [user_config]
+        for endpoint in available_endpoints:
+            # Invoke the endpoint, if it errors out try another one
+            try:
+                return endpoint()
+            except RuntimeError:
+                # This endpoint failed, try the next one
+                pass
+
+        # We have run out of available endpoints to call
+        raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
     def get_num_outputs(self) -> int:
         """

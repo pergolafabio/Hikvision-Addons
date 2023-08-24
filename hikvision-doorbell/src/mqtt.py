@@ -115,7 +115,7 @@ class MQTTHandler(EventHandler):
             # Remove spaces and - from doorbell name
             sanitized_doorbell_name = sanitize_doorbell_name(doorbell_name)
 
-            # No Callsensor and relays for indoor
+            # No Callsensor for indoor
             if not doorbell._type is DeviceType.INDOOR:
                 
                 ##################
@@ -132,22 +132,54 @@ class MQTTHandler(EventHandler):
                 call_sensor.set_state("idle")
                 call_sensor.set_availability(True)
                 self._sensors[doorbell]['call'] = call_sensor
-                ##################
-                # Doors
-                # Create switches for output relays used to open doors
+
+
+            ##################
+            # Doors
+            # Create switches for output relays used to open doors
+
+            if not doorbell._type is DeviceType.INDOOR:
                 num_doors = doorbell.get_num_outputs()
-                logger.debug("Configuring {} door switches", num_doors)
-                for door_id in range(num_doors):
-                    door_switch_info = SwitchInfo(
-                        name=f"Door {door_id+1} relay",
-                        unique_id=f"{device.identifiers}-door_relay_{door_id}",
+            else:
+                num_doors = doorbell.get_num_outputs_indoor()
+            logger.debug("Configuring {} door switches", num_doors)
+            for door_id in range(num_doors):
+                door_switch_info = SwitchInfo(
+                    name=f"Door {door_id+1} relay",
+                    unique_id=f"{device.identifiers}-door_relay_{door_id}",
+                    device=device,
+                    object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
+                settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
+                door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
+                door_switch.off()
+                door_switch.set_availability(True)
+                self._sensors[doorbell][f'door_{door_id}'] = door_switch
+
+            ##################
+            # Output ports
+            # Create com1 and com2 ports for indoor stations
+
+            if doorbell._type is DeviceType.INDOOR:
+                logger.debug("Configuring 2 com relays for indoor station")
+                for com_id in range(2):
+                    com_switch_info = SwitchInfo(
+                        name=f"Com {com_id+1} relay",
+                        unique_id=f"{device.identifiers}-com_relay_{com_id}",
                         device=device,
-                        object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
-                    settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
-                    door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
-                    door_switch.off()
-                    door_switch.set_availability(True)
-                    self._sensors[doorbell][f'door_{door_id}'] = door_switch
+                        object_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
+                    settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True)
+                    com_switch = Switch(settings, self.com_switch_callback, (doorbell, com_id))
+                    com_switch.off()
+                    com_switch.set_availability(True)
+                    self._sensors[doorbell][f'com_{com_id}'] = com_switch
+
+    def com_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
+        doorbell, com_id = user_data
+        command = message.payload.decode("utf-8")
+        logger.debug("Received command: {}, com_id: {}, doorbell: {}", command, com_id, doorbell._config.name)
+        match command:
+            case "ON":
+                doorbell.unlock_com(com_id)
 
     def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, door_id = user_data
