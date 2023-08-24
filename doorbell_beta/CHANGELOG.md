@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.33 - 2023-08-24
+
+### Added
+
+- Added the 2 com ports for indoor station as a switch, have fun with it :-)
+- Optional: When you have a Secure Door Control Module(DS-K2M061), door needs to be unlocked from indoor panel, when you configyre "output_relays: 1" in the indoor config, it will create an extra switch for it
+
 ## 3.0.0-beta.32 - 2023-08-22
 
 ### Changed
