@@ -1,6 +1,10 @@
 # Changelog
 
-## 3.0.0-beta.33 - 2023-08-30
+## 3.0.0-beta.34 - 2023-08-30
+
+## IMPORTANT
+
+- BETA period is over, i have now created a stable release, so you can now copy the config, uninstall the beta addon, install the main release and paste the config...... This main release is the same as the current beta build
 
 ### Added
 
