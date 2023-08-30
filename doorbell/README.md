@@ -14,7 +14,7 @@
 
 Connect your Hikvision IP door stations to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
 
-__NOTE__: This is the pre-release version of the addon. Bear in mind that it may have unexpected issues.
+__NOTE__: This is the stable version of the addon.
 You feedback is very welcome! If you have any doubt, would like to report an issue or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!
 
 
@@ -39,7 +39,7 @@ Here is an example setup showing two doorbells, an indoor and an outdoor unit:
 
 **Note**: **Hikvision Doorbell** requires an MQTT broker to function correctly. Refer to the **Documentation** tab of the add-on to learn how to setup the official **Mosquitto add-on**.
 
-__NOTE__: To use this _beta_ version, enable __Advanced mode__ in you Home Assistant profile:
+__NOTE__: To use this _stable_ version, enable __Advanced mode__ in you Home Assistant profile:
    - Click on you user name (in the lower-left corner of Home Assistant UI)
    - Scroll down the profile page and toggle __Advanced Mode__
      <p align="center">

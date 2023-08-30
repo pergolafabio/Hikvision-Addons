@@ -1,8 +1,0 @@
-# Avoid ignoring HikVision library files
-!lib-amd64/*.so*
-!lib-amd64/**/*.so*
-!lib-aarch64/*.so*
-!lib-aarch64/**/*.so*
-
-# Environment variables for local development
-development.env

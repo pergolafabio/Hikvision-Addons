@@ -21,12 +21,19 @@
 This repository can be added to an Home Assistant OS installation.
 It provides the following add-ons:
 
-## [Hikvision Doorbell](hikvision-sdk/README.md)
+## [Hikvision Doorbell](doorbell/README.md)
 
 Connect to you Hikvision IP doorbells to receive events (motion detection, incoming call, etc..) and relay back commands (reject call, open doors, etc...).
 
 To quickly get started, click the following button:
 [![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_sdk&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
+
+
+## [Running as a standalone container](docs/docker.md)
+
+This program can run as a standalone Docker container, for all other type of installations. (Openhab, Home Assistant, ...)
+[Consult the docs for more info](docs/docker.md)
+
 
 ## [Hikvision Doorbell (Beta)](doorbell_beta/README.md)
 
@@ -37,11 +44,11 @@ __NOTE__: This version is not recommended for general use, but may be of interes
 To quickly get started, click the following button:
 [![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell_beta&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)
 
-## [Use Asterisk as Indoor extension](https://github.com/pergolafabio/Hikvision-Addons/blob/dev/asterisk/asterisk.as.indoor.md)
+## [Use Asterisk as Indoor extension](asterisk/asterisk.as.indoor.md)
 
 __NOTE__: This is not an add-on, just an alternate way to setup Asterisk without setting up SIP on the devices!
 
-## [Use Frigate with Two Audio Support and a Lovelace Hass Card](https://github.com/pergolafabio/Hikvision-Addons/blob/dev/frigate/twowayaudio.with.frigate.md)
+## [Use Frigate with Two Audio Support and a Lovelace Hass Card](frigate/twowayaudio.with.frigate.md)
 
 __NOTE__: This is not an add-on, just an alternate way to answers calls using Home Assistant with Two Way Audio ISAPI support!
 
