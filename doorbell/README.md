@@ -1,4 +1,4 @@
-# Home Assistant Add-on: Hikvision Doorbell (__Beta__)
+# Home Assistant Add-on: Hikvision Doorbell
 
 <p align="center">
    <a href="https://img.shields.io/badge/amd64-yes-green.svg">
