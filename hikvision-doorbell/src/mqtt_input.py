@@ -321,7 +321,7 @@ class MQTTInput():
         requestBody = ""
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
-            response = doorbell._call_isapi("GET", url, json.dumps(requestBody))
+            response = doorbell._call_isapi("GET", url, requestBody)
             attributes = {
                 "response": response
             }
