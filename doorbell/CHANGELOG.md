@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.1 - 2023-08-30
+
+### Fixed
+
+- Fix for caller_info button
+
 ## 3.0.0-beta.34 - 2023-08-30
 
 ### Added
