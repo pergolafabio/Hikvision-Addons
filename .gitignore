@@ -177,3 +177,4 @@ poetry.toml
 
 # IDE configuration
 .vscode/settings.json
+hikvision-doorbell/development.env
