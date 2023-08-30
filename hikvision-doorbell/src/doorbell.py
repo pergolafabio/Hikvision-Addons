@@ -178,6 +178,8 @@ class Doorbell():
             if self._config.output_relays is not None:
                 logger.debug("Using the configured number of switches: {}", self._config.output_relays)
                 return self._config.output_relays
+            else: 
+                return 0
             raise RuntimeError("No user configuration specified")
         
         # Define the list of available endpoints to try
