@@ -1,6 +1,6 @@
 # Running the add-on as a standalone container
 
-This program can run as a standalone Docker container, for all the Home Assistant installations without an add-on store available (e.g. _Home Assistant container_).
+This program can run as a standalone Docker container, for all other type of installations. (Openhab, Home Assistant Container, ...)
 
 ## Docker Compose
 
@@ -26,8 +26,8 @@ services:
         MQTT__PASSWORD: <broker_password>
         
         # To help diagnose problems
-        SYSTEM__LOG_LEVEL: DEBUG
-        SYSTEM__SDK_LOG_LEVEL: DEBUG
+        SYSTEM__LOG_LEVEL: INFO
+        SYSTEM__SDK_LOG_LEVEL: NONE
 ```
 
 ## Manually building and running the container

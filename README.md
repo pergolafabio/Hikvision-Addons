@@ -31,7 +31,7 @@ To quickly get started, click the following button:
 
 ## [Running as a standalone container](docs/docker.md)
 
-This program can run as a standalone Docker container, for all other type of installations. (Openhab, Home Assistant, ...)
+This program can run as a standalone Docker container, for all other type of installations. (Openhab, Home Assistant Container, ...)
 [Consult the docs for more info](docs/docker.md)
 
 
