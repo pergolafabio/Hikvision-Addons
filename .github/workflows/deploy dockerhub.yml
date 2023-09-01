@@ -2,10 +2,13 @@
 
 name: Deploy Docker image on Dockerhub
 
-on:
-  release:
-    types: [published]
 
+on:
+  #release:
+  #  types: [published]
+  push:
+    tags:
+      - "doorbell-v*"
 
 jobs:
   # Remove the prefix `doorbell-v` from the Git tag and set it as output of this step
