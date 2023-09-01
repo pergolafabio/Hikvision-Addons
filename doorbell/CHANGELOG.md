@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.2 - 2023-09-01
+
+### Added
+
+- Better logging for caller_info, now you see it as attribute on caller_info button when pressed
+
 ## 3.0.1 - 2023-08-30
 
 ### Fixed
