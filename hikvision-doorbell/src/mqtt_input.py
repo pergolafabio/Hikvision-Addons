@@ -315,17 +315,17 @@ class MQTTInput():
             logger.error("Error while answering call: {}", err)
            
     def _caller_info_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        logger.info("Received caller info command for doorbell: {}", doorbell._config.name)
-
+        logger.info("Trying to get caller info command for doorbell: {}", doorbell._config.name)
         url = "/ISAPI/VideoIntercom/callerInfo?format=json"
         requestBody = ""
+        caller_info_button = cast(Button, self._sensors[doorbell]['caller_info'])
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             response = doorbell._call_isapi("GET", url, requestBody)
             attributes = {
-                "response": response
+                "caller_info": response
             }
-            caller_info_button = cast(Button, self._sensors[doorbell]['caller_info'])
+            logger.info("Received caller info: {} and show it as an attribute" , response)
             caller_info_button.set_attributes(attributes)
         except Exception as err:
             logger.error("Error while getting caller info: {}", err)           
