@@ -5,7 +5,7 @@ name: Deploy Docker image on Dockerhub
 on:
   workflow_dispatch:
   release:
-    types: [published]
+    types: [released]
 
 
 jobs:
