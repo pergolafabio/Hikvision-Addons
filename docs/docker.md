@@ -12,16 +12,17 @@ version: "3.8"
 
 services:
   doorbell:
-    image: ghcr.io/pergolafabio/hikvision-doorbell
+    # You can find  the latest image here: https://github.com/pergolafabio/Hikvision-Addons/releases
+    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.2
     tty: true   # To receive commands on STDIN
     env:
-        # JSON string with the list of doorbells, for all options, have a look at the [docs](https://github.com/pergolafabio/Hikvision-Addons/blob/main/docs/docker.md)
-        DOORBELLS: '[{"name":"outdoor", "ip": "192.168.0.1", "port": 8000, "username": "user", "password": "password"}]'
+        # JSON string with the list of doorbells, for all options, have a look at the [docs](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell/DOCS.md)
+        DOORBELLS: '[{"name":"outdoor", "ip": "192.168.0.10", "username": "admin", "password": "password"},{"name":"indoor", "ip": "192.168.0.11", "username": "admin", "password": "password"}]'
         
         # Connection to the MQTT broker
         MQTT__HOST: <hostname_of_broker>
-        # Optionals
-        MQTT__PORT: 1883
+        # Optional
+        # MQTT__PORT: 1883
         MQTT__USERNAME: <broker_username>
         MQTT__PASSWORD: <broker_password>
         
@@ -29,6 +30,11 @@ services:
         SYSTEM__LOG_LEVEL: INFO
         SYSTEM__SDK_LOG_LEVEL: NONE
 ```
+## Dockerhub
+
+The image is available to download from Dockerhub, the configuration values are read from the environment variables, see an example screenshot from Synology Docker
+
+![Synology](synology.png)
 
 ## Manually building and running the container
 
