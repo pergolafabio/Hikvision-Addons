@@ -34,6 +34,8 @@ services:
 
 The image is available to download from Dockerhub, the configuration values are read from the environment variables, see an example screenshot from Synology Docker
 
+https://hub.docker.com/r/pergolafabio/hikvision-doorbell
+
 ![Synology](synology.png)
 
 ## Manually building and running the container
