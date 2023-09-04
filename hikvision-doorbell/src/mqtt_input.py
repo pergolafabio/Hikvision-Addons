@@ -144,7 +144,7 @@ class MQTTInput():
                                 # Print a string representation of the response XML
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
                             scene_sensor.set_state(element)
-                            logger.info("Scene sensor changed to {}", element)
+                            logger.debug("Scene sensor changed to {}", element)
                         except RuntimeError:
                             # Ignore error to avoid crashing application
                             pass
@@ -179,7 +179,7 @@ class MQTTInput():
                                 # Print a string representation of the response XML
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
                             alarm_sensor.set_state(element)
-                            logger.info("Alarm sensor changed to {}", element)
+                            logger.debug("Alarm sensor changed to {}", element)
                         except RuntimeError:
                             # Ignore error to avoid crashing application
                             pass
