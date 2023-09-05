@@ -311,6 +311,9 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+            ## Tried to answer the call with SDK instead of ISAPI, but always receive error 23 here??
+            ## result = self._sdk.NET_DVR_SetDVRConfig(self.user_id, 16036, 1, byref(gw),255)
+            # doorbell.answer_call()
         except SDKError as err:
             logger.error("Error while answering call: {}", err)
            

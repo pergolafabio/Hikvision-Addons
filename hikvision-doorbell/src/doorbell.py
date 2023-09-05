@@ -5,7 +5,7 @@ import json
 from typing import Callable, Optional
 from loguru import logger
 from config import AppConfig
-from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_CALL_STATUS, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
+from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_CALL_STATUS, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
 
 from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
@@ -134,6 +134,20 @@ class Doorbell():
             self._call_isapi("PUT", url, requestBody)
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
+
+    def answer_call(self):
+        """ Answer the specified door using the NET_DVR_VIDEO_CALL_PARAM.
+        """
+        gw = NET_DVR_VIDEO_CALL_PARAM()
+        gw.dwSize = sizeof(NET_DVR_VIDEO_CALL_PARAM)
+        gw.dwCmdType = 0
+        gw.wUnitNumber = 1
+        gw.byRes = (c_byte * 115)()
+
+        result = self._sdk.NET_DVR_SetDVRConfig(self.user_id, 16036, 1, byref(gw),255)
+        if not result:
+            logger.debug("NET_DVR_SetDVRConfig failed with code {}", self._sdk.NET_DVR_GetLastError())
+        logger.info(" Door answered by SDK")
 
     def reboot_device(self):
         # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
