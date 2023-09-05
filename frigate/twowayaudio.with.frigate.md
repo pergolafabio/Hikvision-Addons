@@ -84,9 +84,10 @@ Step 1 was the hardest, now the easy part, I quickly created a card configuratio
 IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio!
 With my Hikvision Add-On you can first "answer" the call, and then start talking, you can see i added an "element" section below, where i added an extra "phone" button. 
 
-The phone buttons activates 2 services, first it answers the call, and then it unmutes the microphone! Offcourse change the entity in the elements section
+The phone buttons activates 2 services, first it rejects the call, and then it unmutes the microphone! Offcourse change the entity in the elements section
+I also added a hold action to open the door, also change the entity name, if yours is different
 
-![Ivms](frigate-card.png)
+![Ivms](frigate.png)
 
 ```
         - type: custom:frigate-card
@@ -160,6 +161,13 @@ The phone buttons activates 2 services, first it answers the call, and then it u
               tap_action:
                 - action: custom:frigate-card-action
                   frigate_card_action: microphone_mute
+            - type: custom:frigate-card-menu-icon
+              icon: mdi:door-open
+              hold_action:
+                - action: call-service
+                  service: switch.turn_on
+                  service_data:
+                    entity_id: switch.ds_kd8003_door_relay_0
 
           dimensions:
             aspect_ratio_mode: static
