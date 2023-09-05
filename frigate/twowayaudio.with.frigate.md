@@ -151,7 +151,7 @@ I also added a hold action to open the door, also change the entity name, if you
                 - action: call-service
                   service: button.press
                   service_data:
-                    entity_id: button.ds_kh9510_answer_call
+                    entity_id: button.ds_kh9510_reject_call
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
                 - action: custom:frigate-card-action
