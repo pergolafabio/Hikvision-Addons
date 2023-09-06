@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.35 - 2023-09-06
+
+### Added
+
+- Added support for DS-K1T341AM (test)
+- Changed logging from INFO to DEBUG for polling alarm/scenes
+
 ## 3.0.0-beta.34 - 2023-08-30
 
 ## IMPORTANT
