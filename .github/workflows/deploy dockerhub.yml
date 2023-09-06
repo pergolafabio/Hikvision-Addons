@@ -8,7 +8,7 @@ on:
   #  types: [published]
   push:
     tags:
-      - "doorbell-v*"
+      - "doorbell-v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   # Remove the prefix `doorbell-v` from the Git tag and set it as output of this step
