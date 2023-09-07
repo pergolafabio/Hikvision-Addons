@@ -12,6 +12,7 @@ char = c_char
 
 SERIALNO_LEN = 48
 NAME_LEN = 32
+MAX_NAMELEN = 32
 MACADDR_LEN = 6
 MAX_ANALOG_ALARM_OUT = 32
 MAX_IP_ALARM_OUT = 64
@@ -382,6 +383,17 @@ class NET_DVR_ALARMINFO_V30(Structure):
         ("byDiskNumber", BYTE * MAX_DISKNUM_V30)
     ]
 
+class NET_DVR_TIME(Structure):
+    _fields_ = [
+        ("dwYear", WORD),
+        ("dwMonth", BYTE),
+        ("dwDay", BYTE),
+        ("dwHour", BYTE),
+        ("dwMinute", BYTE),
+        ("bySecond", BYTE),
+        ("dwSecond", BYTE)
+    ]
+
 class NET_DVR_TIME_EX(Structure):
     _fields_ = [
         ("wYear", WORD),
@@ -472,6 +484,7 @@ class NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON(Union):
         ("struAuthInfo", NET_DVR_AUTH_INFO),
         ("struSendCardInfo", NET_DVR_SEND_CARD_INFO),
     ]
+
 class NET_DVR_CONTROL_GATEWAY(Structure):
     _fields_ = [
         ("dwSize", DWORD),
@@ -544,6 +557,7 @@ class NET_DVR_MIME_UNIT(Structure):
 #        ("wPicSize", WORD),
 #        ("wPicQuality", WORD)
 #    ]
+
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
     _fields_ = [
         ("dwSize", DWORD),
@@ -554,6 +568,7 @@ class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
         ("uEventInfo", NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON),
         ("byRes2", BYTE * 256),
     ]
+
 class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
     _fields_ = [
         ("dwPicLen", DWORD),
@@ -561,6 +576,7 @@ class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
         ("szFilename", char * MAX_FILE_PATH_LEN),
         ("pPicData", BYTE),
     ]
+
 class NET_DVR_ALARM_ISAPI_INFO(Structure):
     _fields_ = [
         ("pAlarmData", char),
@@ -572,6 +588,60 @@ class NET_DVR_ALARM_ISAPI_INFO(Structure):
         ("byRes2", BYTE * 32),
     ]
 
+class NET_DVR_IPADDR(Structure):
+    _fields_ = [
+        ("sIpV4", char * 16),
+        ("sIpV6", BYTE * 128),
+    ]
+
+class NET_DVR_ACS_EVENT_INFO(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("byCardNo", BYTE * ACS_CARD_NO_LEN),
+        ("byCardType", BYTE),
+        ("byWhiteListNo", BYTE),
+        ("byReportChannel", BYTE),
+        ("byCardReaderKind", BYTE),
+        ("dwCardReaderNo", DWORD),
+        ("dwDoorNo", DWORD),
+        ("dwVerifyNo", DWORD),
+        ("dwAlarmInNo", DWORD),
+        ("dwAlarmOutNo", DWORD),
+        ("dwCaseSensorNo", DWORD),
+        ("dwRs485No", DWORD),
+        ("dwMultiCardGroupNo", DWORD),
+        ("wAccessChannel", WORD),
+        ("byDeviceNo", BYTE),
+        ("byDistractControlNo", BYTE),
+        ("dwEmployeeNo", DWORD),
+        ("wLocalControllerID", WORD),
+        ("byInternetAccess", BYTE),
+        ("byType", BYTE),
+        ("byMACAddr", BYTE * MACADDR_LEN),
+        ("bySwipeCardType", BYTE),
+        ("byRes2", BYTE),
+        ("dwSerialNo", DWORD),
+        ("byChannelControllerID", BYTE),
+        ("byChannelControllerLampID", BYTE),
+        ("byChannelControllerIRAdaptorID", BYTE),
+        ("byChannelControllerIREmitterID", BYTE),
+        ("byRes", BYTE * 4),
+    ]
+
+class NET_DVR_ACS_ALARM_INFO(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("dwMajor", DWORD),
+        ("dwMinor", DWORD),
+        ("struTime", NET_DVR_TIME),
+        ("sNetUser", BYTE * MAX_NAMELEN),
+        ("struRemoteHostAddr", NET_DVR_IPADDR),
+        ("struAcsEventInfo", NET_DVR_ACS_EVENT_INFO),
+        ("dwPicDataLen", DWORD),
+        ("pPicData", BYTE),
+        ("byRes", BYTE * 24),
+    ]
+
 class MessageCallbackAlarmInfoUnion(Union):
     _fields_ = [
         ("NET_DVR_ALARMINFO_V30", NET_DVR_ALARMINFO_V30),
@@ -579,7 +649,6 @@ class MessageCallbackAlarmInfoUnion(Union):
         ("NET_DVR_VIDEO_INTERCOM_EVENT", NET_DVR_VIDEO_INTERCOM_EVENT),
         ("NET_DVR_ALARM_ISAPI_INFO", NET_DVR_ALARM_ISAPI_INFO)
     ]
-
 
 fMessageCallBack = CFUNCTYPE(BOOL, LONG, POINTER(
     NET_DVR_ALARMER), POINTER(MessageCallbackAlarmInfoUnion), DWORD, c_void_p)

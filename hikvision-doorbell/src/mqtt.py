@@ -15,9 +15,11 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           NET_DVR_VIDEO_INTERCOM_ALARM,
                           NET_DVR_VIDEO_INTERCOM_EVENT,
                           NET_DVR_ALARM_ISAPI_INFO,
+                          NET_DVR_ACS_ALARM_INFO,
                           VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
                           VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
                           VideoInterComAlarmType)
+from sdk.acsalarminfo import (AcsAlarmInfoMajor, AcsAlarmInfoMajorAlarm, AcsAlarmInfoMajorException, AcsAlarmInfoMajorOperation, AcsAlarmInfoMajorEvent)
 from typing_extensions import override
 import xml.etree.ElementTree as ET
 import json
@@ -52,7 +54,6 @@ def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
         hw_version=parsed_device_info["hardware"]
     )
 
-
 class DeviceTriggerMetadata(TypedDict):
     """
     Helper dict class defining the information of a device trigger.
@@ -66,7 +67,6 @@ class DeviceTriggerMetadata(TypedDict):
     """Displayed in the HA UI"""
     payload: dict[str, str]
     """Optional payload sent in the trigger"""    
-
 
 DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata] = {
     VideoInterComAlarmType.TAMPERING_ALARM: DeviceTriggerMetadata(name='tampering_alarm', type='alarm', subtype='tampering'),
@@ -84,7 +84,6 @@ DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata]
     VideoInterComAlarmType.ACCESS_CONTROL_TAMPERING_ALARM: DeviceTriggerMetadata(name='access_control_tampering_alarm', type='alarm', subtype='access control tampering'),
 }
 """Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComAlarmType"""
-
 
 class MQTTHandler(EventHandler):
     name = 'MQTT'
@@ -200,6 +199,38 @@ class MQTTHandler(EventHandler):
             user_pointer: c_void_p):
         metadata = DeviceTriggerMetadata(name="motion_detection", type="Motion detected", subtype="")
         self.handle_device_trigger(doorbell, metadata)
+
+    @override
+    async def acs_alarm(
+            self,
+            doorbell: Doorbell,
+            command: int,
+            device: NET_DVR_ALARMER,
+            alarm_info: NET_DVR_ACS_ALARM_INFO,
+            buffer_length,
+            user_pointer: c_void_p):
+        
+        # Extract the type of alarm as a Python enum
+        try:
+            major = alarm_info.dwMajor
+            minor = alarm_info.dwMinor
+            logger.debug("Access control event occured, trying to find the event for Major: {} : Minor: {}", major, minor)
+            major_alarm = AcsAlarmInfoMajor(major)
+            match major:
+                case AcsAlarmInfoMajor.MAJOR_ALARM.value:
+                    minor_alarm = AcsAlarmInfoMajorAlarm(minor)
+                case AcsAlarmInfoMajor.MAJOR_EXCEPTION.value:
+                    minor_alarm = AcsAlarmInfoMajorException(minor)
+                case AcsAlarmInfoMajor.MAJOR_OPERATION.value:
+                    minor_alarm = AcsAlarmInfoMajorOperation(minor)
+                case AcsAlarmInfoMajor.MAJOR_EVENT.value:
+                    minor_alarm = AcsAlarmInfoMajorEvent(minor)
+            logger.info("Access control event: {} found with event: {}", major_alarm.name, minor_alarm.name)
+            trigger = DeviceTriggerMetadata(name=f"{major_alarm.name} {minor_alarm.name}", type=f"", subtype=f"{major_alarm.name} {minor_alarm.name}")
+            self.handle_device_trigger(doorbell, trigger)
+        except:
+            logger.warning("Received unknown Access control event with Major: {} Minor: {}", major, minor)
+            return
 
     @override
     async def isapi_alarm(
