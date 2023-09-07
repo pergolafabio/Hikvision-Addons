@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.36 - 2023-09-07
+
+### Added
+
+- Added support for ACS events
+
 ## 3.0.0-beta.35 - 2023-09-06
 
 ### Added
