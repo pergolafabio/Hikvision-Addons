@@ -290,7 +290,7 @@ class MQTTInput():
         url = "/ISAPI/VideoIntercom/callSignal?format=json"
         requestBody = {
             "CallSignal": {
-                "cmdType": "hangup"
+                "cmdType": "hangUp"
             }
         }
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
