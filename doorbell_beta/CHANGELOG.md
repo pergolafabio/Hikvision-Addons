@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.36 - 2023-09-08
+
+### Fixed
+
+- Fixed the hangUp command
+
 ## 3.0.0-beta.36 - 2023-09-07
 
 ### Added
