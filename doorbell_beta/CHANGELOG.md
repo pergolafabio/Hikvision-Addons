@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.39 - 2023-09-10
+
+### Test
+
+- Some testing to get correct info for locks for device DS-K1T341XX
+
 ## 3.0.0-beta.36 - 2023-09-08
 
 ### Fixed
