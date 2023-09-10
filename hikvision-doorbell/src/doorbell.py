@@ -244,6 +244,7 @@ class Doorbell():
             if not result:
                 raise SDKError(self._sdk, "Error while getting device ability")
             response_xml = output_buffer.value.decode('utf-8')
+            logger.info("Response url for sdk_device_ability: {}", response_xml)
 
             # Parse the XML response
             response = ET.fromstring(response_xml)
@@ -255,7 +256,7 @@ class Doorbell():
 
         def isapi_io_outputs() -> int:
             io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
-
+            logger.info("Response url for /ISAPI/System/IO/outputs: {}", io_outputs_xml)
             root = ET.fromstring(io_outputs_xml)
             if 'IOOutputPortList' not in root.tag:
                 # XML does not contain the required tag
@@ -265,6 +266,7 @@ class Doorbell():
         def isapi_remote_control() -> int:
             # Device does not support previous ISAPI endpoint, try another
             door_capabilities_xml = self._call_isapi("GET", "/ISAPI/AccessControl/RemoteControl/door/capabilities")
+            logger.info("Response url for /ISAPI/AccessControl/RemoteControl/door/capabilities: {}", door_capabilities_xml)
             root = ET.fromstring(door_capabilities_xml)
 
             door_number_element = root.find('{*}doorNo')
