@@ -82,10 +82,9 @@ When the Add-on is running and all working well, install the Frigate integration
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
 IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio!
-With my Hikvision Add-On you can first "answer" the call, and then start talking, you can see i added an "element" section below, where i added an extra "phone" button. 
+With my Hikvision Add-On you can first "answer" the call and then "hangup", and then start talking, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my indoor station... You can also just send the "reject" instead, but that makes a "hanngup" tone at your outdoor
 
-The phone buttons activates 2 services, first it rejects the call, and then it unmutes the microphone! Offcourse change the entity in the elements section
-I also added a hold action to open the door, also change the entity name, if yours is different
+So the phone buttons activates 4 services, first it "answer" + "hangUp"  the call, and then it unmutes the microphone (start two way audion) and unmutes the card .Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too...
 
 ![Ivms](frigate.png)
 
@@ -151,7 +150,11 @@ I also added a hold action to open the door, also change the entity name, if you
                 - action: call-service
                   service: button.press
                   service_data:
-                    entity_id: button.ds_kh9510_reject_call
+                    entity_id: button.ds_kh9510_answer_call
+                - action: call-service
+                  service: button.press
+                  service_data:
+                    entity_id: button.ds_kh9510_hangup_call
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
                 - action: custom:frigate-card-action
