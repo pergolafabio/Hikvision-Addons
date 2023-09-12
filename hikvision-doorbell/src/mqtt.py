@@ -159,8 +159,10 @@ class MQTTHandler(EventHandler):
             # Create com1 and com2 ports for indoor stations
 
             if doorbell._type is DeviceType.INDOOR:
-                logger.debug("Configuring 2 com relays for indoor station")
-                for com_id in range(2):
+                
+                num_coms = doorbell.get_num_coms_indoor()
+                logger.debug("Configuring {} door switches", num_coms)
+                for com_id in range(num_coms):
                     com_switch_info = SwitchInfo(
                         name=f"Com {com_id+1} relay",
                         unique_id=f"{device.identifiers}-com_relay_{com_id}",

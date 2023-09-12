@@ -244,7 +244,7 @@ class Doorbell():
             if not result:
                 raise SDKError(self._sdk, "Error while getting device ability")
             response_xml = output_buffer.value.decode('utf-8')
-            logger.info("Response url for sdk_device_ability: {}", response_xml)
+            logger.debug("Response url for sdk_device_ability: {}", response_xml)
 
             # Parse the XML response
             response = ET.fromstring(response_xml)
@@ -256,7 +256,7 @@ class Doorbell():
 
         def isapi_io_outputs() -> int:
             io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
-            logger.info("Response url for /ISAPI/System/IO/outputs: {}", io_outputs_xml)
+            logger.debug("Response url for /ISAPI/System/IO/outputs: {}", io_outputs_xml)
             root = ET.fromstring(io_outputs_xml)
             if 'IOOutputPortList' not in root.tag:
                 # XML does not contain the required tag
@@ -266,7 +266,7 @@ class Doorbell():
         def isapi_remote_control() -> int:
             # Device does not support previous ISAPI endpoint, try another
             door_capabilities_xml = self._call_isapi("GET", "/ISAPI/AccessControl/RemoteControl/door/capabilities")
-            logger.info("Response url for /ISAPI/AccessControl/RemoteControl/door/capabilities: {}", door_capabilities_xml)
+            logger.debug("Response url for /ISAPI/AccessControl/RemoteControl/door/capabilities: {}", door_capabilities_xml)
             root = ET.fromstring(door_capabilities_xml)
 
             door_number_element = root.find('{*}doorNo')
@@ -290,6 +290,40 @@ class Doorbell():
 
         # We have run out of available endpoints to call
         raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+
+    def get_num_coms_indoor(self) -> int:
+        """
+        Get the number of com relays configured for this doorbell.
+
+        """
+
+        # Define various functions, each using a different method to gather this information
+        def isapi_device_info() -> int:
+            io_coms_xml = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
+            logger.debug("Response url for /ISAPI/System/IO/outputs: {}", io_coms_xml)
+            root = ET.fromstring(io_coms_xml)
+            com_number_element = root.find('{*}alarmOutNum')
+            # Error out if we don't find attribute `max` inside the `doorNo` element
+            if com_number_element is None :
+                # Print a string representation of the response XML
+                logger.debug("No com ports found for the indoor device")
+                return 0
+            logger.debug("We have found {} com ports found for the indoor device", com_number_element.text)
+            return int(com_number_element.text)
+
+        # Define the list of available endpoints to try
+        available_endpoints: list[Callable] = [isapi_device_info]
+        for endpoint in available_endpoints:
+            # Invoke the endpoint, if it errors out try another one
+            try:
+                return endpoint()
+            except RuntimeError:
+                # This endpoint failed, try the next one
+                pass
+
+        # We have run out of available endpoints to call
+        #raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+
 
     def get_device_info(self):
         """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.
