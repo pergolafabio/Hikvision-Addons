@@ -140,7 +140,7 @@ class MQTTHandler(EventHandler):
             if not doorbell._type is DeviceType.INDOOR:
                 num_doors = doorbell.get_num_outputs()
             else:
-                num_doors = doorbell.get_num_outputs_indoor()
+                num_doors = int(doorbell.get_num_outputs_indoor())
             logger.debug("Configuring {} door switches", num_doors)
             for door_id in range(num_doors):
                 door_switch_info = SwitchInfo(
