@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-beta.40 - 2023-09-12
+
+### Added
+
+- Trying to get locks for device DS-K1T341XX
+- Dynamicly add door relays for indoor stations
+- Dynamicly add com ports for indoor stations 
+
 ## 3.0.0-beta.39 - 2023-09-10
 
 ### Test
