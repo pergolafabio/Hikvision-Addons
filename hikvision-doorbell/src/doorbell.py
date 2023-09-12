@@ -213,7 +213,7 @@ class Doorbell():
                 logger.debug("No door relays found for the indoor device")
                 return 0
             #logger.debug("We have found {} door relays for the indoor device", door_number_element.text)
-            return door_number_element.text
+            return int(door_number_element.text)
 
         # Define the list of available endpoints to try
         available_endpoints: list[Callable] = [user_config, isapi_door_capabilities]
@@ -294,8 +294,21 @@ class Doorbell():
 
             return int(door_number_element.attrib['max'])
 
+        def isapi_device_info() -> int:
+            electro_lock_xml = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
+            logger.info("Response url for /ISAPI/System/deviceInfo: {}", electro_lock_xml)
+            root = ET.fromstring(electro_lock_xml)
+            electro_lock_xml_element = root.find('{*}electroLockNum')
+            # Error out if we don't find attribute `max` inside the `doorNo` element
+            if electro_lock_xml_element is None :
+                # Print a string representation of the response XML
+                logger.info("No electro locks found for the outdoor device")
+                raise RuntimeError('Cannot find `electroLockNum` node in XML response')
+            logger.info("We have found {} electro locks for the outdoor device", electro_lock_xml_element.text)
+            return int(electro_lock_xml_element.text)
+
         # Define the list of available endpoints to try
-        available_endpoints: list[Callable] = [user_config, sdk_device_ability, isapi_io_outputs, isapi_remote_control]
+        available_endpoints: list[Callable] = [user_config, sdk_device_ability, isapi_io_outputs, isapi_remote_control, isapi_device_info]
         for endpoint in available_endpoints:
             # Invoke the endpoint, if it errors out try another one
             try:
