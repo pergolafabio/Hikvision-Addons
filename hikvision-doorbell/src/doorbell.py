@@ -208,7 +208,7 @@ class Doorbell():
                 logger.debug("Error parsing: {}", io_doors_xml)
                 return 0
             # Error out if we don't find attribute `max` inside the `doorNo` element
-            if door_number_element.text is None:
+            if door_number_element is None or door_number_element.text is None:
                 # Print a string representation of the response XML
                 logger.debug("No door relays found for the indoor device")
                 return 0
@@ -300,7 +300,7 @@ class Doorbell():
             root = ET.fromstring(electro_lock_xml)
             electro_lock_xml_element = root.find('{*}electroLockNum')
             # Error out if we don't find attribute `max` inside the `doorNo` element
-            if electro_lock_xml_element.text is None :
+            if electro_lock_xml_element is None or electro_lock_xml_element.text is None:
                 # Print a string representation of the response XML
                 logger.info("No electro locks found for the outdoor device")
                 raise RuntimeError('Cannot find `electroLockNum` node in XML response')
@@ -332,7 +332,7 @@ class Doorbell():
             root = ET.fromstring(io_coms_xml)
             com_number_element = root.find('{*}alarmOutNum')
             # Error out if we don't find attribute `max` inside the `doorNo` element
-            if com_number_element.text is None :
+            if com_number_element is None or com_number_element.text is None:
                 # Print a string representation of the response XML
                 logger.debug("No com ports found for the indoor device")
                 return 0
