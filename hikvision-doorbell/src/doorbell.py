@@ -332,7 +332,7 @@ class Doorbell():
             root = ET.fromstring(io_coms_xml)
             com_number_element = root.find('{*}alarmOutNum')
             # Error out if we don't find attribute `max` inside the `doorNo` element
-            if com_number_element is None :
+            if com_number_element.text is None :
                 # Print a string representation of the response XML
                 logger.debug("No com ports found for the indoor device")
                 return 0
