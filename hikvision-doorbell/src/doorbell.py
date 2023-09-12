@@ -208,11 +208,11 @@ class Doorbell():
                 logger.debug("Error parsing: {}", io_doors_xml)
                 return 0
             # Error out if we don't find attribute `max` inside the `doorNo` element
-            if door_number_element is None :
+            if door_number_element.text is None:
                 # Print a string representation of the response XML
                 logger.debug("No door relays found for the indoor device")
                 return 0
-            #logger.debug("We have found {} door relays for the indoor device", door_number_element.text)
+            logger.debug("We have found {} door relays for the indoor device", door_number_element.text)
             return int(door_number_element.text)
 
         # Define the list of available endpoints to try
