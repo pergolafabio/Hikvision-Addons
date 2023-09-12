@@ -300,7 +300,7 @@ class Doorbell():
             root = ET.fromstring(electro_lock_xml)
             electro_lock_xml_element = root.find('{*}electroLockNum')
             # Error out if we don't find attribute `max` inside the `doorNo` element
-            if electro_lock_xml_element is None :
+            if electro_lock_xml_element.text is None :
                 # Print a string representation of the response XML
                 logger.info("No electro locks found for the outdoor device")
                 raise RuntimeError('Cannot find `electroLockNum` node in XML response')
