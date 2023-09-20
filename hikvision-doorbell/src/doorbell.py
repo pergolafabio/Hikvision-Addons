@@ -296,15 +296,14 @@ class Doorbell():
 
         def isapi_device_info() -> int:
             electro_lock_xml = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
-            logger.info("Response url for /ISAPI/System/deviceInfo: {}", electro_lock_xml)
+            logger.debug("Response url for /ISAPI/System/deviceInfo: {}", electro_lock_xml)
             root = ET.fromstring(electro_lock_xml)
             electro_lock_xml_element = root.find('{*}electroLockNum')
             # Error out if we don't find attribute `max` inside the `doorNo` element
             if electro_lock_xml_element is None or electro_lock_xml_element.text is None:
                 # Print a string representation of the response XML
-                logger.info("No electro locks found for the outdoor device")
                 raise RuntimeError('Cannot find `electroLockNum` node in XML response')
-            logger.info("We have found {} electro locks for the outdoor device", electro_lock_xml_element.text)
+            logger.debug("We have found {} electro locks for the outdoor device", electro_lock_xml_element.text)
             return int(electro_lock_xml_element.text)
 
         # Define the list of available endpoints to try
