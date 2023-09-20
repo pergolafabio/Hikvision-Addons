@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.44 - 2023-09-20
+
+### Added
+
+- Add support for DS-K1T342
+
 ## 3.0.0-beta.43 - 2023-09-12
 
 ### Added
