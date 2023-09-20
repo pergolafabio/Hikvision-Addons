@@ -17,6 +17,7 @@ class DeviceType(IntEnum):
     VillaVTO = 605
     FaceAccessTerminal_1 = 10503
     FaceAccessTerminal_2 = 10510
+    FaceAccessTerminal_3 = 10538
     HD = 31
     AccessControlTerminal = 861
 
