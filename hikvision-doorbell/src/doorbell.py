@@ -276,7 +276,7 @@ class Doorbell():
         def isapi_io_outputs() -> int:
             io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
             root = ET.fromstring(io_outputs_xml)
-            if 'IOOutputPortList' not in root.tag or len(root) is 0:
+            if 'IOOutputPortList' not in root.tag or len(root) == 0:
                 # XML does not contain the required tag
                 raise RuntimeError(f'Unexpected XML response: {io_outputs_xml}')
             return len(root)
