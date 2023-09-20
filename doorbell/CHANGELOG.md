@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.6 - 2023-09-20
+## 3.0.7 - 2023-09-20
 
 ### Added
 
@@ -9,6 +9,7 @@
 - Dynamicly add com ports for indoor stations
 - Added support for ACS events
 - Added support for DS-K1T341AM device
+- Added support for DS-K1T342 device
 - Changed logging from INFO to DEBUG for polling alarm/scenes
 
 ### Fixed
