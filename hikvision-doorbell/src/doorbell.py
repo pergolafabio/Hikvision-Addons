@@ -15,9 +15,9 @@ class DeviceType(IntEnum):
     OUTDOOR = 603
     INDOOR = 602
     VillaVTO = 605
-    FaceAccessTerminal_1 = 10503
-    FaceAccessTerminal_2 = 10510
-    FaceAccessTerminal_3 = 10538
+    K1T341AM = 10503
+    K1T341M = 10510
+    K1T342 = 10538
     HD = 31
     AccessControlTerminal = 861
 
