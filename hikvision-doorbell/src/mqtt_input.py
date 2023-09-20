@@ -22,6 +22,7 @@ class MQTTInput():
 
         mqtt_settings = Settings.MQTT(
             host=config.host,
+            port=config.port,
             username=config.username,
             password=config.password
         )
