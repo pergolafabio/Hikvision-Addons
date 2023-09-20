@@ -126,10 +126,7 @@ class TestGetNumOutputs:
 
         outputs = mock_doorbell.get_num_outputs()
         assert outputs == 2
-
-
-    ''' Giving issues here with test
-    
+  
     def test_isapi_remote_control(self, mock_doorbell: Doorbell, mocker: MockerFixture):
         """Fallback to another ISAPI endpoint"""
 
@@ -149,7 +146,7 @@ class TestGetNumOutputs:
 
         outputs = mock_doorbell.get_num_outputs()
         assert outputs == 2
-        '''
+
     def test_no_methods_available(self, mock_doorbell: Doorbell, mocker: MockerFixture):
         '''Raise exception if no more methods are available'''
         # Set user ID to simulate a login

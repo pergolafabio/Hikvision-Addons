@@ -273,42 +273,38 @@ class Doorbell():
                 raise RuntimeError('Cannot find `IOOutNo` node in XML response')
             return int(ioout_element.attrib['max'])
 
+        def isapi_io_outputs() -> int:
+            io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
+            root = ET.fromstring(io_outputs_xml)
+            if 'IOOutputPortList' not in root.tag or len(root) is 0:
+                # XML does not contain the required tag
+                raise RuntimeError(f'Unexpected XML response: {io_outputs_xml}')
+            return len(root)
+
+        def isapi_remote_control() -> int:
+            door_capabilities_xml = self._call_isapi("GET", "/ISAPI/AccessControl/RemoteControl/door/capabilities")
+            root = ET.fromstring(door_capabilities_xml)
+            door_number_element = root.find('{*}doorNo')
+            # Error out if we don't find attribute `max` inside the `doorNo` element
+            if door_number_element is None or 'max' not in door_number_element.attrib:
+                # Print a string representation of the response XML
+                raise RuntimeError(f'Unexpected XML response: {door_capabilities_xml}')
+            return int(door_number_element.attrib['max'])
+
         def isapi_device_info() -> int:
             electro_lock_xml = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
             logger.debug("Response url for /ISAPI/System/deviceInfo: {}", electro_lock_xml)
             root = ET.fromstring(electro_lock_xml)
             electro_lock_xml_element = root.find('{*}electroLockNum')
-            # Error out if we don't find attribute `max` inside the `doorNo` element
+            # Error out if we don't find `electroLockNum`
             if electro_lock_xml_element is None or electro_lock_xml_element.text is None:
                 # Print a string representation of the response XML
                 raise RuntimeError('Cannot find `electroLockNum` node in XML response')
             logger.debug("We have found {} electro locks for the outdoor device", electro_lock_xml_element.text)
             return int(electro_lock_xml_element.text)
 
-        def isapi_io_outputs() -> int:
-            io_outputs_xml = self._call_isapi("GET", "/ISAPI/System/IO/outputs")
-            root = ET.fromstring(io_outputs_xml)
-            if 'IOOutputPortList' not in root.tag:
-                # XML does not contain the required tag
-                raise RuntimeError(f'Unexpected XML response: {io_outputs_xml}')
-            return len(root)
-
-        def isapi_remote_control() -> int:
-            # Device does not support previous ISAPI endpoint, try another
-            door_capabilities_xml = self._call_isapi("GET", "/ISAPI/AccessControl/RemoteControl/door/capabilities")
-            root = ET.fromstring(door_capabilities_xml)
-
-            door_number_element = root.find('{*}doorNo')
-
-            # Error out if we don't find attribute `max` inside the `doorNo` element
-            if door_number_element is None or 'max' not in door_number_element.attrib:
-                # Print a string representation of the response XML
-                raise RuntimeError(f'Unexpected XML response: {door_capabilities_xml}')
-
-            return int(door_number_element.attrib['max'])
-
         # Define the list of available endpoints to try
-        available_endpoints: list[Callable] = [user_config, sdk_device_ability, isapi_device_info, isapi_io_outputs, isapi_remote_control]
+        available_endpoints: list[Callable] = [user_config, sdk_device_ability, isapi_io_outputs, isapi_remote_control, isapi_device_info]
         for endpoint in available_endpoints:
             # Invoke the endpoint, if it errors out try another one
             try:
@@ -316,7 +312,6 @@ class Doorbell():
             except RuntimeError:
                 # This endpoint failed, try the next one
                 pass
-
         # We have run out of available endpoints to call
         raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
