@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.0.6 - 2023-09-20
+
+### Added
+
+- Now also avaible on Dockerhub for standalone containers! https://hub.docker.com/r/pergolafabio/hikvision-doorbell
+- Dynamicly add door relays for indoor stations
+- Dynamicly add com ports for indoor stations
+- Added support for ACS events
+- Added support for DS-K1T341AM device
+- Changed logging from INFO to DEBUG for polling alarm/scenes
+
+### Fixed
+
+- Fix for hangup button
+
 ## 3.0.2 - 2023-09-01
 
 ### Added
