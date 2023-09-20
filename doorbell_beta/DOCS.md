@@ -38,8 +38,6 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
   ip: 192.168.0.3
   username: admin
   password: password
-  caller_info: true
-  scenes: true
 
 - name: "Indoor Extension"
   ip: 192.168.0.4
