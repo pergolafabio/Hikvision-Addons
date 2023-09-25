@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.8 - 2023-09-25
+
+### Added
+
+- Make mqtt port configurable for standalone containers
+
 ## 3.0.7 - 2023-09-20
 
 ### Added
