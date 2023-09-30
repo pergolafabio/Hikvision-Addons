@@ -154,24 +154,26 @@ The input string must be in the format
 ```
 - `<command>` is one of:
 
-  | Command     | Description                                               |
-  | --------    | ----                                                      |
-  | unlock      | Unlock the specified door (`<optional_parameter>` must be `1` or `2`) connected to the doorbell station output relay
-  | reboot      | Reboot the specified  door station
-  | reject      | Reject the incoming call and stop the indoor stations from ringing
-  | request     | Unknown
-  | cancel      | Unknown
-  | answer      | Unknown
-  | reject      | Unknown
-  | bellTimeout | Unknown
-  | hangUp      | Unknown
-  | deviceOnCall| Unknown
-  | atHome      | Sending scene "At home" for indoor panels
-  | goOut       | Sending scene "Go out" for indoor panels
-  | goToBed     | Sending scene "Go to bed" for indoor panels
-  | custom      | Sending scene "custom" for indoor panels
-  | setupAlarm  | Turn on the alarm on the indoor panel
-  | closeAlarm  | Turn off the alarm on the indoor panel
+  | Command           | Description                                               |
+  | --------          | ----                                                      |
+  | unlock            | Unlock the specified door (`<optional_parameter>` must be `1` or `2`) connected to the doorbell station output relay
+  | reboot            | Reboot the specified  door station
+  | reject            | Reject the incoming call and stop the indoor stations from ringing
+  | request           | Unknown
+  | cancel            | Unknown
+  | answer            | Unknown
+  | reject            | Unknown
+  | bellTimeout       | Unknown
+  | hangUp            | Unknown
+  | deviceOnCall      | Unknown
+  | atHome            | Sending scene "At home" for indoor panels
+  | goOut             | Sending scene "Go out" for indoor panels
+  | goToBed           | Sending scene "Go to bed" for indoor panels
+  | custom            | Sending scene "custom" for indoor panels
+  | setupAlarm        | Turn on the alarm on the indoor panel
+  | closeAlarm        | Turn off the alarm on the indoor panel
+  | muteAudioOutput   | Mutes the audio output of the doorbell / indoor station
+  | unmuteAudioOutput | Unmutes the audio output of the doorbell / indoor station
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 
   E.G.: If the doorbell is named `Front door`, the input string must reference it as `front_door`.

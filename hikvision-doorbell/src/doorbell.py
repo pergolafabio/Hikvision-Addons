@@ -37,6 +37,8 @@ class Doorbell():
     _type: DeviceType
     _device_info: NET_DVR_DEVICEINFO_V30
     '''Populated after authenticate method is invoked'''
+    _previouse_audio_out_volume: str
+    '''Used to unmute the doorbell by changing the audio out volume from 0 to the previouse value '''
 
     def __init__(self, id: int, config: AppConfig.Doorbell, sdk: CDLL):
         """
@@ -47,6 +49,7 @@ class Doorbell():
         self._sdk = sdk
         self._config = config
         self._id = id
+        self._previouse_audio_out_volume = "5"
 
     def authenticate(self):
         '''Authenticate with the remote doorbell'''
@@ -352,6 +355,63 @@ class Doorbell():
         Return the parsed XML document"""
         xml_string = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
         return ET.fromstring(xml_string)
+
+    def get_audio_out_settings(self):
+        """Retrieve audio output seetings of channel 1 (volume of the output and talk volume) using the ISAPI endpoint.
+        Return the parsed XML document"""
+        xml_string = self._call_isapi("GET", "/ISAPI/System/Audio/AudioOut/channels/1")
+        return ET.fromstring(xml_string)
+
+    def mute_audio_output(self):
+        try:
+            current_settings = self.get_audio_out_settings()
+
+            currentTalkVolume = current_settings.find('{*}talkVolume')
+            if currentTalkVolume is None or currentTalkVolume.text is None:
+                talkVolume = "5"
+            else:
+                talkVolume = currentTalkVolume.text
+
+            currentVolume = current_settings.find('{*}volume')
+            if currentVolume is None or currentVolume.text is None:
+                self._previouse_audio_out_volume = 5
+            else:
+                # remember current audio out volume for the unmute of the doorbell
+                self._previouse_audio_out_volume = int(currentVolume.text)
+
+        except SDKError:
+            # Cannot get current audio out settings use default values
+            talkVolume = "5"
+            self._previouse_audio_out_volume = "5"
+
+        url = "/ISAPI/System/Audio/AudioOut/channels/1"
+        # mute audio out by changing the audio out volume to 0
+        requestBody = """<AudioOut><id>1</id><AudioOutVolumelist><AudioOutVlome><type>audioOutput</type>
+                         <volume>0</volume><talkVolume>{}</talkVolume>
+                         </AudioOutVlome></AudioOutVolumelist></AudioOut>""".format(talkVolume)
+
+        self._call_isapi("PUT", url, requestBody)
+
+    def unmute_audio_output(self):
+        try:
+            current_settings = self.get_audio_out_settings()
+            currentTalkVolume = current_settings.find('{*}talkVolume')
+            if currentTalkVolume is None or currentTalkVolume.text is None:
+                talkVolume = "5"
+            else:
+                talkVolume = currentTalkVolume.text
+        except SDKError:
+            # Cannot get current audio out settings use default values
+            talkVolume = "5"
+
+        url = "/ISAPI/System/Audio/AudioOut/channels/1"
+
+        # unmute audio out by changing the audio out volume back to the previouse volume
+        requestBody = """<AudioOut><id>1</id><AudioOutVolumelist><AudioOutVlome><type>audioOutput</type>
+                         <volume>{}</volume><talkVolume>{}</talkVolume>
+                         </AudioOutVlome></AudioOutVolumelist></AudioOut>""".format(self._previouse_audio_out_volume, talkVolume)
+
+        self._call_isapi("PUT", url, requestBody)
 
     def get_call_status(self) -> int:
         """Get the current status of the call."""
