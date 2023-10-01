@@ -350,7 +350,9 @@ class Doorbell():
                 pass
 
         # We have run out of available endpoints to call
-        raise RuntimeError("Unable to get the number of coms")
+        logger.info("Unable to get the number of coms for the indoor station")
+        return 0
+        #raise RuntimeError("Unable to get the number of coms")
 
     def get_device_info(self):
         """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.
@@ -367,14 +369,15 @@ class Doorbell():
     def mute_audio_output(self):
         try:
             current_settings = self.get_audio_out_settings()
-
             currentTalkVolume = current_settings.find('{*}talkVolume')
+            logger.debug("Current talk volume is {}", currentTalkVolume)
             if currentTalkVolume is None or currentTalkVolume.text is None:
                 talkVolume = "5"
             else:
                 talkVolume = currentTalkVolume.text
 
             currentVolume = current_settings.find('{*}volume')
+            logger.debug("Current volume is {}", currentVolume)
             if currentVolume is None or currentVolume.text is None:
                 self._previouse_audio_out_volume = 5
             else:
@@ -398,6 +401,7 @@ class Doorbell():
         try:
             current_settings = self.get_audio_out_settings()
             currentTalkVolume = current_settings.find('{*}talkVolume')
+            logger.debug("Current talk volume is {}", currentTalkVolume)
             if currentTalkVolume is None or currentTalkVolume.text is None:
                 talkVolume = "5"
             else:

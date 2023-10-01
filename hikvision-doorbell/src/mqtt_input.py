@@ -442,7 +442,7 @@ class MQTTInput():
         try:
             doorbell.mute_audio_output()
         except SDKError as err:
-            logger.error("Error setting scene: {}", err)
+            logger.error("Error muting: {}", err)
 
     def _unmute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received unmute audio output command for doorbell: {}", doorbell._config.name)
@@ -450,7 +450,7 @@ class MQTTInput():
         try:
             doorbell.unmute_audio_output()
         except SDKError as err:
-            logger.error("Error setting scene: {}", err)
+            logger.error("Error unmuting: {}", err)
 
     def _isapi_input_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.debug("Received input text for doorbell: {}", doorbell._config.name)
