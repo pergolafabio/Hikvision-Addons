@@ -122,7 +122,7 @@ def call_ISAPI(sdk: CDLL, user_id: int, http_method: str, url: str, requestBody:
     # e.g.: `GET /ISAPI/System/IO/outputs`
     inUrl = f"{http_method} {url}"
 
-    logger.debug("Request body: {}", requestBody)
+    logger.debug("Call ISAPI request method url body: {} {} {} ", http_method, url, requestBody)
 
     # Input information
     inputStruct = NET_DVR_XML_CONFIG_INPUT()

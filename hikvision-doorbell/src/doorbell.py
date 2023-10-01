@@ -205,16 +205,14 @@ class Doorbell():
             try:
                 root = ET.fromstring(io_doors_xml)
                 door_number_element = root.find('{*}channelNo')
+                if door_number_element is None or door_number_element.text is None:
+                    # Print a string representation of the response XML
+                    logger.debug("No door relays found for the indoor device")
+                logger.debug("We have found {} door relays for the indoor device", door_number_element.text)
+                return int(door_number_element.text)
             except ET.ParseError:
                 logger.debug("Error parsing: {}", io_doors_xml)
-                return 0
-            # Error out if we don't find attribute `max` inside the `doorNo` element
-            if door_number_element is None or door_number_element.text is None:
-                # Print a string representation of the response XML
-                logger.debug("No door relays found for the indoor device")
-                return 0
-            logger.debug("We have found {} door relays for the indoor device", door_number_element.text)
-            return int(door_number_element.text)
+                raise RuntimeError("Error parsing: {}", io_doors_xml)
 
         # Define the list of available endpoints to try
         available_endpoints: list[Callable] = [user_config, isapi_door_capabilities]
@@ -226,8 +224,10 @@ class Doorbell():
                 # This endpoint failed, try the next one
                 pass
 
-        # We have run out of available endpoints to call
-        raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+        # We have run out of available endpoints to call, dont ro a runtime error, just continue with 0 outputs
+        logger.info("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+        return 0
+        #raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
     def get_num_outputs(self) -> int:
         """
@@ -312,8 +312,10 @@ class Doorbell():
             except RuntimeError:
                 # This endpoint failed, try the next one
                 pass
-        # We have run out of available endpoints to call
-        raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+        # We have run out of available endpoints to call, dont ro a runtime error, just continue with 0 outputs
+        logger.info("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+        return 0
+        #raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
     def get_num_coms_indoor(self) -> int:
         """
