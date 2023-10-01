@@ -170,6 +170,9 @@ The input string must be in the format
   | custom      | Sending scene "custom" for indoor panels
   | setupAlarm  | Turn on the alarm on the indoor panel
   | closeAlarm  | Turn off the alarm on the indoor panel
+  | muteAudioOutput   | Mutes the audio output of the doorbell / indoor station
+  | unmuteAudioOutput | Unmutes the audio output of the doorbell / indoor station  
+
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 
   E.G.: If the doorbell is named `Front door`, the input string must reference it as `front_door`.
