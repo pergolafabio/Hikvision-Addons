@@ -88,6 +88,30 @@ class MQTTInput():
             answer_button.set_availability(True)
 
             ###########
+            # Mute audio output button
+            button_info = ButtonInfo(
+                name="Mute audio output",
+                unique_id=f"{sanitized_doorbell_name}_mute_audio_output",
+                device=device,
+                icon="mdi:volume-mute",
+                object_id=f"{sanitized_doorbell_name}_mute_audio_output")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            mute_button = Button(settings, self._mute_audio_output_callback, doorbell)
+            mute_button.set_availability(True)
+
+            ###########
+            # Unmute audio output button
+            button_info = ButtonInfo(
+                name="Unmute audio output",
+                unique_id=f"{sanitized_doorbell_name}_unmute_audio_output",
+                device=device,
+                icon="mdi:volume-high",
+                object_id=f"{sanitized_doorbell_name}_unmute_audio_output")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            unmute_button = Button(settings, self._unmute_audio_output_callback, doorbell)
+            unmute_button.set_availability(True)
+
+            ###########
             # ISAPI request input text
             text_info = TextInfo(
                 name="ISAPI request",
@@ -409,6 +433,22 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, requestBody)
             alarm_sensor = cast(Sensor, self._sensors[doorbell]['alarm_sensor'])
             alarm_sensor.set_state("closeAlarm")
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received mute audio output command for doorbell: {}", doorbell._config.name)
+
+        try:
+            doorbell.mute_audio_output()
+        except SDKError as err:
+            logger.error("Error setting scene: {}", err)
+
+    def _unmute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received unmute audio output command for doorbell: {}", doorbell._config.name)
+
+        try:
+            doorbell.unmute_audio_output()
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 

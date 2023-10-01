@@ -149,6 +149,12 @@ class InputReader():
             case "reboot":
                 logger.info("Rebooting door station")
                 doorbell.reboot_device()
+            case "muteAudioOutput":
+                logger.info("Mute audio output")
+                doorbell.mute_audio_output()
+            case "unmuteAudioOutput":
+                logger.info("Unmute audio output")
+                doorbell.unmute_audio_output()
             case "debug":
                 # This is a special command that accept the name of a method,
                 # calls the method on the doorbell instance and outputs the result
