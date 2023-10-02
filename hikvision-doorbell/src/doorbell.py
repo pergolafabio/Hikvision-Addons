@@ -229,7 +229,7 @@ class Doorbell():
                 pass
 
         # We have run out of available endpoints to call, dont ro a runtime error, just continue with 0 outputs
-        logger.debug("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+        logger.debug("Unable to get the number of doors on the indoor station, please configure the relays manually with this option in the config: output_relays")
         return 0
         #raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
