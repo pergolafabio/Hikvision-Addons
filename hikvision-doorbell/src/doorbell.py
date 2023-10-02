@@ -334,8 +334,7 @@ class Doorbell():
             # Error out if we don't find attribute `max` inside the `doorNo` element
             if com_number_element is None or com_number_element.text is None:
                 # Print a string representation of the response XML
-                logger.debug("No com ports found for the indoor device")
-                return 0
+                raise RuntimeError('Cannot find `alarmOutNum` node in XML response')
             logger.debug("We have found {} com ports for the indoor device", com_number_element.text)
             return int(com_number_element.text)
 
@@ -369,25 +368,27 @@ class Doorbell():
     def mute_audio_output(self):
         try:
             current_settings = self.get_audio_out_settings()
-            currentTalkVolume = current_settings.find('{*}talkVolume')
-            logger.debug("Current talk volume is {}", currentTalkVolume)
+            currentTalkVolume = current_settings.find('.//{*}talkVolume')
             if currentTalkVolume is None or currentTalkVolume.text is None:
-                talkVolume = "5"
+                talkVolume = "7"
+                logger.debug("Current talk volume not found, using 7 as default")
             else:
                 talkVolume = currentTalkVolume.text
+                logger.debug("Current talk volume found: {}", talkVolume)
 
-            currentVolume = current_settings.find('{*}volume')
-            logger.debug("Current volume is {}", currentVolume)
+            currentVolume = current_settings.find('.//{*}volume')
             if currentVolume is None or currentVolume.text is None:
-                self._previouse_audio_out_volume = 5
+                self._previouse_audio_out_volume = 7
+                logger.debug("Current volume not found, using 7 as default")
             else:
                 # remember current audio out volume for the unmute of the doorbell
                 self._previouse_audio_out_volume = int(currentVolume.text)
+                logger.debug("Current volume found: {}", self._previouse_audio_out_volume)
 
         except SDKError:
             # Cannot get current audio out settings use default values
-            talkVolume = "5"
-            self._previouse_audio_out_volume = "5"
+            talkVolume = "7"
+            self._previouse_audio_out_volume = "7"
 
         url = "/ISAPI/System/Audio/AudioOut/channels/1"
         # mute audio out by changing the audio out volume to 0
@@ -400,15 +401,16 @@ class Doorbell():
     def unmute_audio_output(self):
         try:
             current_settings = self.get_audio_out_settings()
-            currentTalkVolume = current_settings.find('{*}talkVolume')
-            logger.debug("Current talk volume is {}", currentTalkVolume)
+            currentTalkVolume = current_settings.find('.//{*}talkVolume')
             if currentTalkVolume is None or currentTalkVolume.text is None:
-                talkVolume = "5"
+                talkVolume = "7"
+                logger.debug("Current talk volume not found, using 7 as default")
             else:
                 talkVolume = currentTalkVolume.text
+                logger.debug("Current talk volume found: {}", talkVolume)
         except SDKError:
             # Cannot get current audio out settings use default values
-            talkVolume = "5"
+            talkVolume = "7"
 
         url = "/ISAPI/System/Audio/AudioOut/channels/1"
 
