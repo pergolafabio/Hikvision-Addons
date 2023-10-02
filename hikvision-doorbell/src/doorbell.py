@@ -211,6 +211,7 @@ class Doorbell():
                 if door_number_element is None or door_number_element.text is None:
                     # Print a string representation of the response XML
                     logger.debug("No door relays found for the indoor device")
+                    raise RuntimeError(f'Unexpected XML response: {io_doors_xml}')
                 logger.debug("We have found {} door relays for the indoor device", door_number_element.text)
                 return int(door_number_element.text)
             except ET.ParseError:
@@ -228,7 +229,7 @@ class Doorbell():
                 pass
 
         # We have run out of available endpoints to call, dont ro a runtime error, just continue with 0 outputs
-        logger.info("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
+        logger.debug("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
         return 0
         #raise RuntimeError("Unable to get the number of doors, please configure the relays manually with this option in the config: output_relays")
 
@@ -349,7 +350,7 @@ class Doorbell():
                 pass
 
         # We have run out of available endpoints to call
-        logger.info("Unable to get the number of coms for the indoor station")
+        logger.debug("Unable to get the number of coms for the indoor station")
         return 0
         #raise RuntimeError("Unable to get the number of coms")
 
