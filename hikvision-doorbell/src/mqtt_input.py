@@ -308,14 +308,14 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
             # If error code is 23 on some indoor stations, ISAPI failed, fallback to SDK method
-            logger.error("Error while answering call with ISAPI: {}", err)
+            logger.error("Error while rejecting the call with ISAPI: {}", err)
             error_code = err.args[1]
             if error_code == 23:
                 try:
-                    logger.debug("Answering call failed with ISAPI method, with error {} fallback to SDK method", error_code)
+                    logger.debug("Rejecting call failed with ISAPI method, with error {} fallback to SDK method", error_code)
                     doorbell.callsignal(3)
                 except SDKError as err:
-                    logger.error("Error while answering call with SDK: {}", err)
+                    logger.error("Error while rejecting the call with SDK: {}", err)
 
     def _hangup_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received hangup command for doorbell: {}", doorbell._config.name)
@@ -331,14 +331,14 @@ class MQTTInput():
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
             # If error code is 23 on some indoor stations, ISAPI failed, fallback to SDK method
-            logger.error("Error while answering call with ISAPI: {}", err)
+            logger.error("Error while Hanging up the call with ISAPI: {}", err)
             error_code = err.args[1]
             if error_code == 23:
                 try:
-                    logger.debug("Answering call failed with ISAPI method, with error {} fallback to SDK method", error_code)
+                    logger.debug("Hangup call failed with ISAPI method, with error {} fallback to SDK method", error_code)
                     doorbell.callsignal(5)
                 except SDKError as err:
-                    logger.error("Error while answering call with SDK: {}", err)           
+                    logger.error("Error while hanging up the call with SDK: {}", err)           
 
     def _answer_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received answer command for doorbell: {}", doorbell._config.name)
