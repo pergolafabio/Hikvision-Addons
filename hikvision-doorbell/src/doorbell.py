@@ -144,20 +144,22 @@ class Doorbell():
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
-    def answer_call(self):
+    def callsignal(self, cmd_type: int):
         """ Answer the specified door using the NET_DVR_VIDEO_CALL_PARAM.
+            command type: 0- Request call, 1- cancel call, 2- answer the call, 3- refuse the call, 4- called timeout, 5- end the call, 6- the device is busy, 7- the device is busy. 
         """
         gw = NET_DVR_VIDEO_CALL_PARAM()
         gw.dwSize = sizeof(NET_DVR_VIDEO_CALL_PARAM)
-        gw.dwCmdType = 0
-        gw.wUnitNumber = 1
+        gw.dwCmdType = cmd_type
+        #gw.wUnitNumber = 1
         gw.byRes = (c_byte * 115)()
 
         result = self._sdk.NET_DVR_SetDVRConfig(self.user_id, 16036, 1, byref(gw),255)
         if not result:
-            logger.debug("NET_DVR_SetDVRConfig failed with code {}", self._sdk.NET_DVR_GetLastError())
-        logger.info(" Door answered by SDK")
-
+            raise SDKError(self._sdk, "Error while calling NET_DVR_VIDEO_CALL_PARAM")
+        logger.info("Callsignal {} sended with SDK", cmd_type)
+        
+        
     def reboot_device(self):
         # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
         try:

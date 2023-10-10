@@ -307,7 +307,15 @@ class MQTTInput():
         try:
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
-            logger.error("Error while rejecting call: {}", err)
+            # If error code is 23 on some indoor stations, ISAPI failed, fallback to SDK method
+            logger.error("Error while answering call with ISAPI: {}", err)
+            error_code = err.args[1]
+            if error_code == 23:
+                try:
+                    logger.debug("Answering call failed with ISAPI method, with error {} fallback to SDK method", error_code)
+                    doorbell.callsignal(3)
+                except SDKError as err:
+                    logger.error("Error while answering call with SDK: {}", err)
 
     def _hangup_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received hangup command for doorbell: {}", doorbell._config.name)
@@ -322,7 +330,15 @@ class MQTTInput():
         try:
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
         except SDKError as err:
-            logger.error("Error while hanging up call: {}", err)            
+            # If error code is 23 on some indoor stations, ISAPI failed, fallback to SDK method
+            logger.error("Error while answering call with ISAPI: {}", err)
+            error_code = err.args[1]
+            if error_code == 23:
+                try:
+                    logger.debug("Answering call failed with ISAPI method, with error {} fallback to SDK method", error_code)
+                    doorbell.callsignal(5)
+                except SDKError as err:
+                    logger.error("Error while answering call with SDK: {}", err)           
 
     def _answer_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received answer command for doorbell: {}", doorbell._config.name)
@@ -336,11 +352,16 @@ class MQTTInput():
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             doorbell._call_isapi("PUT", url, json.dumps(requestBody))
-            ## Tried to answer the call with SDK instead of ISAPI, but always receive error 23 here??
-            ## result = self._sdk.NET_DVR_SetDVRConfig(self.user_id, 16036, 1, byref(gw),255)
-            # doorbell.answer_call()
         except SDKError as err:
-            logger.error("Error while answering call: {}", err)
+            # If error code is 23 on some indoor stations, ISAPI failed, fallback to SDK method
+            logger.error("Error while answering call with ISAPI: {}", err)
+            error_code = err.args[1]
+            if error_code == 23:
+                try:
+                    logger.debug("Answering call failed with ISAPI method, with error {} fallback to SDK method", error_code)
+                    doorbell.callsignal(2)
+                except SDKError as err:
+                    logger.error("Error while answering call with SDK: {}", err)
            
     def _caller_info_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Trying to get caller info command for doorbell: {}", doorbell._config.name)
