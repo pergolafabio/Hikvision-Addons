@@ -149,11 +149,11 @@ So the phone buttons activates 4 services, first it "answer" + "hangUp"  the cal
               tap_action:
                 - action: call-service
                   service: button.press
-                  service_data:
+                  data:
                     entity_id: button.ds_kh9510_answer_call
                 - action: call-service
                   service: button.press
-                  service_data:
+                  data:
                     entity_id: button.ds_kh9510_hangup_call
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
@@ -169,7 +169,7 @@ So the phone buttons activates 4 services, first it "answer" + "hangUp"  the cal
               hold_action:
                 - action: call-service
                   service: switch.turn_on
-                  service_data:
+                  data:
                     entity_id: switch.ds_kd8003_door_relay_0
 
           dimensions:

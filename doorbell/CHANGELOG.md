@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.10 - 2023-10-02
+
+### Added
+
+- New Mute/Unmute output sound buttons for indoor and outdoor stations
+- Default 0 output relays, if none found instead of stopping addon and present warning
+- Default 0 com relays, if none found instead of stopping addon and present warning
+
 ## 3.0.8 - 2023-09-25
 
 ### Added
