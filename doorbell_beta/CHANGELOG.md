@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.46 - 2023-10-10
+
+### Added
+
+- Added alternative way for callsignal command if ISAPI fails with error 23
+
 ## 3.0.0-beta.44 - 2023-09-20
 
 ### Added
