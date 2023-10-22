@@ -65,10 +65,10 @@ go2rtc:
       - isapi://admin:XXXXXXXX@192.168.0.70:80/
 
 ```
-First of all, check if ISAPI already works, you can expose/enable port 1984 in the Frigate Add-on, afterwards you can surf to to https://mydomain:1984 or http://IP:1984
+First of all, check if ISAPI already works, you can expose/enable port 1984 in the Frigate Add-on, afterwards you can surf to to http://mylocalip:1984
 You should see the camera there, with also a "links" command, click on it, at the bottom you should see: "video+audio+microphone = two way audio from camera"
 
-In order to test, chrome needs https with valid domain to give permissions to the camera, to use with http, you can apply this hack:
+Chrome doesnt allow microphone support if you visit that webpage with http, but you can apply this hack:
 https://stackoverflow.com/questions/52759992/how-to-access-camera-and-microphone-in-chrome-without-https
 
 OR you can also use this button: "external WebRTC viewer", that one creates a valid https link for you
