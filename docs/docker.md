@@ -12,24 +12,40 @@ version: "3.8"
 
 services:
   doorbell:
-    # You can find  the latest image here: https://github.com/pergolafabio/Hikvision-Addons/releases
-    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.2
-    tty: true   # To receive commands on STDIN
-    env:
-        # JSON string with the list of doorbells, for all options, have a look at the [docs](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell/DOCS.md)
-        DOORBELLS: '[{"name":"outdoor", "ip": "192.168.0.10", "username": "admin", "password": "password"},{"name":"indoor", "ip": "192.168.0.11", "username": "admin", "password": "password"}]'
-        
-        # Connection to the MQTT broker
-        MQTT__HOST: <hostname_of_broker>
-        # Optional
-        # MQTT__PORT: 1883
-        MQTT__USERNAME: <broker_username>
-        MQTT__PASSWORD: <broker_password>
-        
-        # To help diagnose problems
-        SYSTEM__LOG_LEVEL: INFO
-        SYSTEM__SDK_LOG_LEVEL: NONE
+    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.10
+    build:
+      args:       
+        # Change this according to your architecture (so the correct native C libraries are used)
+        - BUILD_ARCH=amd64
+        # - BUILD_ARCH=aarch64
+      context: .
+    env_file:
+      - development.env
+    tty: true   # To read stdin commands
 ```
+
+The contents of the `development.env` should look like:
+```yaml
+# JSON string with the list of doorbells or indoor stations, for all options, have a look at the [docs](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell/DOCS.md)
+DOORBELLS=[{"name":"Outdoor", "ip": "192.168.0.70", "username": "admin", "password": "xxx"},{"name":"Indoor", "ip": "192.168.0.71", "username": "admin", "password": "xxx"}]
+
+# Connection to MQTT broker
+MQTT__HOST=192.168.0.17
+#MQTT__PORT=1883
+MQTT__USERNAME=admin
+MQTT__PASSWORD=xxx
+
+# Help diagnose problems during development
+SYSTEM__LOG_LEVEL=INFO
+SYSTEM__SDK_LOG_LEVEL=NONE
+
+# Load C native libraries required by the Hikvision SDK. Use the correct folder depending on you architecture.
+LD_LIBRARY_PATH=lib-amd64/
+
+# Enable python module to get stacktraces from C native calls in the SDK
+PYTHONFAULTHANDLER=true
+```
+
 ## Dockerhub
 
 The image is available to download from Dockerhub, the configuration values are read from the environment variables, see an example screenshot from Synology Docker
