@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.12 - 2023-11-13
+
+### Added
+
+- Added support for DS-K1T671MF device
+
 ## 3.0.10 - 2023-10-02
 
 ### Added
