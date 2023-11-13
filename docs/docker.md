@@ -56,7 +56,7 @@ https://hub.docker.com/r/pergolafabio/hikvision-doorbell
 
 ## Manually building and running the container
 
-To manually build and run the container, run the following from the `hikvision-doorbell` folder:
+To manually build and run the container, run the following from the `hikvision-doorbell` folder (dev branch):
 
 - Build the image, specifying your architecture.
 For instance:
@@ -71,7 +71,7 @@ docker run -e MQTT__HOST=mosquitto hikvision-doorbell
 
 
 ## Configuration
-If no configuration is provided, the container uses the values from the `default_config.yaml` file present in this repository.
+If no configuration is provided, the container uses the values from the `default_config.yaml` file present in this repository (dev branch).
 
 The application uses [Goodconf](https://github.com/lincolnloop/goodconf) to manage its configuration.
 The configuration values are read from the environment variables or from a JSON/YAML file.
