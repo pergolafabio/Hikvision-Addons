@@ -12,7 +12,7 @@ version: "3.8"
 
 services:
   doorbell:
-    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.10
+    image: ghcr.io/pergolafabio/hikvision-doorbell:latest
     build:
       args:       
         # Change this according to your architecture (so the correct native C libraries are used)
