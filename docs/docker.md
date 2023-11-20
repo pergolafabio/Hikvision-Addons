@@ -41,6 +41,9 @@ SYSTEM__SDK_LOG_LEVEL=NONE
 
 # Load C native libraries required by the Hikvision SDK. Use the correct folder depending on you architecture.
 LD_LIBRARY_PATH=lib-amd64/
+# Or
+# LD_LIBRARY_PATH=lib-aarch64/
+
 
 # Enable python module to get stacktraces from C native calls in the SDK
 PYTHONFAULTHANDLER=true
