@@ -12,13 +12,15 @@ version: "3.8"
 
 services:
   doorbell:
-    image: ghcr.io/pergolafabio/hikvision-doorbell:latest
-    build:
-      args:       
+    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.12-amd64
+    # OR if you are using an RPI
+    # image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.12-aarch64
+    # build:
+      # args:       
         # Change this according to your architecture (so the correct native C libraries are used)
-        - BUILD_ARCH=amd64
+        # - BUILD_ARCH=amd64
         # - BUILD_ARCH=aarch64
-      context: .
+      # context: .
     env_file:
       - development.env
     tty: true   # To read stdin commands
