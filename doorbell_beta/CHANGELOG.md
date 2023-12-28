@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.47 - 2023-12-28
+
+### Added
+
+- Added support for DS-K1T343MWX
+
 ## 3.0.0-beta.46 - 2023-10-10
 
 ### Added
