@@ -216,6 +216,8 @@ class MQTTHandler(EventHandler):
         try:
             major = alarm_info.dwMajor
             minor = alarm_info.dwMinor
+            door_id = alarm_info.struAcsEventInfo.dwDoorNo
+            employee_id = alarm_info.struAcsEventInfo.dwEmployeeNo
             logger.debug("Access control event occured, trying to find the event for Major: {} : Minor: {}", major, minor)
             major_alarm = AcsAlarmInfoMajor(major)
             match major:
@@ -228,6 +230,21 @@ class MQTTHandler(EventHandler):
                 case AcsAlarmInfoMajor.MAJOR_EVENT.value:
                     minor_alarm = AcsAlarmInfoMajorEvent(minor)
             logger.info("Access control event: {} found with event: {}", major_alarm.name, minor_alarm.name)
+            match minor_alarm.name:
+                case "MINOR_FACE_VERIFY_PASS":
+                    logger.info("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name, door_id, employee_id)
+                    attributes = {
+                        'employee_id': employee_id,
+                    }
+                    trigger = DeviceTriggerMetadata(name=f"ACS Face Verify", type="face verify", subtype=f"door {door_id}", payload=attributes)
+                    self.handle_device_trigger(doorbell, trigger)
+                case "MINOR_LOCK_OPEN":
+                    logger.info("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name, door_id, employee_id)
+                    attributes = {
+                        'employee_id': employee_id,
+                    }
+                    trigger = DeviceTriggerMetadata(name=f"ACS Lock Open", type="lock open", subtype=f"door {door_id}", payload=attributes)
+                    self.handle_device_trigger(doorbell, trigger)
             trigger = DeviceTriggerMetadata(name=f"{major_alarm.name} {minor_alarm.name}", type=f"", subtype=f"{major_alarm.name} {minor_alarm.name}")
             self.handle_device_trigger(doorbell, trigger)
         except:
