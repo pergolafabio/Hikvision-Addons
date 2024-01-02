@@ -18,7 +18,6 @@ For each of your doorbells, repeat the following configuration:
 | username      | admin         | Username to access the doorbell
 | password      |               | Password to access the doorbell
 | output_relays | 2             | (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
-| caller_info   | false         | (optional) If you want to see the button prssed as an atribute on the call sensor, usefull for intercoms with multiple buttons.
 | scenes        | false         | (optional) Extra Scene buttons for indoor panels 
 
 #### Example config

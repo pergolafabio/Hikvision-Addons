@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.13 - 2024-01-02
+
+### Added
+
+- Added support for DS-K1T343MWX
+- Caller info button is not optional anymore, seems K1T devices dont create an incoming ring event, so users can build a polling autimation with this button
+- For K1T devices a seperate device trigger is created when a face is verified, the trigger will show the employee id
+
 ## 3.0.12 - 2023-11-13
 
 ### Added
