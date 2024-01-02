@@ -233,7 +233,7 @@ class MQTTHandler(EventHandler):
             match minor_alarm.name:
                 case "MINOR_FACE_VERIFY_PASS":
                     logger.info("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name, door_id, employee_id)
-                    trigger = DeviceTriggerMetadata(name=f"ACS Face Employee {employee_id}", type=f"face_verify", subtype=f"employee_id {employee_id}")
+                    trigger = DeviceTriggerMetadata(name=f"ACS Face Employee {employee_id}", type=f"face_verify", subtype=f"employee_id_{employee_id}")
                     self.handle_device_trigger(doorbell, trigger)
             trigger = DeviceTriggerMetadata(name=f"{major_alarm.name} {minor_alarm.name}", type=f"", subtype=f"{major_alarm.name} {minor_alarm.name}")
             self.handle_device_trigger(doorbell, trigger)
