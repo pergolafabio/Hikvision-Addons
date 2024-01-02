@@ -71,7 +71,6 @@ class AppConfig(GoodConf):
         username: str
         password: str
         output_relays: Optional[int] = None   # TODO: validate it is in acceppable range!
-        caller_info: Optional[bool] = False
         scenes: Optional[bool] = False
 
     class HomeAssistant(BaseModel):

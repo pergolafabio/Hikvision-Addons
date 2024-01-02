@@ -124,22 +124,19 @@ class MQTTInput():
             isapi_text = Text(settings, self._isapi_input_callback, doorbell)
             isapi_text.set_availability(True)
             self._sensors[doorbell]['isapi_text'] = isapi_text
-            
-            if doorbell._config.caller_info is True:
-                # Optional: Define a caller_info button to know what indoor station is ringinhg
-                
-                ###########
-                # Caller_info call button
-                button_info = ButtonInfo(
-                    name="Caller info",
-                    unique_id=f"{sanitized_doorbell_name}_caller_info",
-                    device=device,
-                    icon="mdi:phone-log",
-                    object_id=f"{sanitized_doorbell_name}_caller_info")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                caller_info_button = Button(settings, self._caller_info_callback, doorbell)
-                caller_info_button.set_availability(True)
-                self._sensors[doorbell]['caller_info'] = caller_info_button
+     
+            ###########
+            # Caller_info call button Define a caller_info button to know what indoor station is ringing
+            button_info = ButtonInfo(
+                name="Caller info",
+                unique_id=f"{sanitized_doorbell_name}_caller_info",
+                device=device,
+                icon="mdi:phone-log",
+                object_id=f"{sanitized_doorbell_name}_caller_info")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            caller_info_button = Button(settings, self._caller_info_callback, doorbell)
+            caller_info_button.set_availability(True)
+            self._sensors[doorbell]['caller_info'] = caller_info_button
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
