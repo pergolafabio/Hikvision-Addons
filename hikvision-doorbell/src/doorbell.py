@@ -15,6 +15,7 @@ class DeviceType(IntEnum):
     OUTDOOR = 603
     INDOOR = 602
     VillaVTO = 605
+    DSK1T502 = 884
     K1T671MF = 896
     K1T341AM = 10503
     K1T341M = 10510
