@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.52 - 2024-01-06
+
+### Added
+
+- Added support for DS-K1T502DBFWX-C
+
 ## 3.0.0-beta.47 - 2023-12-28
 
 ### Added
