@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.53 - 2024-01-08
+
+### Added
+
+- Employee ID is now an attribute payload, instead of making seperate topics
+
 ## 3.0.0-beta.52 - 2024-01-06
 
 ### Added
