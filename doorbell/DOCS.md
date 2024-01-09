@@ -3,7 +3,7 @@
 ## Configuration
 **Note**: _Remember to restart the add-on when the configuration is changed._
 
-**Note**: _When the add-on connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. A reboot might be required._
+**Note**: _When the add-on connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. You will also see a lot of false events just give it a while, it can sometimes takes a few hours... A reboot might be required._
 
 The following configuration options are available to be setup using the **Configuration** tab of this add-on in the Home Assistant interface:
 
