@@ -74,7 +74,9 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-K1T67X
 - DS-KB8113
 - ...
+
 - DS-KV8102-IM (First generation not supported, only open lock works)
+- DS-K1T502DBFWX- (Not supported at all)
 
 
 ## Additional resources
