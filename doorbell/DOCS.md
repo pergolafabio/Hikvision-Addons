@@ -96,7 +96,8 @@ For each of your doorbells, the following entities are available:
 - Switches
   - `Door relays` (one for each available relay, open the door connected to the output relay of the device)
 - Buttons
-  - `Answer call`
+  - `Answer call` (The device needs to be connected to Hikconnect in to make "answer" work, if its not possible, you can use "reject" instead)
+  - `Hangup call` (The device needs to be connected to Hikconnect in to make "hangup" work, if its not possible, you can use "reject" instead)
   - `Reject call`
   - `Reboot`
   - ...
@@ -160,10 +161,10 @@ The input string must be in the format
   | reject      | Reject the incoming call and stop the indoor stations from ringing
   | request     | Unknown
   | cancel      | Unknown
-  | answer      | Unknown
+  | answer      | Answers the call, usefull in combination with "hangUp" afterwards, so the intercom stops ringing (idle) and you can start two way audio with Frigate for example
   | reject      | Unknown
   | bellTimeout | Unknown
-  | hangUp      | Unknown
+  | hangUp      | Hangs up the call, usefull in combination with "answer" before, so the intercom stops ringing (idle) and you can start two way audio with Frigate for example
   | deviceOnCall| Unknown
   | atHome      | Sending scene "At home" for indoor panels
   | goOut       | Sending scene "Go out" for indoor panels
