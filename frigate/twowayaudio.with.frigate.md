@@ -86,6 +86,8 @@ With my Hikvision Add-On you can first "answer" the call and then "hangup", and 
 
 So the phone buttons activates 4 services, first it "answer" + "hangUp"  the call, and then it unmutes the microphone (start two way audion) and unmutes the card .Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too...
 
+If you send the "answer" command and you notice error 29 in the log on a real call, this means that your device is NOT connected to Hikconnect, seems for the answer command to work, it needs internet connection... It thats not possible, you can use the "reject" command instead!
+
 ![Ivms](frigate.png)
 
 ```
