@@ -82,8 +82,8 @@ DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata]
     VideoInterComAlarmType.SMART_LOCK_LOW_BATTERY_ALARM: DeviceTriggerMetadata(name='smart_lock_low_battery_alarm', type='smart lock alarm', subtype='low battery'),
     VideoInterComAlarmType.BLACKLIST_ALARM: DeviceTriggerMetadata(name='smart_lock_blacklist_alarm', type='alarm', subtype='blacklist'),
     VideoInterComAlarmType.SMART_LOCK_DISCONNECTED: DeviceTriggerMetadata(name='smart_lock_disconnected', type='smart lock disconnected', subtype=''),
-    VideoInterComAlarmType.ACCESS_CONTROL_TAMPERING_ALARM: DeviceTriggerMetadata(name='access_control_tampering_alarm', type='alarm', subtype='access control tampering'),
-    VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE: DeviceTriggerMetadata(name='door_open_by_external_force', type='alarm', subtype='door open by external force'),
+    VideoInterComAlarmType.ACCESS_CONTROL_TAMPERING_ALARM: DeviceTriggerMetadata(name='access_control_tampering_alarm', type='alarm', subtype='access control tampering alarm'),
+    VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE: DeviceTriggerMetadata(name='door_open_by_external_force', type='force', subtype='door open by external force'),
 }
 """Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComAlarmType"""
 

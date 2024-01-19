@@ -206,7 +206,6 @@ class VideoInterComAlarmType(IntEnum):
     DRESSING_REMINDER = 26
     FACE_TEMPERATURE_ALARM = 27
     DRESSING_REMINDER_CANCELLED = 28
-
     
 class DeviceCapabilityType(Enum):
     DEVICE_VIDEOPIC_ABILITY = 0x00e
