@@ -18,7 +18,8 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           NET_DVR_ACS_ALARM_INFO,
                           VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
                           VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
-                          VideoInterComAlarmType)
+                          VideoInterComAlarmType,
+                          VideoInterComEventType)
 from sdk.acsalarminfo import (AcsAlarmInfoMajor, AcsAlarmInfoMajorAlarm, AcsAlarmInfoMajorException, AcsAlarmInfoMajorOperation, AcsAlarmInfoMajorEvent)
 from typing_extensions import override
 import xml.etree.ElementTree as ET
@@ -82,8 +83,15 @@ DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata]
     VideoInterComAlarmType.BLACKLIST_ALARM: DeviceTriggerMetadata(name='smart_lock_blacklist_alarm', type='alarm', subtype='blacklist'),
     VideoInterComAlarmType.SMART_LOCK_DISCONNECTED: DeviceTriggerMetadata(name='smart_lock_disconnected', type='smart lock disconnected', subtype=''),
     VideoInterComAlarmType.ACCESS_CONTROL_TAMPERING_ALARM: DeviceTriggerMetadata(name='access_control_tampering_alarm', type='alarm', subtype='access control tampering'),
+    VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE: DeviceTriggerMetadata(name='door_open_by_external_force', type='alarm', subtype='door open by external force'),
 }
 """Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComAlarmType"""
+
+DEVICE_TRIGGERS_DEFINITIONS_EVENT: dict[VideoInterComEventType, DeviceTriggerMetadata] = {
+    VideoInterComEventType.AUTHENTICATION_LOG: DeviceTriggerMetadata(name='authentication_log', type='event', subtype='authentication log'),
+    VideoInterComEventType.MAGNETIC_DOOR_STATUS: DeviceTriggerMetadata(name='magnetic_door_status', type='event', subtype='magnetic door status'),
+}
+"""Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComEventType"""
 
 class MQTTHandler(EventHandler):
     name = 'MQTT'
@@ -284,31 +292,43 @@ class MQTTHandler(EventHandler):
 
             # Wait some seconds, then turn off the switch entity (since the door relay in the doorbell is momentary)
             await asyncio.sleep(2)
-
             door_sensor.off()
-        if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
-            door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
-            control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
-            # unlock_type = alarm_info.uEventInfo.struUnlockRecord.byUnlockType
-            # card_number = str(alarm_info.uEventInfo.struAuthInfo.byCardNo
             
-            # Name of the entity inside the dict array containing all the sensors
-            entity_id = f'door_{door_id}'
-            # Extract the sensor entity from the dict and cast to know type
-            door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
-            # If the SDK returns a lock ID that is not starting from 0, 
-            # we don't know what switch to update in HA -> trigger both of them
-            # Make sure the switch is back in "OFF" position in case it was trigger by the switch
-            if not door_sensor:
-                logger.warning("Received unknown lockID: {}", door_id)
-                # logger.debug("Changing switches back to OFF position")
-                num_doors = doorbell.get_num_outputs()
-                for door_id in range(num_doors):
-                    await update_door_entities(door_id, control_source)
-                return
-            await update_door_entities(door_id, control_source)
-        else:
-            logger.warning("Unhandled eventType: {}", alarm_info.byEventType)
+        # Extract the type of event as a Python enum
+        try:
+            event_type = VideoInterComEventType(alarm_info.byEventType)
+        except ValueError:
+            logger.warning("Received unknown Event type: {}", alarm_info.byEventType)
+            return
+        
+        match event_type:
+            case VideoInterComEventType.UNLOCK_LOG:
+                door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
+                control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
+                # unlock_type = alarm_info.uEventInfo.struUnlockRecord.byUnlockType
+                # card_number = str(alarm_info.uEventInfo.struAuthInfo.byCardNo
+                
+                # Name of the entity inside the dict array containing all the sensors
+                entity_id = f'door_{door_id}'
+                # Extract the sensor entity from the dict and cast to know type
+                door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
+                # If the SDK returns a lock ID that is not starting from 0, 
+                # we don't know what switch to update in HA -> trigger both of them
+                # Make sure the switch is back in "OFF" position in case it was trigger by the switch
+                if not door_sensor:
+                    logger.warning("Received unknown lockID: {}", door_id)
+                    # logger.debug("Changing switches back to OFF position")
+                    num_doors = doorbell.get_num_outputs()
+                    for door_id in range(num_doors):
+                        await update_door_entities(door_id, control_source)
+                    return
+                await update_door_entities(door_id, control_source)
+                
+            case _:
+                """Generic event: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
+                
+                logger.info("Video intercom event {} detected on {}", event_type.name, doorbell._config.name)
+                self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS_EVENT[event_type])
 
     @override
     async def video_intercom_alarm(
@@ -419,9 +439,8 @@ class MQTTHandler(EventHandler):
         # Cast to know type DeviceTrigger
         device_trigger = cast(DeviceTrigger, device_trigger)
         # Trigger the event
-        logger.debug("Invoking device trigger {}", trigger)
+        logger.info("Invoking device trigger automation{}", trigger)
         
         # Serialize the payload, if provided as part of the trigger
         json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
         device_trigger.trigger(json_payload)
-        #device_trigger.trigger()
