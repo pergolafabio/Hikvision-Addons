@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.14 - 2024-01-XX (not yet released)
+
+### Added
+
+- Added support for DS-KV9503-WBE1 handling more events
+- For K1T devices a seperate device trigger was created when a face is verified, now the employee is an attribute
+
+### Changed
+
+- Removed support for DS-K1T343MWX (SDK not compatible)
+
 ## 3.0.13 - 2024-01-02
 
 ### Added
