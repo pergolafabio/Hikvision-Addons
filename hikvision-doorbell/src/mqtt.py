@@ -83,12 +83,26 @@ DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata]
     VideoInterComAlarmType.BLACKLIST_ALARM: DeviceTriggerMetadata(name='smart_lock_blacklist_alarm', type='alarm', subtype='blacklist'),
     VideoInterComAlarmType.SMART_LOCK_DISCONNECTED: DeviceTriggerMetadata(name='smart_lock_disconnected', type='smart lock disconnected', subtype=''),
     VideoInterComAlarmType.ACCESS_CONTROL_TAMPERING_ALARM: DeviceTriggerMetadata(name='access_control_tampering_alarm', type='alarm', subtype='access control tampering alarm'),
+    VideoInterComAlarmType.SOS_CANCELLED: DeviceTriggerMetadata(name='sos_cancelled', type='alarm', subtype='sos cancelled'),
+    VideoInterComAlarmType.NO_MASK_ALARM: DeviceTriggerMetadata(name='no_mask_alarm', type='alarm', subtype='no mask alarm'),
+    VideoInterComAlarmType.FIRE_INPUT_ALARM: DeviceTriggerMetadata(name='fire_input_alarm', type='alarm', subtype='fire input alarm'),
+    VideoInterComAlarmType.FIRE_INPUT_RESTORED: DeviceTriggerMetadata(name='fire_input_restored', type='alarm', subtype='fire input restored'),
     VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE: DeviceTriggerMetadata(name='door_open_by_external_force', type='force', subtype='door open by external force'),
+    VideoInterComAlarmType.TOILET_ALARM: DeviceTriggerMetadata(name='toilet_alarm', type='alarm', subtype='toilet alarm'),
+    VideoInterComAlarmType.TOILET_ALARM_CANCELLED: DeviceTriggerMetadata(name='toilet_alarm_cancelled', type='alarm', subtype='toilet alarm cancelled'),
+    VideoInterComAlarmType.DRESSING_REMINDER: DeviceTriggerMetadata(name='dressing_reminder', type='alarm', subtype='dressing reminder'),
+    VideoInterComAlarmType.FACE_TEMPERATURE_ALARM: DeviceTriggerMetadata(name='face_temperature_alarm', type='alarm', subtype='face temperature alarm'),
+    VideoInterComAlarmType.DRESSING_REMINDER_CANCELLED: DeviceTriggerMetadata(name='dressing_reminder_cancelled', type='force', subtype='dressing reminder cancelled'),
 }
 """Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComAlarmType"""
 
 DEVICE_TRIGGERS_DEFINITIONS_EVENT: dict[VideoInterComEventType, DeviceTriggerMetadata] = {
     VideoInterComEventType.AUTHENTICATION_LOG: DeviceTriggerMetadata(name='authentication_log', type='event', subtype='authentication log'),
+    VideoInterComEventType.ANNOUNCEMENT_READING_RECEIPT: DeviceTriggerMetadata(name='announcement_reading_receipt', type='event', subtype='announcement reading receipt'),
+    VideoInterComEventType.UPLOAD_PLATE_INFO: DeviceTriggerMetadata(name='upload_plate_info', type='event', subtype='upload plate info'),
+    VideoInterComEventType.ILLEGAL_CARD_SWIPING_EVENT: DeviceTriggerMetadata(name='illegal_card_swiping_event', type='event', subtype='illegal card_swiping event'),
+    VideoInterComEventType.DOOR_STATION_ISSUED_CARD_LOG: DeviceTriggerMetadata(name='door_station_issued_card_log', type='event', subtype='door station issued card log'),
+    VideoInterComEventType.MASK_DETECT_EVENT: DeviceTriggerMetadata(name='mask_detect_event', type='event', subtype='mask detect event'),
     VideoInterComEventType.MAGNETIC_DOOR_STATUS: DeviceTriggerMetadata(name='magnetic_door_status', type='event', subtype='magnetic door status'),
 }
 """Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComEventType"""
@@ -237,17 +251,17 @@ class MQTTHandler(EventHandler):
                     minor_alarm = AcsAlarmInfoMajorOperation(minor)
                 case AcsAlarmInfoMajor.MAJOR_EVENT.value:
                     minor_alarm = AcsAlarmInfoMajorEvent(minor)
-            logger.info("Access control event: {} found with event: {}", major_alarm.name, minor_alarm.name)
+            logger.info("Access control event: {} found with event: {}", major_alarm.name.lower(), minor_alarm.name.lower())
             match minor_alarm.name:
                 case "MINOR_FACE_VERIFY_PASS":
-                    logger.debug("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name, door_id, employee_id)
+                    logger.debug("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name.lower(), door_id, employee_id)
                     attributes = {
                         'employee_id': employee_id,
                     }
-                    trigger = DeviceTriggerMetadata(name=f"{major_alarm.name} {minor_alarm.name}", type=f"", subtype=f"{major_alarm.name} {minor_alarm.name}", payload=attributes)
+                    trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", payload=attributes)
                     self.handle_device_trigger(doorbell, trigger)
                 case _:
-                    trigger = DeviceTriggerMetadata(name=f"{major_alarm.name} {minor_alarm.name}", type=f"", subtype=f"{major_alarm.name} {minor_alarm.name}")
+                    trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}")
                     self.handle_device_trigger(doorbell, trigger)
         except:
             logger.warning("Received unknown Access control event with Major: {} Minor: {}", major, minor)
