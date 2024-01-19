@@ -341,7 +341,7 @@ class MQTTHandler(EventHandler):
             case _:
                 """Generic event: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
                 
-                logger.info("Video intercom event {} detected on {}", event_type.name, doorbell._config.name)
+                logger.info("Video intercom event {} detected on {}", event_type.name.lower(), doorbell._config.name)
                 self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS_EVENT[event_type])
 
     @override
@@ -414,7 +414,7 @@ class MQTTHandler(EventHandler):
             case _:
                 """Generic alarm: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
                 
-                logger.info("Video intercom alarm {} detected on {}", alarm_type.name, doorbell._config.name)
+                logger.info("Video intercom alarm {} detected on {}", alarm_type.name.lower(), doorbell._config.name)
                 self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS[alarm_type])
 
     @override
