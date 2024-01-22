@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.14 - 2024-01-XX (not yet released)
+## 3.0.14 - 2024-01-22
 
 ### Added
 
