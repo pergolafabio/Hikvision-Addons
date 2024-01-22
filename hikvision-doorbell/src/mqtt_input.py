@@ -126,7 +126,7 @@ class MQTTInput():
             self._sensors[doorbell]['isapi_text'] = isapi_text
      
             ###########
-            # Caller_info call button Define a caller_info button to know what indoor station is ringing
+            # Caller_info call button
             button_info = ButtonInfo(
                 name="Caller info",
                 unique_id=f"{sanitized_doorbell_name}_caller_info",
@@ -137,6 +137,19 @@ class MQTTInput():
             caller_info_button = Button(settings, self._caller_info_callback, doorbell)
             caller_info_button.set_availability(True)
             self._sensors[doorbell]['caller_info'] = caller_info_button
+            
+            ###########
+            # Call_status button
+            button_info = ButtonInfo(
+                name="Call status",
+                unique_id=f"{sanitized_doorbell_name}_call_status",
+                device=device,
+                icon="mdi:phone-log",
+                object_id=f"{sanitized_doorbell_name}_call_status")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            call_status_button = Button(settings, self._call_status_callback, doorbell)
+            call_status_button.set_availability(True)
+            self._sensors[doorbell]['call_status'] = call_status_button
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -361,20 +374,38 @@ class MQTTInput():
                     logger.error("Error while answering call with SDK: {}", err)
            
     def _caller_info_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        logger.info("Trying to get caller info command for doorbell: {}", doorbell._config.name)
+        logger.info("Trying to get caller info for doorbell: {}", doorbell._config.name)
         url = "/ISAPI/VideoIntercom/callerInfo?format=json"
         requestBody = ""
         caller_info_button = cast(Button, self._sensors[doorbell]['caller_info'])
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             response = doorbell._call_isapi("GET", url, requestBody)
-            attributes = {
-                "caller_info": response
-            }
             logger.info("Received caller info: {} and show it as an attribute" , response)
+            caller_info_button.set_attributes(json.loads(response))
+        except SDKError as err:
+            logger.error("Error while getting caller info with ISAPI: {}", err)
+            attributes = {
+                "CallerInfo": "Error while getting caller info with error code: " + str(err.args[1])
+            }
             caller_info_button.set_attributes(attributes)
-        except Exception as err:
-            logger.error("Error while getting caller info: {}", err)           
+            
+    def _call_status_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Trying to get call status for doorbell: {}", doorbell._config.name)
+        url = "/ISAPI/VideoIntercom/callStatus?format=json"
+        requestBody = ""
+        call_status_button = cast(Button, self._sensors[doorbell]['call_status'])
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+            response = doorbell._call_isapi("GET", url, requestBody)
+            logger.info("Received call status: {} and show it as an attribute" , response)
+            call_status_button.set_attributes(json.loads(response))
+        except SDKError as err:
+            logger.error("Error while getting call status with ISAPI: {}", err)
+            attributes = {
+                "CallStatus": "Error while getting call status with error code: " + str(err.args[1])
+            }
+            call_status_button.set_attributes(attributes)
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)
