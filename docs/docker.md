@@ -12,9 +12,9 @@ version: "3.8"
 
 services:
   doorbell:
-    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.13-amd64
+    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.14-amd64
     # OR if you are using an RPI
-    # image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.13-aarch64
+    # image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.14-aarch64
     # build:
       # args:       
         # Change this according to your architecture (so the correct native C libraries are used)
