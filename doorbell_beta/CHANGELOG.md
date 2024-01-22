@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-beta.57 - 2024-01-22
+
+### Added
+
+- Added support for DS-KV9503-WBE1 handling more events
+- For K1T devices a seperate device trigger was created when a face is verified, now the employee is an attribute
+- Added Call Status button, usefull to poll the call status for devices not supporting the SDK event
+
 ## 3.0.0-beta.53 - 2024-01-08
 
 ### Added
