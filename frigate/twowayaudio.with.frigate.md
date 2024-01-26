@@ -151,11 +151,11 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
               tap_action:
                 - action: call-service
                   service: button.press
-                  data:
+                  service_data:
                     entity_id: button.ds_kh9510_answer_call
                 - action: call-service
                   service: button.press
-                  data:
+                  service_data:
                     entity_id: button.ds_kh9510_hangup_call
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
@@ -171,7 +171,7 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
               hold_action:
                 - action: call-service
                   service: switch.turn_on
-                  data:
+                  service_data:
                     entity_id: switch.ds_kd8003_door_relay_0
 
           dimensions:
