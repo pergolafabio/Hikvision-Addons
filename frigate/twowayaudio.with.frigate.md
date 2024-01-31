@@ -29,17 +29,7 @@ I think this Frigate card is the first card with microphone support!
 
 ## Get started:
 
-Install the Frigate Addon, as i told earlier, this Frigate addon uses in background the go2rtc addon. BUT, the version included is still 1.2, ISAPI was introduced in go2rtc since version 1.3.2, so we need to configure the Frigate Addon to use the latest version of go2rtc, this time of writing i used 1.6.2
-
-Here are the instructions to use a custom version of go2rtc: https://docs.frigate.video/configuration/advanced/#custom-go2rtc-version
-
-When starting the Frigate Add-on you should see this if you configured it correctly:
-
-```
-2023-08-10 12:51:48.188302372  [WARN] Using go2rtc binary from '/config/go2rtc' instead of the embedded one
-2023-08-10 12:51:48.188310430  [INFO] Starting go2rtc...
-2023-08-10 12:51:48.311927197  14:51:48.311 INF go2rtc version 1.6.2 linux/amd64
-```
+Install the Frigate Addon (at least 0.13), this Frigate addon uses in background the go2rtc addon.
 
 ## Step 1: Frigate Add-On configuration
 
