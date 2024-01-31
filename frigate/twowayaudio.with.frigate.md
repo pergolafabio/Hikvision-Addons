@@ -140,13 +140,7 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
               icon: mdi:phone
               tap_action:
                 - action: call-service
-                  service: button.press
-                  service_data:
-                    entity_id: button.ds_kh9510_answer_call
-                - action: call-service
-                  service: button.press
-                  service_data:
-                    entity_id: button.ds_kh9510_hangup_call
+                  service: script.answer_call
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
                 - action: custom:frigate-card-action
@@ -167,6 +161,21 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
           dimensions:
             aspect_ratio_mode: static
             aspect_ratio: '16:9'
+```
+In the phone icon above, i call a script.answer_call, its because i use a delay, between the answer+hangup command for 0.5 seconds, seems its needed, otherwhise the indoor is not able to handle the 2 commands, here is the script:
+
+```
+answer_call:
+  alias: Answer + Hangup the call with a delay
+  sequence:
+  - service: button.press
+    entity_id: button.ds_kh9510_answer_call
+  - delay: 
+      milliseconds: 500
+  - service: button.press
+    entity_id: button.ds_kh9510_hangup_call
+  - delay: 
+      milliseconds: 500
 ```
 
 Have FUN :-)
