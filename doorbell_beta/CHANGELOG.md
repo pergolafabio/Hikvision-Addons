@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.59 - 2024-02-15
+
+### Added
+
+- Added control source as attribute for illegal card swipe
+
 ## 3.0.0-beta.57 - 2024-01-22
 
 ### Added
