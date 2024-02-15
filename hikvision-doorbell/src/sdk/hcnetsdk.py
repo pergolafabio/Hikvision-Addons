@@ -507,6 +507,11 @@ class NET_DVR_AUTH_INFO(Structure):
         ("byRes", BYTE * 212),
     ]
 
+    def cardNo(self):
+        """Return the card number as a string representation, removing the ending `0`s"""
+        serial = "".join([str(number) for number in self.byCardNo[:]])
+        return re.sub(r"0*$", "0", serial)
+
 class NET_DVR_VIDEO_INTERCOM_EVENT_INFO_UINON(Union):
     _fields_ = [
         ("byLen", BYTE),

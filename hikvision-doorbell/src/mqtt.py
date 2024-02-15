@@ -100,7 +100,6 @@ DEVICE_TRIGGERS_DEFINITIONS_EVENT: dict[VideoInterComEventType, DeviceTriggerMet
     VideoInterComEventType.AUTHENTICATION_LOG: DeviceTriggerMetadata(name='authentication_log', type='event', subtype='authentication log'),
     VideoInterComEventType.ANNOUNCEMENT_READING_RECEIPT: DeviceTriggerMetadata(name='announcement_reading_receipt', type='event', subtype='announcement reading receipt'),
     VideoInterComEventType.UPLOAD_PLATE_INFO: DeviceTriggerMetadata(name='upload_plate_info', type='event', subtype='upload plate info'),
-    VideoInterComEventType.ILLEGAL_CARD_SWIPING_EVENT: DeviceTriggerMetadata(name='illegal_card_swiping_event', type='event', subtype='illegal card_swiping event'),
     VideoInterComEventType.DOOR_STATION_ISSUED_CARD_LOG: DeviceTriggerMetadata(name='door_station_issued_card_log', type='event', subtype='door station issued card log'),
     VideoInterComEventType.MASK_DETECT_EVENT: DeviceTriggerMetadata(name='mask_detect_event', type='event', subtype='mask detect event'),
     VideoInterComEventType.MAGNETIC_DOOR_STATUS: DeviceTriggerMetadata(name='magnetic_door_status', type='event', subtype='magnetic door status'),
@@ -319,9 +318,7 @@ class MQTTHandler(EventHandler):
             case VideoInterComEventType.UNLOCK_LOG:
                 door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
                 control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
-                # unlock_type = alarm_info.uEventInfo.struUnlockRecord.byUnlockType
-                # card_number = str(alarm_info.uEventInfo.struAuthInfo.byCardNo
-                
+                # card_number = alarm_info.uEventInfo.struAuthInfo.cardNo()
                 # Name of the entity inside the dict array containing all the sensors
                 entity_id = f'door_{door_id}'
                 # Extract the sensor entity from the dict and cast to know type
@@ -337,7 +334,15 @@ class MQTTHandler(EventHandler):
                         await update_door_entities(door_id, control_source)
                     return
                 await update_door_entities(door_id, control_source)
-                
+
+            case VideoInterComEventType.ILLEGAL_CARD_SWIPING_EVENT:
+                control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
+                attributes = {
+                    'control_source': control_source,
+                }
+                trigger = DeviceTriggerMetadata(name='illegal_card_swiping_event', type='event', subtype='illegal card_swiping event', payload=attributes)
+                self.handle_device_trigger(doorbell, trigger)
+
             case _:
                 """Generic event: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
                 
