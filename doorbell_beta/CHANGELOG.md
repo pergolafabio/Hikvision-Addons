@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.60 - 2024-04-11
+
+### Added
+
+- Added door id as asstribute for magnetic door event and external force alarm
+
 ## 3.0.0-beta.59 - 2024-02-15
 
 ### Added
