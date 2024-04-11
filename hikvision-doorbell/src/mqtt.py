@@ -87,7 +87,6 @@ DEVICE_TRIGGERS_DEFINITIONS: dict[VideoInterComAlarmType, DeviceTriggerMetadata]
     VideoInterComAlarmType.NO_MASK_ALARM: DeviceTriggerMetadata(name='no_mask_alarm', type='alarm', subtype='no mask alarm'),
     VideoInterComAlarmType.FIRE_INPUT_ALARM: DeviceTriggerMetadata(name='fire_input_alarm', type='alarm', subtype='fire input alarm'),
     VideoInterComAlarmType.FIRE_INPUT_RESTORED: DeviceTriggerMetadata(name='fire_input_restored', type='alarm', subtype='fire input restored'),
-    VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE: DeviceTriggerMetadata(name='door_open_by_external_force', type='force', subtype='door open by external force'),
     VideoInterComAlarmType.TOILET_ALARM: DeviceTriggerMetadata(name='toilet_alarm', type='alarm', subtype='toilet alarm'),
     VideoInterComAlarmType.TOILET_ALARM_CANCELLED: DeviceTriggerMetadata(name='toilet_alarm_cancelled', type='alarm', subtype='toilet alarm cancelled'),
     VideoInterComAlarmType.DRESSING_REMINDER: DeviceTriggerMetadata(name='dressing_reminder', type='alarm', subtype='dressing reminder'),
@@ -102,7 +101,6 @@ DEVICE_TRIGGERS_DEFINITIONS_EVENT: dict[VideoInterComEventType, DeviceTriggerMet
     VideoInterComEventType.UPLOAD_PLATE_INFO: DeviceTriggerMetadata(name='upload_plate_info', type='event', subtype='upload plate info'),
     VideoInterComEventType.DOOR_STATION_ISSUED_CARD_LOG: DeviceTriggerMetadata(name='door_station_issued_card_log', type='event', subtype='door station issued card log'),
     VideoInterComEventType.MASK_DETECT_EVENT: DeviceTriggerMetadata(name='mask_detect_event', type='event', subtype='mask detect event'),
-    VideoInterComEventType.MAGNETIC_DOOR_STATUS: DeviceTriggerMetadata(name='magnetic_door_status', type='event', subtype='magnetic door status'),
 }
 """Define the attributes of each DeviceTrigger entity, indexing them by the enum VideoInterComEventType"""
 
@@ -343,6 +341,15 @@ class MQTTHandler(EventHandler):
                 trigger = DeviceTriggerMetadata(name='illegal_card_swiping_event', type='event', subtype='illegal card_swiping event', payload=attributes)
                 self.handle_device_trigger(doorbell, trigger)
 
+            case VideoInterComEventType.MAGNETIC_DOOR_STATUS:
+                door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
+                logger.info("Magnetic door event detected on door {}", door_id + 1)
+                attributes = {
+                    'door_id': door_id + 1,
+                }
+                trigger = DeviceTriggerMetadata(name='magnetic door status', type='event', subtype='magnetic_door_status', payload=attributes)
+                self.handle_device_trigger(doorbell, trigger)
+
             case _:
                 """Generic event: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
                 
@@ -416,6 +423,17 @@ class MQTTHandler(EventHandler):
                     trigger = DeviceTriggerMetadata(name=f"door_not_closed_{door_id}", type="not closed", subtype=f"Door {door_id+1}")
 
                 self.handle_device_trigger(doorbell, trigger)
+                
+            case VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE:
+                # Get information about the door that caused this alarm
+                door_id = alarm_info.wLockID
+                logger.info("External force {} detected on door {}", alarm_info.uAlarmInfo, door_id + 1)
+                attributes = {
+                    'door_id': door_id + 1,
+                }
+                trigger = DeviceTriggerMetadata(name='door open by external force', type='event', subtype='door_open_by_external_force', payload=attributes)
+                self.handle_device_trigger(doorbell, trigger)
+
             case _:
                 """Generic alarm: create the device trigger entity according to the information inside the DEVICE_TRIGGERS_DEFINITIONS dict"""
                 

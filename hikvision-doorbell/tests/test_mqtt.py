@@ -151,7 +151,8 @@ class TestDeviceTrigger:
                           VideoInterComAlarmType.DOOR_NOT_CLOSED,
                           VideoInterComAlarmType.ZONE_ALARM,
                           VideoInterComAlarmType.DOORBELL_RINGING,
-                          VideoInterComAlarmType.DISMISS_INCOMING_CALL
+                          VideoInterComAlarmType.DISMISS_INCOMING_CALL,
+                          VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE
                           ):
             pytest.skip("Tested in another function")
         video_intercom_alarm = mocker.patch("sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_ALARM")
