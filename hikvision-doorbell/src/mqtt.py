@@ -427,7 +427,7 @@ class MQTTHandler(EventHandler):
             case VideoInterComAlarmType.DOOR_OPEN_BY_EXTERNAL_FORCE:
                 # Get information about the door that caused this alarm
                 door_id = alarm_info.wLockID
-                logger.info("External force {} detected on door {}", alarm_info.uAlarmInfo, door_id + 1)
+                logger.info("External force detected on door {}", door_id + 1)
                 attributes = {
                     'door_id': door_id + 1,
                 }
