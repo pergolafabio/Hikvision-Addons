@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.61 - 2024-05-05
+
+### Added
+
+- Testing for NVR
+
 ## 3.0.0-beta.60 - 2024-04-11
 
 ### Added

@@ -79,6 +79,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - This is just a confirmed list of users, proabbly other devices are working too...
 - DS-KV8102-IM (First generation not supported, only open lock works)
 - DS-K1T502DBFWX (Not supported at all)
+- DS-HD1 and DS-HD2 not supported? They dont support ISAPI?
 
 
 ## Additional resources
