@@ -23,7 +23,6 @@ class DeviceType(IntEnum):
     K1T342 = 10538
     HD = 31
     AccessControlTerminal = 861
-    NVR = 2239
 
 
 class Doorbell():
