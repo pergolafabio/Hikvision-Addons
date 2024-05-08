@@ -273,7 +273,8 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_ALARM_ISAPI_INFO,
             buffer_length,
             user_pointer: c_void_p):
-        logger.debug("Isapi alarm from {}", doorbell._config.name)
+        alarmData = alarm_info.pAlarmData
+        logger.debug("Isapi alarm from {} with Alarmdata: {} ", doorbell._config.name, alarmData)
 
     @override
     async def video_intercom_event(
