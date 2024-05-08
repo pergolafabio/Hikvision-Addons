@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.62 - 2024-05-05
+
+### Added
+
+- Testing fIsapi alarm for invalid keypad entry
+
 ## 3.0.0-beta.61 - 2024-05-05
 
 ### Added
