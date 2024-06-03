@@ -257,6 +257,13 @@ class MQTTHandler(EventHandler):
                     }
                     trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", payload=attributes)
                     self.handle_device_trigger(doorbell, trigger)
+                case "MINOR_FINGERPRINT_COMPARE_PASS":
+                    logger.debug("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name.lower(), door_id, employee_id)
+                    attributes = {
+                        'employee_id': employee_id,
+                    }
+                    trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", payload=attributes)
+                    self.handle_device_trigger(doorbell, trigger)
                 case _:
                     trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}")
                     self.handle_device_trigger(doorbell, trigger)
