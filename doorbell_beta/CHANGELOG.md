@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.63 - 2024-06-03
+
+### Added
+
+- Employee ID for event: MINOR_FINGERPRINT_COMPARE_PASS
+
 ## 3.0.0-beta.62 - 2024-05-05
 
 ### Added
