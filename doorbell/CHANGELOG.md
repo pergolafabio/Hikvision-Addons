@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.15 - 2024-06-04
+
+### Added
+
+- For K1T devices a seperate device trigger was created when a fingerscan is verified, now the employee is an attribute
+- Added door id as asstribute for magnetic door event and external force alarm
+- Added control_source as attribute for illegal card swipe
+
 ## 3.0.14 - 2024-01-22
 
 ### Added
