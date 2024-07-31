@@ -383,7 +383,7 @@ class Doorbell():
                 logger.debug("Current talk volume found: {}", talkVolume)
 
             currentVolume = current_settings.find('.//{*}volume')
-            if currentVolume is None or currentVolume.text is None:
+            if currentVolume is None or currentVolume.text is None or "0":
                 self._previouse_audio_out_volume = 7
                 logger.debug("Current volume not found, using 7 as default")
             else:
