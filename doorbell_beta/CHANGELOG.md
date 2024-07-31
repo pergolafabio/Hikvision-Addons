@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.64 - 2024-07-31
+
+### Fix
+
+- When muting twice by mistake, we used a default of "7" to unmuted, and not the previous "0" setting
+
 ## 3.0.0-beta.63 - 2024-06-03
 
 ### Added
