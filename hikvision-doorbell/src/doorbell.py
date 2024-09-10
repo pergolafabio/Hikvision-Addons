@@ -21,6 +21,7 @@ class DeviceType(IntEnum):
     K1T341M = 10510
     K1T343 = 10533
     K1T342 = 10538
+    K1T670M = 10552
     HD = 31
     AccessControlTerminal = 861
 
