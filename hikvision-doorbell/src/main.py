@@ -91,16 +91,23 @@ def signal_handler(task: asyncio.Task):
     task.cancel()
 
 
+async def main_loop():
+    while True:
+        try:
+            await main()
+            break
+        except SDKError as e:
+            user_message, sdk_code, sdk_message = e.args
+            logger.error("{}: {} Error code: {}", user_message, sdk_message, sdk_code)
+            if sdk_code == 7:
+                logger.info("Retrying in 15 seconds...")
+                await asyncio.sleep(15)
+            else:
+                sys.exit(1)
+        except (OSError, ConnectionRefusedError) as e:
+            logger.error("Error while connecting to MQTT broker: {}", e.strerror)
+            sys.exit(1)
+
+
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except SDKError as e:
-        # Define a global error handler for SDKErrors, to print them out in a user-friendly manner:
-        # <user_message> <sdk_message> <sdk_code>
-        user_message, sdk_code, sdk_message = e.args
-        logger.error("{}: {} Error code:{}", user_message, sdk_message, sdk_code)
-        sys.exit(1)
-    except (OSError, ConnectionRefusedError) as e:
-        # Connection to MQTT broker failed
-        logger.error("Error while connecting to MQTT broker: {}", e.strerror)
-        sys.exit(1)
+    asyncio.run(main_loop())
