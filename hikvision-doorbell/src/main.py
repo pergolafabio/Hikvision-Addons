@@ -100,7 +100,7 @@ async def main_loop():
             logger.error("{}: {} Error code: {}", user_message, sdk_message, sdk_code)
             if sdk_code == 7:
                 logger.info("Failed to connect to the device, retrying again in 15 seconds...")
-                await asyncio.sleep(5)
+                await asyncio.sleep(15)
             else:
                 sys.exit(1)
         except (OSError, ConnectionRefusedError) as e:
