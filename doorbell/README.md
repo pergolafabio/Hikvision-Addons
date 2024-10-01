@@ -72,6 +72,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-KV6113
 - DS-K1T34X
 - DS-K1T67X
+- DS-K1T670M
 - DS-KB8113
 - DS-KV9503
 - Seems other rebranded devices confirmed working like: VDM10 made by Metzler 

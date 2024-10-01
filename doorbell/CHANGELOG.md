@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.16 - 2024-10-01
+
+### Added
+
+- Retry added every 15 sec, when the device is offline, when starting the addon
+- Added support for deviceK1T670M
+- When muting twice by mistake, we used a default of "7" to unmuted, and not the previous "0" setting
+
 ## 3.0.15 - 2024-06-04
 
 ### Added
