@@ -1,6 +1,12 @@
 # Changelog
 
-## 3.0.0-beta.66 - 2024-10-09
+## 3.0.0-beta.68 - 2024-10-1
+
+### Fix
+
+- Retry added every 15 sec, when the device is offline, when starting the addon
+
+## 3.0.0-beta.66 - 2024-09-10
 
 ### Add
 
