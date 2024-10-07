@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.69 - 2024-10-07
+
+### Fix
+
+- Fix for mute button, current volume
+
 ## 3.0.0-beta.68 - 2024-10-1
 
 ### Fix
