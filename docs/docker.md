@@ -47,11 +47,12 @@ PYTHONFAULTHANDLER=true
 
 ## Dockerhub
 
-The image is available to download from Dockerhub, the configuration values are read from the environment variables, see an example screenshot from Synology Docker
+The image is available to download from Dockerhub, the configuration values are read from the environment variables, see an example screenshot from Synology Docker or Portainer
 
 https://hub.docker.com/r/pergolafabio/hikvision-doorbell
 
 ![Synology](synology.png)
+![Portainer](portainer.png)
 
 ## Manually building and running the container
 
@@ -63,7 +64,7 @@ For instance:
 docker build --build-arg=BUILD_ARCH=amd64 -t hikvision-doorbell .
 ```
 
-- Run a container from the built image (remember to set the required environment variables, see below for details)
+- Run a container from the built image (remember to set the required environment variables, see above for details)
 ```bash
 docker run -e MQTT__HOST=mosquitto hikvision-doorbell
 ```
