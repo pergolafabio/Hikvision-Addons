@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.18 - 2024-11-05
+
+### Added
+
+- Previously, the ISAPI text entity was disabled by default, since it was used for testing commands, now its enabled by default, since it can be usefull to trigger commands that are not part of the addon yet, i added a new document with some examle commands... If you are using the service, the output of the ISAPI command will be shown in the attribute text
+
 ## 3.0.16 - 2024-10-01
 
 ### Added

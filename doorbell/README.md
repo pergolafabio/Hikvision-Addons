@@ -35,6 +35,8 @@ Here is an example setup showing two doorbells, an indoor and an outdoor unit:
    <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/dev/hikvision-doorbell/assets/docs_sensors.png" width="500px">
 </p>
 
+Make sure to read the full documentation here! [Readme](DOCS.md)
+
 ## Getting started
 
 **Note**: **Hikvision Doorbell** requires an MQTT broker to function correctly. Refer to the **Documentation** tab of the add-on to learn how to setup the official **Mosquitto add-on**.
@@ -82,10 +84,9 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-K1T502DBFWX (Not supported at all)
 - DS-HD1 and DS-HD2 not supported? They dont support ISAPI?
 
+Make sure to read the full documentation here! [Readme](DOCS.md)
 
 ## Additional resources
-- [Add-on documentation](DOCS.md)
-- [Development documentation](/docs)
 - [Home Assistant community forum](https://community.home-assistant.io/t/add-on-hikvision-doorbell-integration/532796)
 
 ## Contributing

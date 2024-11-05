@@ -88,7 +88,7 @@ password: pass
 After you have setup an MQTT broker, you can start __Hikvision Doorbell__. 
 Each of you defined doorbell should be visible as a device under `Settings` -> `Devices & Services` -> `Devices`.
 
-### Sensors, switches and buttons
+### Sensors, switches, input text and buttons
 For each of your doorbells, the following entities are available:
 
 - Sensors
@@ -119,18 +119,25 @@ For each of your doorbells, the following entities are available:
     <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/dev/hikvision-doorbell/assets/docs_device_triggers_automation.png" width="600px" />
   </p>
 
-<!-- ### REST integration
-DEPRECATED, comment out documentation
-__Automatically enabled__ whenever there is no __MQTT broker__ available. 
+ - Input Text 
+   - `Isapi request` (This input text is usefull for sending ISAPI commands to indoor/outdoor devices. Indoor devices dont have port 80 open to send ISAPI commands, but it does work using this addon, since its based on the SDK. Be carefull using this service, it can crash the add-on/docker if not properly used. An example service is posted below. GET/PUT is mandatory, as well as the ISAPI command, the JSON/XML is optional, depending on the command used. Make sure there is only 1 space between the input. A sample list of usefull ISAPI commands can be found here... [ISAPI](ISAPI.md))
 
-This integration, while supported, is discouraged for new installations, but still available whenever you are unable to run an MQTT broker.
-Due to the limitations of the Home Assistant _REST API_, it cannot provide a complete set of features as does the MQTT integration.
-(e.g.: devices and button configurable from the HA UI)
+  ```
+  # Get call status
+  action: text.set_value
+  target:
+    entity_id: text.ds_kd8003_isapi_request
+  data:
+    value: GET /ISAPI/VideoIntercom/callStatus?format=json
 
-The entities created by this integration are all binary sensors.
-When triggered, the state of each binary sensor is `on` for 5 seconds.
+  # Open a door
+  action: text.set_value
+  target:
+    entity_id: text.ds_kd8003_isapi_request
+  data:
+    value: PUT /ISAPI/AccessControl/RemoteControl/door/1 <RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>
 
-The `door` sensors exports as attributes the `door ID` that was opened as well the badge/key used. -->
+  ```
 
 
 ## Sending commands to the doorbells
