@@ -117,8 +117,8 @@ class MQTTInput():
                 name="ISAPI request",
                 unique_id=f"{sanitized_doorbell_name}_isapi_request",
                 device=device,
-                enabled_by_default=False,
-                entity_category="diagnostic",
+                # enabled_by_default=False,
+                # entity_category="diagnostic",
                 object_id=f"{sanitized_doorbell_name}_isapi_request")
             settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True)
             isapi_text = Text(settings, self._isapi_input_callback, doorbell)
@@ -502,7 +502,7 @@ class MQTTInput():
             logger.error("Error unmuting: {}", err)
 
     def _isapi_input_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        logger.debug("Received input text for doorbell: {}", doorbell._config.name)
+        logger.info("Received input text for doorbell: {}", doorbell._config.name)
 
         text_string = message.payload.decode('utf-8')
 
