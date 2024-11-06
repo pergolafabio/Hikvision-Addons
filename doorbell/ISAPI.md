@@ -2,6 +2,7 @@
 
 ## Usefull ISAPI commands
 
+```
 - GET /ISAPI/VideoIntercom/callStatus?format=json
 - PUT /ISAPI/AccessControl/RemoteControl/door/1 <RemoteControlDoor><cmd>open</cmd></RemoteControlDoor>
 - PUT /ISAPI/System/reboot
@@ -11,6 +12,7 @@
 - POST /ISAPI/SecurityCP/status/outputStatus?format=json {"OutputCond":{"maxResults":2,"outputModuleNo":0,"searchID":"1","searchResultPosition":0}}
 - POST /ISAPI/AccessControl/UserInfo/Search?format=json {"UserInfoSearchCond":{"searchID":"1","searchResultPosition": 0,"maxResults": 10,"EmployeeNoList":[{"employeeNo":"6"}]}}
 - POST /ISAPI/AccessControl/CardInfo/Search?format=json {"CardInfoSearchCond": {"searchID": "1","maxResults": 10,"searchResultPosition": 0,"EmployeeNoList": [{ "employeeNo": "6" }]}}
+```
 
 And a lot more can be found on the SDK documentation online
 
