@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.70 - 2024-11-07
+
+### Test
+
+- Test For Ezviz HP7 device
+
 ## 3.0.0-beta.69 - 2024-10-07
 
 ### Fix
