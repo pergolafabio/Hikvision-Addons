@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.71 - 2024-11-12
+
+### Test
+
+- Test For DS-K1T673M
+
 ## 3.0.0-beta.70 - 2024-11-07
 
 ### Test
