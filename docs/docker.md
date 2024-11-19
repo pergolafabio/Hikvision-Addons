@@ -12,9 +12,9 @@ version: "3.8"
 
 services:
   doorbell:
-    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.18-amd64
+    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.19-amd64
     # OR if you are using an RPI
-    # image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.18-aarch64
+    # image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.19-aarch64
     env_file:
       - development.env
     tty: true   # To read stdin commands

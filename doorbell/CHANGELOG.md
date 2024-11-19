@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.19 - 2024-11-19
+
+### Added
+
+- Added support for K1T341BM and K1T673M
+
 ## 3.0.18 - 2024-11-05
 
 ### Added
