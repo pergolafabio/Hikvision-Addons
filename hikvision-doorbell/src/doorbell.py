@@ -19,6 +19,7 @@ class DeviceType(IntEnum):
     K1T671MF = 896
     K1T341AM = 10503
     K1T341M = 10510
+    K1T341BM = 10515
     K1T343 = 10533
     K1T673 = 10534
     K1T342 = 10538
