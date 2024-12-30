@@ -8,8 +8,6 @@ Most cameras/doorbells do have a speaker/microphone, so two way audio (talk-back
 
 Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, Frigate is an NVR system that can be used in combination with the go2rtc addon... 
 Frigate also offers an lovelace sip card, and YES, with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
-I think this Frigate card is the first card with microphone support! 
-
 
 ## Advantages:
 
@@ -22,70 +20,62 @@ I think this Frigate card is the first card with microphone support!
 
 ## Prerequisites:
 - Home Assistant! :-)
-- Frigate Add-on: https://github.com/blakeblackshear/frigate-hass-addons
-- Frigate Hass Integration: https://github.com/blakeblackshear/frigate-hass-integration
-- Frigate Hass Card: https://github.com/dermotduffy/frigate-hass-card
-- MQTT Broker
+- Frigate Hass Card: https://github.com/dermotduffy/frigate-hass-card  (6.1 and up)
+- Go2rtc Addon: https://github.com/AlexxIT/hassio-addons
 
 ## Get started:
 
-Install the Frigate Addon (at least 0.13), this Frigate addon uses in background the go2rtc addon.
+Install the go2rtc Addon, this addon is needed, the once in core doesnt work, since you cant customize the streams (isapi support)
 
-## Step 1: Frigate Add-On configuration
+## Step 1: go2rtc Add-On configuration
 
-A simple frigate.yml configuration to add the doorbell with ISAPI support:
+A simple go2rtc.yml configuration to add the doorbell with ISAPI support:
+IMPORTANT: HTTPS is needed! to have MIC support, i use nginx to access my instance, if you dont use nginx, make sure to enable tls in below config
+If go2rtc setup is configured, you should be able to view the stream by browsing to this page https://user:pass@yourdomain:1985 (then click on links and then: "video+audio+microphone = two way audio from camera", test the stream to test your go2rtc config)
 
-```
-mqtt:
-  enabled: True
-  host: IP
-  user: username
-  password: pass
-
-cameras:
-  Doorbell:
-    ffmpeg:
-      inputs:
-        - path: rtsp://admin:XXXXXXXX@192.168.0.70:554/Streaming/Channels/101
-
-go2rtc:
-  streams:
-    Doorbell:
-      - rtsp://admin:XXXXXXXX@192.168.0.70:554/Streaming/Channels/101
-      - isapi://admin:XXXXXXXX@192.168.0.70:80/
 
 ```
-First of all, check if ISAPI already works, you can expose/enable port 1984 in the Frigate Add-on, afterwards you can surf to to http://mylocalip:1984
-You should see the camera there, with also a "links" command, click on it, at the bottom you should see: "video+audio+microphone = two way audio from camera"
+streams:
+  deurbel:
+    - rtsp://admin:xxx@192.168.0.70:554/Streaming/Channels/101
+    - isapi://admin:xxx@192.168.0.70:80/
+api:
+  listen: ":1984"    # default ":1984", HTTP API port ("" - disabled)
+  username: "user"  # default "", Basic auth for WebUI
+  password: "pass"   # default "", Basic auth for WebUI
+  origin: "*"        # default "", allow CORS requests (only * supported)
+  #tls_listen: ":1985" # default "", enable HTTPS server
+  #tls_cert: /ssl/fullchain.pem
+  #tls_key: /ssl/privkey.pem
 
-Chrome doesnt allow microphone support if you visit that webpage with http, but you can apply this hack:
-https://stackoverflow.com/questions/52759992/how-to-access-camera-and-microphone-in-chrome-without-https
-
-OR you can also use this button: "external WebRTC viewer", that one creates a valid https link for you
-
-## Step 2: Frigate Hass Integration
-
-When the Add-on is running and all working well, install the Frigate integration, MQTT is necessary. After the integration is finished, the camera entity will be created in HA, that you need to use with the Frigate Hass Card
-
-## Step 3: Frigate Hass Card configuration
+```
+## Step 2: Frigate Hass Card configuration
 
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
-IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio!
-With my Hikvision Add-On you can first "answer" the call and then "hangup", and then start talking, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my indoor station... You can also just send the "reject" instead, but that makes a "hanngup" tone at your outdoor
+IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio and the ringing just continues...
+With my Hikvision Add-On you can first "answer" the call and then "hangup", and then start talking with twowayaudio, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my indoor station... You can also just send the "reject" instead, but that makes a "beep beep beep" tone at your outdoor
+For people without an indoor station, some people say confirmed that sending "hangup" is enough to stop the ringing, you should test this...
 
-So the phone buttons activates 4 services, first it "answer" + "hangUp"  the call, and then it unmutes the microphone (start two way audion) and unmutes the card .Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too...
+So the "phone" button activates some services:
+- First send "answer" + "hangUp"  commands, to stop the real call and to make the speaker idle again
+
+- Lastly then it unmutes the microphone (start two way audion) and unmutes the card.
+- Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too...
 
 If you send the "answer" command and you notice error 29 in the log on a real call, this means that your device is NOT connected to Hikconnect, seems for the answer command to work, it needs internet connection... It thats not possible, you can use the "reject" command instead!
+
+The "phone-hangup" button, mutes the microphone AND you see i send the ISAPI command close channel to the OUTDOOR station.. This one is needed also, cause if the frigate card is still open , seems the second call doesnt activate the microphone/speaker anymore, somehow the frigate card doesnt really close the audiochannels when muting the microphone.. so forcing to close it before starting two way audio does the trick! I hvave an issue open for this, so for the moment, this close command is still needed... https://github.com/dermotduffy/frigate-hass-card/issues/1356#
 
 ![Ivms](frigate.png)
 
 ```
         - type: custom:frigate-card
           cameras:
-            - camera_entity: camera.doorbell
-              live_provider: go2rtc
+            - live_provider: go2rtc
               go2rtc:
+                url: https://user:pass@yourdomain:1985
+                stream: deurbel
                 modes:
                   - webrtc
           menu:
@@ -118,7 +108,11 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
               camera_ui:
                 enabled: false
           live:
-            auto_mute: never
+            microphone:
+              always_connected: false
+              disconnect_seconds: 0
+            auto_mute: []
+            auto_unmute: []
             controls:
               builtin: true
               title:
@@ -140,7 +134,17 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
               icon: mdi:phone
               tap_action:
                 - action: call-service
-                  service: script.answer_call
+                  service: button.press
+                  data:
+                    entity_id: button.ds_kh9510_answer_call
+                - action: custom:frigate-card-action
+                  frigate_card_action: sleep
+                  duration:
+                    ms: 500
+                - action: call-service
+                  service: button.press
+                  data:
+                    entity_id: button.ds_kh9510_hangup_call
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
                 - action: custom:frigate-card-action
@@ -150,32 +154,23 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
               tap_action:
                 - action: custom:frigate-card-action
                   frigate_card_action: microphone_mute
+                - action: call-service
+                  service: text.set_value
+                  data:
+                    entity_id: text.ds_kd8003_isapi_request
+                    value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
             - type: custom:frigate-card-menu-icon
               icon: mdi:door-open
               hold_action:
                 - action: call-service
                   service: switch.turn_on
-                  service_data:
+                  data:
                     entity_id: switch.ds_kd8003_door_relay_0
-
           dimensions:
             aspect_ratio_mode: static
             aspect_ratio: '16:9'
-```
-In the phone icon above, i call a script.answer_call, its because i use a delay, between the answer+hangup command for 0.5 seconds, seems its needed, otherwhise the indoor is not able to handle the 2 commands, here is the script:
-
-```
-answer_call:
-  alias: Answer + Hangup the call with a delay
-  sequence:
-  - service: button.press
-    entity_id: button.ds_kh9510_answer_call
-  - delay: 
-      milliseconds: 500
-  - service: button.press
-    entity_id: button.ds_kh9510_hangup_call
-  - delay: 
-      milliseconds: 500
+          status_bar:
+            style: none
 ```
 
 Have FUN :-)
