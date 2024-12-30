@@ -33,6 +33,9 @@ A simple go2rtc.yml configuration to add the doorbell with ISAPI support:
 IMPORTANT: HTTPS is needed! to have MIC support, i use nginx to access my instance, if you dont use nginx, make sure to enable tls in below config
 If go2rtc setup is configured, you should be able to view the stream by browsing to this page https://user:pass@yourdomain:1985 (then click on links and then: "video+audio+microphone = two way audio from camera", test the stream to test your go2rtc config)
 
+More info here:
+https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#module-webrtc
+https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#source-isapi
 
 ```
 streams:
@@ -59,13 +62,14 @@ For people without an indoor station, some people say confirmed that sending "ha
 
 So the "phone" button activates some services:
 - First send "answer" + "hangUp"  commands, to stop the real call and to make the speaker idle again
-
 - Lastly then it unmutes the microphone (start two way audion) and unmutes the card.
 - Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too...
 
 If you send the "answer" command and you notice error 29 in the log on a real call, this means that your device is NOT connected to Hikconnect, seems for the answer command to work, it needs internet connection... It thats not possible, you can use the "reject" command instead!
 
-The "phone-hangup" button, mutes the microphone AND you see i send the ISAPI command close channel to the OUTDOOR station.. This one is needed also, cause if the frigate card is still open , seems the second call doesnt activate the microphone/speaker anymore, somehow the frigate card doesnt really close the audiochannels when muting the microphone.. so forcing to close it before starting two way audio does the trick! I hvave an issue open for this, so for the moment, this close command is still needed... https://github.com/dermotduffy/frigate-hass-card/issues/1356#
+The "phone-hangup" button:
+- Mutes the microphone
+- I also send the ISAPI command to close the audio channel to the OUTDOOR station... This one is needed also, cause if the frigate card is still open, seems the second call doesnt activate the microphone/speaker anymore, somehow the frigate card doesnt really close the audiochannels when muting the microphone.. so forcing to close  the audiochannel when you hangup does the trick! I hvave an issue open for this, so for the moment, this close command is still needed... https://github.com/dermotduffy/frigate-hass-card/issues/1356#
 
 ![Ivms](frigate.png)
 
