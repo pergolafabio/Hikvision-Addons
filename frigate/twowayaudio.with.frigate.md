@@ -73,7 +73,9 @@ The "phone-hangup" button:
 - Mutes the microphone
 - I also send the ISAPI command to close the audio channel to the OUTDOOR station... This one is needed also, cause if the frigate card is still open, seems the second call doesnt activate the microphone/speaker anymore, somehow the frigate card doesnt really close the audiochannels when muting the microphone.. so forcing to close  the audiochannel when you hangup does the trick! I hvave an issue open for this, so for the moment, this close command is still needed... https://github.com/dermotduffy/frigate-hass-card/issues/1356#
 
-So in below example screenshot, the first 3 icons are just for starting two way audi / mute / unmute, BUT without a real call!! When you actually have an incoming doorbell ring, you need to use the phone/hangup buttons
+So in below example screenshot, the first 3 icons are just for starting two way audi / mute / unmute, BUT without a real call!! When you actually have an incoming doorbell ring, you need to use the phone/hangup buttons.
+
+IMPORTANT: If you are missing the first icon, the microphone button, that means your go2rtc addon is not working correctly, remember, https and a valid ssl is needed!
 
 ![Ivms](frigate.png)
 
