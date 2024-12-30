@@ -65,7 +65,7 @@ For people without an indoor station, some people say confirmed that sending "ha
 So the "phone" button activates some services:
 - First send "answer" + "hangUp"  commands, to stop the real call and to make the speaker idle again
 - Lastly then it unmutes the microphone (start two way audion) and unmutes the card.
-- Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too...
+- Offcourse change the entity names in the elements section for your indoor/outdoor station. I also added a hold action to open the door, also change the entity name there too... Also added some delays, maybe its not needed or maybe more, this something you can test to make it better
 
 If you send the "answer" command and you notice error 29 in the log on a real call, this means that your device is NOT connected to Hikconnect, seems for the answer command to work, it needs internet connection... It thats not possible, you can use the "reject" command instead!
 
@@ -151,6 +151,10 @@ The "phone-hangup" button:
                   service: button.press
                   data:
                     entity_id: button.ds_kh9510_hangup_call
+                - action: custom:frigate-card-action
+                  frigate_card_action: sleep
+                  duration:
+                    ms: 500
                 - action: custom:frigate-card-action
                   frigate_card_action: unmute
                 - action: custom:frigate-card-action
