@@ -35,6 +35,7 @@ If go2rtc setup is configured, you should be able to view the stream by browsing
 
 More info here:
 https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#module-webrtc
+
 https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#source-isapi
 
 ```
