@@ -34,6 +34,7 @@ IMPORTANT: HTTPS is needed! to have MIC support, i use nginx to access my instan
 If go2rtc setup is configured, you should be able to view the stream by browsing to this page https://user:pass@yourdomain:1985 (then click on links and then: "video+audio+microphone = two way audio from camera", test the stream to test your go2rtc config)
 
 More info here:
+
 https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#module-webrtc
 
 https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#source-isapi
