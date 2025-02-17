@@ -1,4 +1,4 @@
-# Setup Advanced camera cardcard to use two way audio with Hikvision doorbells
+# Setup Advanced Camera Card to use two way audio with Hikvision doorbells
 
 
 ## Background info:
