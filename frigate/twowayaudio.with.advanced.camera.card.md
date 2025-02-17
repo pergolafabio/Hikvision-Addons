@@ -1,4 +1,4 @@
-# Setup Frigate to use two way audio with Hikvision doorbells
+# Setup Advanced camera cardcard to use two way audio with Hikvision doorbells
 
 
 ## Background info:
@@ -6,8 +6,7 @@
 Our hikvision devices do support SIP, but SIP knowledge is necessary, its not always easy to setup a PBX like Asterisk, but there is another away!
 Most cameras/doorbells do have a speaker/microphone, so two way audio (talk-back) can be activated, they all use a different protocol, in case of Hikvision its ISAPI
 
-Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, Frigate is an NVR system that can be used in combination with the go2rtc addon... 
-Frigate also offers an lovelace sip card, and YES, with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
+Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, the advanced camera card offers a card with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
 
 ## Advantages:
 
@@ -15,12 +14,11 @@ Frigate also offers an lovelace sip card, and YES, with microphone support!! So 
 - Answer the call with HA or companion app
 - Talk to the person at the doorbell, whenever you want, no need to initiate a call first
 - With go2rtc you can send streams/music to your Doorbell :-)
-- Frigate supports person detection, so you can already start talking before the postman actually pressed the doorbutton! :-)
 - ....
 
 ## Prerequisites:
 - Home Assistant! :-)
-- Frigate Hass Card: https://github.com/dermotduffy/frigate-hass-card  (6.1 and up)
+- Advanced Camera Card: https://github.com/dermotduffy/advanced-camera-card
 - Go2rtc Addon: https://github.com/AlexxIT/hassio-addons
 
 ## Get started:
@@ -54,7 +52,7 @@ api:
   #tls_key: /ssl/privkey.pem
 
 ```
-## Step 2: Frigate Hass Card configuration
+## Step 2: Advanced Card configuration
 
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
@@ -71,20 +69,20 @@ If you send the "answer" command and you notice error 29 in the log on a real ca
 
 The "phone-hangup" button:
 - Mutes the microphone
-- I also send the ISAPI command to close the audio channel to the OUTDOOR station... This one is needed also, cause if the frigate card is still open, seems the second call doesnt activate the microphone/speaker anymore, somehow the frigate card doesnt really close the audiochannels when muting the microphone.. so forcing to close  the audiochannel when you hangup does the trick! I hvave an issue open for this, so for the moment, this close command is still needed... https://github.com/dermotduffy/frigate-hass-card/issues/1356#
+- I also send the ISAPI command to close the audio channel to the OUTDOOR station... This one is needed also, cause if the card is still open, seems the second call doesnt activate the microphone/speaker anymore, somehow the card doesnt really close the audiochannels when muting the microphone.. so forcing to close  the audiochannel when you hangup does the trick! 
 
 So in below example screenshot, the first 3 icons are just for starting two way audi / mute / unmute, BUT without a real call!! When you actually have an incoming doorbell ring, you need to use the phone/hangup buttons.
 
 IMPORTANT: If you are missing the first icon, the microphone button, that means your go2rtc addon is not working correctly, remember, https and a valid ssl is needed!
 
-![Ivms](frigate.png)
+![Ivms](advanced.card.png)
 
 ```
-        - type: custom:frigate-card
+        - type: custom:advanced-camera-card
           cameras:
             - live_provider: go2rtc
               go2rtc:
-                url: https://user:pass@yourdomain:1985
+                url: https://yourdomain.com:1985
                 stream: deurbel
                 modes:
                   - webrtc
@@ -113,14 +111,14 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                 enabled: false
               cameras:
                 enabled: false
-              frigate:
+              iris:
                 enabled: false
               camera_ui:
                 enabled: false
           live:
             microphone:
-              always_connected: false
-              disconnect_seconds: 0
+              always_connected: true
+              mute_after_microphone_mute_seconds: 90
             auto_mute: []
             auto_unmute: []
             controls:
@@ -130,50 +128,59 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
             layout:
               fit: fill
           elements:
-            - type: custom:frigate-card-menu-icon
+            - type: custom:advanced-camera-card-menu-icon
               icon: mdi:volume-high
               tap_action:
-                - action: custom:frigate-card-action
-                  frigate_card_action: unmute
-            - type: custom:frigate-card-menu-icon
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: unmute
+            - type: custom:advanced-camera-card-menu-icon
               icon: mdi:volume-off
               tap_action:
-                - action: custom:frigate-card-action
-                  frigate_card_action: mute
-            - type: custom:frigate-card-menu-icon
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: mute
+            - type: custom:advanced-camera-card-menu-icon
               icon: mdi:phone
               tap_action:
                 - action: call-service
                   service: button.press
                   data:
                     entity_id: button.ds_kh9510_answer_call
-                - action: custom:frigate-card-action
-                  frigate_card_action: sleep
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: sleep
                   duration:
-                    ms: 500
+                    ms: 200
                 - action: call-service
                   service: button.press
                   data:
                     entity_id: button.ds_kh9510_hangup_call
-                - action: custom:frigate-card-action
-                  frigate_card_action: sleep
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: sleep
                   duration:
-                    ms: 500
-                - action: custom:frigate-card-action
-                  frigate_card_action: unmute
-                - action: custom:frigate-card-action
-                  frigate_card_action: microphone_unmute
-            - type: custom:frigate-card-menu-icon
-              icon: mdi:phone-hangup
-              tap_action:
-                - action: custom:frigate-card-action
-                  frigate_card_action: microphone_mute
+                    ms: 200
                 - action: call-service
                   service: text.set_value
                   data:
                     entity_id: text.ds_kd8003_isapi_request
                     value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
-            - type: custom:frigate-card-menu-icon
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: sleep
+                  duration:
+                    ms: 200
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: unmute
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: microphone_unmute
+            - type: custom:advanced-camera-card-menu-icon
+              icon: mdi:phone-hangup
+              tap_action:
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: microphone_mute
+                - action: call-service
+                  service: text.set_value
+                  data:
+                    entity_id: text.ds_kd8003_isapi_request
+                    value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
+            - type: custom:advanced-camera-card-menu-icon
               icon: mdi:door-open
               hold_action:
                 - action: call-service
@@ -182,7 +189,7 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                     entity_id: switch.ds_kd8003_door_relay_0
           dimensions:
             aspect_ratio_mode: static
-            aspect_ratio: '16:9'
+            aspect_ratio: '4:3'
           status_bar:
             style: none
 ```
