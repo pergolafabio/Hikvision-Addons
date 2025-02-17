@@ -38,7 +38,7 @@ This program can run as a standalone Docker container, for all other type of ins
 
 __NOTE__: This is not an add-on, just an alternate way to setup Asterisk without setting up SIP on the devices!
 
-## [Use Advanced Card (Lovelace) with Two Audio Support](advanced_card/twowayaudio.with.advanced_card.md)
+## [Use Advanced Card (Lovelace) with Two Audio Support](advanced_card/wowayaudio.with.advanced.camera.card.md)
 
 __NOTE__: This is not an add-on, just an alternate way to answers calls using Home Assistant with Two Way Audio ISAPI support!
 
