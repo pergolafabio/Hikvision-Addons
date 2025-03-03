@@ -160,7 +160,7 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                 - action: call-service
                   service: text.set_value
                   data:
-                    entity_id: text.ds_kd8003_isapi_request
+                    entity_id: text.ds_kh9510_isapi_request
                     value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
                 - action: custom:advanced-camera-card-action
                   advanced_camera_card_action: sleep
@@ -178,7 +178,7 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                 - action: call-service
                   service: text.set_value
                   data:
-                    entity_id: text.ds_kd8003_isapi_request
+                    entity_id: text.ds_kh9510_isapi_request
                     value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
             - type: custom:advanced-camera-card-menu-icon
               icon: mdi:door-open
