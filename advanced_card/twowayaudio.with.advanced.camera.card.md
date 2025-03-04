@@ -57,7 +57,7 @@ api:
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
 IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio and the ringing just continues...
-With my Hikvision Add-On you can first "answer" the call and then "hangup", and then start talking with twowayaudio, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my indoor station... You can also just send the "reject" instead, but that makes a "beep beep beep" tone at your outdoor
+With my Hikvision Add-On you can first "answer" the call and then "hangup", and then start talking with twowayaudio, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my INDOOR station... You can also just send the "reject" instead, but that makes a "beep beep beep" tone at your outdoor
 For people without an indoor station, some people say confirmed that sending "hangup" is enough to stop the ringing, you should test this...
 
 So the "phone" button activates some services:
@@ -160,7 +160,7 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                 - action: call-service
                   service: text.set_value
                   data:
-                    entity_id: text.ds_kh9510_isapi_request
+                    entity_id: text.ds_kd8003_isapi_request
                     value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
                 - action: custom:advanced-camera-card-action
                   advanced_camera_card_action: sleep
@@ -178,7 +178,7 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                 - action: call-service
                   service: text.set_value
                   data:
-                    entity_id: text.ds_kh9510_isapi_request
+                    entity_id: text.kd_8003_isapi_request
                     value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
             - type: custom:advanced-camera-card-menu-icon
               icon: mdi:door-open
