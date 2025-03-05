@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.72 - 2024-05-03
+
+### Test
+
+- Test For  DS-K1T6QT-F72M
+
 ## 3.0.0-beta.71 - 2024-11-12
 
 ### Test
