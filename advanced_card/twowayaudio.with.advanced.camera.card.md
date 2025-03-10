@@ -145,23 +145,10 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                   service: button.press
                   data:
                     entity_id: button.ds_kh9510_answer_call
-                - action: custom:advanced-camera-card-action
-                  advanced_camera_card_action: sleep
-                  duration:
-                    ms: 200
                 - action: call-service
                   service: button.press
                   data:
                     entity_id: button.ds_kh9510_hangup_call
-                - action: custom:advanced-camera-card-action
-                  advanced_camera_card_action: sleep
-                  duration:
-                    ms: 200
-                - action: call-service
-                  service: text.set_value
-                  data:
-                    entity_id: text.ds_kd8003_isapi_request
-                    value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
                 - action: custom:advanced-camera-card-action
                   advanced_camera_card_action: sleep
                   duration:
@@ -174,11 +161,13 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
               icon: mdi:phone-hangup
               tap_action:
                 - action: custom:advanced-camera-card-action
-                  advanced_camera_card_action: microphone_mute
+                  advanced_camera_card_action: microphone_disconnect
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: mute
                 - action: call-service
                   service: text.set_value
                   data:
-                    entity_id: text.kd_8003_isapi_request
+                    entity_id: text.ds_kd8003_isapi_request
                     value: PUT /ISAPI/System/TwoWayAudio/channels/1/close
             - type: custom:advanced-camera-card-menu-icon
               icon: mdi:door-open
