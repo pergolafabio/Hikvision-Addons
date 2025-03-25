@@ -85,7 +85,7 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                 url: https://yourdomain.com:1985
                 stream: deurbel
                 modes:
-                  - webrtc
+                  - mse
           menu:
             style: outside
             position: bottom
