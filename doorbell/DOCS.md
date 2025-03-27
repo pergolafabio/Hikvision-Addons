@@ -111,6 +111,7 @@ For each of your doorbells, the following entities are available:
   These are special entities that do not have a state associated to them (therefore are not visible in the list of HA entities, but under each `Device info` page). 
   
   **NOTE**: The device triggers are discovered *once the associated event is triggered on the device at least once.*
+  
   **NOTE**: For some reason there is no "door not closed" device trigger, here is a workaround: https://community.home-assistant.io/t/hikvision-doorbell-videointercom-integration/532796/537.*
   
   
