@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.73 - 2024-04-01
+
+### Test
+
+- Test For  DS-K1T341CMF
+
 ## 3.0.0-beta.72 - 2024-05-03
 
 ### Test
