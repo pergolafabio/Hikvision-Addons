@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.21 - 2025-04-01
+
+### Added
+
+- Added support for DS-K1T341CMF and DS-K1T6QT-F72M
+
 ## 3.0.19 - 2024-11-19
 
 ### Added
