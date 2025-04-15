@@ -145,6 +145,10 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
                   service: button.press
                   data:
                     entity_id: button.ds_kh9510_answer_call
+                - action: custom:advanced-camera-card-action
+                  advanced_camera_card_action: sleep
+                  duration:
+                    ms: 300
                 - action: call-service
                   service: button.press
                   data:
@@ -162,8 +166,6 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
               tap_action:
                 - action: custom:advanced-camera-card-action
                   advanced_camera_card_action: microphone_disconnect
-                - action: custom:advanced-camera-card-action
-                  advanced_camera_card_action: mute
                 - action: call-service
                   service: text.set_value
                   data:
