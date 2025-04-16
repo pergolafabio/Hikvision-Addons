@@ -196,7 +196,7 @@ exten => 10000000005,1,NoOp()
  same => n,NoOp(Confbridge number of participants : ${CONFBRIDGE_INFO(parties,1)})
  same => n,GotoIf($["${CONFBRIDGE_INFO(parties,1)}" >= "1"]?startconf) 
  same => n,Wait(1) 
- same => n,Set(i=$[${i} + 1]
+ same => n,Set(i=$[${i} + 1])
  same => n,EndWhile()
  same => n(startconf),ConfBridge(1,myconferenceroom,default_user) 
  same => n,Hangup() 
