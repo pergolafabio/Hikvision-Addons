@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.22 - 2025-05-04
+
+### Changed
+
+- Added date/time in the motion event
+
 ## 3.0.21 - 2025-04-01
 
 ### Added
