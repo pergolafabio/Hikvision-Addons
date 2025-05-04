@@ -24,6 +24,7 @@ from sdk.acsalarminfo import (AcsAlarmInfoMajor, AcsAlarmInfoMajorAlarm, AcsAlar
 from typing_extensions import override
 import xml.etree.ElementTree as ET
 import json
+import datetime
 
 from sdk.utils import SDKError
 
@@ -218,7 +219,9 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_ALARMINFO_V30,
             buffer_length,
             user_pointer: c_void_p):
-        metadata = DeviceTriggerMetadata(name="motion_detection", type="Motion detected", subtype="")
+        now = datetime.datetime.now()
+        attributes = {'motion_detected': now.strftime("%Y-%m-%d %H:%M:%S")}
+        metadata = DeviceTriggerMetadata(name="motion_detection", type="Motion detected", subtype="motion_detection", payload=attributes)
         self.handle_device_trigger(doorbell, metadata)
 
     @override
