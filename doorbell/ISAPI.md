@@ -16,7 +16,10 @@
 - PUT /ISAPI/System/reboot
 - GET /ISAPI/System/Audio/AudioOut/channels/1
 - PUT /ISAPI/System/Audio/AudioOut/channels/1<AudioOut><id>1</id><AudioOutVolumelist><AudioOutVlome><type>audioOutput</type><volume>0</volume><talkVolume>7</talkVolume></AudioOutVlome></AudioOutVolumelist></AudioOut>
-- POST /ISAPI/SecurityCP/status/outputStatus?format=json {"OutputCond":{"maxResults":2,"outputModuleNo":0,"searchID":"1","searchResultPosition":0}}
+- GET /ISAPI/System/IO/capabilities
+- GET /ISAPI/System/IO/outputs/1
+- PUT /ISAPI/System/IO/outputs/<ID>/trigger <IOPortData><outputState>high</outputState></IOPortData>
+- PUT /ISAPI/System/IO/outputs/<ID>/trigger <IOPortData><outputState>low</outputState></IOPortData>
 ```
 
 And a lot more can be found on the SDK documentation online
