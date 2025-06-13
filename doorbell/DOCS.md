@@ -112,7 +112,11 @@ For each of your doorbells, the following entities are available:
   
   **NOTE**: The device triggers are discovered *once the associated event is triggered on the device at least once.*
   
-  **NOTE**: For some reason there is no "door not closed" device trigger, here is a workaround: https://community.home-assistant.io/t/hikvision-doorbell-videointercom-integration/532796/537
+  **NOTE**: For some reason there is no "door not closed" device trigger, here is a workaround:
+
+  https://community.home-assistant.io/t/hikvision-doorbell-videointercom-integration/532796/537
+
+  https://community.home-assistant.io/t/hikvision-doorbell-videointercom-integration/532796/2297?
   
   
   You can use a [device trigger](https://www.home-assistant.io/docs/automation/trigger/#device-triggers) in an automation by using a trigger of type `Device`.
