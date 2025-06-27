@@ -40,7 +40,7 @@ https://github.com/AlexxIT/go2rtc?tab=readme-ov-file#source-isapi
 ```
 streams:
   deurbel:
-    - rtsp://admin:xxx@192.168.0.70:554/Streaming/Channels/101
+    - rtsp://admin:xxx@192.168.0.70:554/Streaming/Channels/101#backchannel=0
     - isapi://admin:xxx@192.168.0.70:80/
 api:
   listen: ":1984"    # default ":1984", HTTP API port ("" - disabled)
