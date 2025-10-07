@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.23- 2024-10-07
+
+### Fix
+
+- Fix for: uses the deprecated option 'object_id' to set the default entity id.
+
 ## 3.0.22 - 2025-05-04
 
 ### Changed
