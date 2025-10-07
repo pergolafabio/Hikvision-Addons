@@ -143,7 +143,7 @@ class MQTTHandler(EventHandler):
                     name="Call state",
                     unique_id=f"{device.identifiers}-call_state",
                     device=device,
-                    object_id=f"{sanitized_doorbell_name}_call_state",
+                    default_entity_id=f"{sanitized_doorbell_name}_call_state",
                     icon="mdi:bell")
 
                 settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
@@ -167,7 +167,7 @@ class MQTTHandler(EventHandler):
                     name=f"Door {door_id+1} relay",
                     unique_id=f"{device.identifiers}-door_relay_{door_id}",
                     device=device,
-                    object_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
+                    default_entity_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
                 settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
                 door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
                 door_switch.off()
@@ -187,7 +187,7 @@ class MQTTHandler(EventHandler):
                         name=f"Com {com_id+1} relay",
                         unique_id=f"{device.identifiers}-com_relay_{com_id}",
                         device=device,
-                        object_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
+                        default_entity_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
                     settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True)
                     com_switch = Switch(settings, self.com_switch_callback, (doorbell, com_id))
                     com_switch.off()

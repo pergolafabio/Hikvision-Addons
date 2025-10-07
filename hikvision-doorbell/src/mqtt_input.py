@@ -42,7 +42,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_reboot",
                 device_class="restart",
                 device=device,
-                object_id=f"{sanitized_doorbell_name}_reboot")
+                default_entity_id=f"{sanitized_doorbell_name}_reboot")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             reboot_button = Button(settings, self._reboot_callback, doorbell)
             reboot_button.set_availability(True)
@@ -58,7 +58,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_reject_call",
                 device=device,
                 icon="mdi:phone-cancel",
-                object_id=f"{sanitized_doorbell_name}_reject_call")
+                default_entity_id=f"{sanitized_doorbell_name}_reject_call")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             reject_button = Button(settings, self._reject_call_callback, doorbell)
             reject_button.set_availability(True)
@@ -70,7 +70,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_hangup_call",
                 device=device,
                 icon="mdi:phone-cancel",
-                object_id=f"{sanitized_doorbell_name}_hangup_call")
+                default_entity_id=f"{sanitized_doorbell_name}_hangup_call")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             hangup_button = Button(settings, self._hangup_call_callback, doorbell)
             hangup_button.set_availability(True)
@@ -82,7 +82,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_answer_call",
                 device=device,
                 icon="mdi:phone-check",
-                object_id=f"{sanitized_doorbell_name}_answer_call")
+                default_entity_id=f"{sanitized_doorbell_name}_answer_call")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             answer_button = Button(settings, self._answer_call_callback, doorbell)
             answer_button.set_availability(True)
@@ -94,7 +94,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_mute_audio_output",
                 device=device,
                 icon="mdi:volume-mute",
-                object_id=f"{sanitized_doorbell_name}_mute_audio_output")
+                default_entity_id=f"{sanitized_doorbell_name}_mute_audio_output")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             mute_button = Button(settings, self._mute_audio_output_callback, doorbell)
             mute_button.set_availability(True)
@@ -106,7 +106,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_unmute_audio_output",
                 device=device,
                 icon="mdi:volume-high",
-                object_id=f"{sanitized_doorbell_name}_unmute_audio_output")
+                default_entity_id=f"{sanitized_doorbell_name}_unmute_audio_output")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             unmute_button = Button(settings, self._unmute_audio_output_callback, doorbell)
             unmute_button.set_availability(True)
@@ -119,7 +119,7 @@ class MQTTInput():
                 device=device,
                 # enabled_by_default=False,
                 # entity_category="diagnostic",
-                object_id=f"{sanitized_doorbell_name}_isapi_request")
+                default_entity_id=f"{sanitized_doorbell_name}_isapi_request")
             settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True)
             isapi_text = Text(settings, self._isapi_input_callback, doorbell)
             isapi_text.set_availability(True)
@@ -132,7 +132,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_caller_info",
                 device=device,
                 icon="mdi:phone-log",
-                object_id=f"{sanitized_doorbell_name}_caller_info")
+                default_entity_id=f"{sanitized_doorbell_name}_caller_info")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             caller_info_button = Button(settings, self._caller_info_callback, doorbell)
             caller_info_button.set_availability(True)
@@ -145,7 +145,7 @@ class MQTTInput():
                 unique_id=f"{sanitized_doorbell_name}_call_status",
                 device=device,
                 icon="mdi:phone-log",
-                object_id=f"{sanitized_doorbell_name}_call_status")
+                default_entity_id=f"{sanitized_doorbell_name}_call_status")
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
             call_status_button = Button(settings, self._call_status_callback, doorbell)
             call_status_button.set_availability(True)
@@ -160,7 +160,7 @@ class MQTTInput():
                     name="Scene",
                     unique_id=f"{device.identifiers}-scene",
                     device=device,
-                    object_id=f"{sanitized_doorbell_name}_scene",
+                    default_entity_id=f"{sanitized_doorbell_name}_scene",
                     icon="mdi:shield")
 
                 settings = Settings(mqtt=mqtt_settings, entity=scene_sensor_info, manual_availability=True)
@@ -195,7 +195,7 @@ class MQTTInput():
                     name="Alarm",
                     unique_id=f"{device.identifiers}-alarm",
                     device=device,
-                    object_id=f"{sanitized_doorbell_name}_alarm",
+                    default_entity_id=f"{sanitized_doorbell_name}_alarm",
                     icon="mdi:alarm-check")
 
                 settings = Settings(mqtt=mqtt_settings, entity=alarm_sensor_info, manual_availability=True)
@@ -231,7 +231,7 @@ class MQTTInput():
                     unique_id=f"{sanitized_doorbell_name}_at_home",
                     device=device,
                     icon="mdi:shield-home",
-                    object_id=f"{sanitized_doorbell_name}_at_home")
+                    default_entity_id=f"{sanitized_doorbell_name}_at_home")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 at_home_button = Button(settings, self._at_home_callback, doorbell)
                 at_home_button.set_availability(True)
@@ -243,7 +243,7 @@ class MQTTInput():
                     unique_id=f"{sanitized_doorbell_name}_go_out",
                     device=device,
                     icon="mdi:shield-lock",
-                    object_id=f"{sanitized_doorbell_name}_go_out")
+                    default_entity_id=f"{sanitized_doorbell_name}_go_out")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 go_out_button = Button(settings, self._go_out_callback, doorbell)
                 go_out_button.set_availability(True)
@@ -255,7 +255,7 @@ class MQTTInput():
                     unique_id=f"{sanitized_doorbell_name}_go_to_bed",
                     device=device,
                     icon="mdi:shield-moon",
-                    object_id=f"{sanitized_doorbell_name}_go_to_bed")
+                    default_entity_id=f"{sanitized_doorbell_name}_go_to_bed")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 go_to_bed_button = Button(settings, self._go_to_bed_callback, doorbell)
                 go_to_bed_button.set_availability(True)
@@ -267,7 +267,7 @@ class MQTTInput():
                     unique_id=f"{sanitized_doorbell_name}_custom",
                     device=device,
                     icon="mdi:shield-star",
-                    object_id=f"{sanitized_doorbell_name}_custom")
+                    default_entity_id=f"{sanitized_doorbell_name}_custom")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 custom_button = Button(settings, self._custom_callback, doorbell)
                 custom_button.set_availability(True)
@@ -279,7 +279,7 @@ class MQTTInput():
                     unique_id=f"{sanitized_doorbell_name}_setupAlarm",
                     device=device,
                     icon="mdi:alarm",
-                    object_id=f"{sanitized_doorbell_name}_setupAlarm")
+                    default_entity_id=f"{sanitized_doorbell_name}_setupAlarm")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 setupAlarm_button = Button(settings, self._setupAlarm_callback, doorbell)
                 setupAlarm_button.set_availability(True)
@@ -291,7 +291,7 @@ class MQTTInput():
                     unique_id=f"{sanitized_doorbell_name}_closeAlarm",
                     device=device,
                     icon="mdi:alarm-off",
-                    object_id=f"{sanitized_doorbell_name}_closeAlarm")
+                    default_entity_id=f"{sanitized_doorbell_name}_closeAlarm")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
                 closeAlarm_button = Button(settings, self._closeAlarm_callback, doorbell)
                 closeAlarm_button.set_availability(True)
