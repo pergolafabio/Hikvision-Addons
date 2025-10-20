@@ -18,6 +18,7 @@ class DeviceType(IntEnum):
     # K1T502 = 884 (unsupported)
     K1T671MF = 896
     K1T341AM = 10503
+    DS-KIT6Q = 10509
     K1T341M = 10510
     K1T341BM = 10515
     K1T343 = 10533
