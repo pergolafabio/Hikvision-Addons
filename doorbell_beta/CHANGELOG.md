@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.76 - 2024-10-20
+
+### Change
+
+- Add support for DS-KIT6Q 10509
+
 ## 3.0.0-beta.75 - 2024-10-07
 
 ### Change
