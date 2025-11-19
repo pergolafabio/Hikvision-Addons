@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.77 - 2024-11-19
+
+### Test
+
+- Test For  DS-K1T321MFWX
+
 ## 3.0.0-beta.76 - 2024-10-20
 
 ### Change
