@@ -1,10 +1,10 @@
 # Changelog
 
-## 3.0.0-beta.78 - 2024-11-19
+## 3.0.0-beta.78 - 2025-11-25
 
 ### Test
 
-- Test For  DS-K1T321MFWX
+- Put the call sensor back to idle after 60 sec in any case
 
 ## 3.0.0-beta.76 - 2024-10-20
 
