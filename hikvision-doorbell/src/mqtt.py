@@ -391,6 +391,9 @@ class MQTTHandler(EventHandler):
             case VideoInterComAlarmType.DOORBELL_RINGING:
                 logger.info("Doorbell ringing, updating sensor {}", call_sensor)
                 call_sensor.set_state('ringing')
+                logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
+                await asyncio.sleep(60)
+                call_sensor.set_state('idle')
             case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
                 logger.info("Call dismissed, updating sensor {}", call_sensor)
                 call_sensor.set_state('dismissed')
