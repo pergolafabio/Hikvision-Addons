@@ -120,6 +120,21 @@ class Doorbell():
             raise err
         logger.info(" Com {} unlocked by ISAPI", com_id +1)
 
+    def lock_com(self, com_id: int):
+
+        url = "/ISAPI/SecurityCP/control/outputs/" + str(com_id) + "?format=json"
+        requestBody = {
+            "OutputsCtrl": {
+                "switch": "close"
+            }
+        }
+        try:
+            self._call_isapi("PUT", url, json.dumps(requestBody))
+        except SDKError as err:
+            # If error code is 10 (NET_DVR_NETWORK_RECV_TIMEOUT) suppress it,
+            raise err
+        logger.info(" Com {} locked by ISAPI", com_id +1)
+
     def unlock_door(self, lock_id: int):
         if not self._type is DeviceType.INDOOR:
             """ Unlock the specified door using the SKD NET_DVR_RemoteControl.

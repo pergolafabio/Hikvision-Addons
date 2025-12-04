@@ -201,6 +201,8 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_com(com_id)
+            case "OFF":
+                doorbell.unlock_com(com_id)
 
     def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, door_id = user_data
