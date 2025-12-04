@@ -188,7 +188,7 @@ class MQTTHandler(EventHandler):
                         unique_id=f"{device.identifiers}-com_relay_{com_id}",
                         device=device,
                         default_entity_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
-                    settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True, optimistic=True)
+                    settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True, assume_state=False)
                     com_switch = Switch(settings, self.com_switch_callback, (doorbell, com_id))
                     com_switch.off()
                     com_switch.set_availability(True)
@@ -202,7 +202,7 @@ class MQTTHandler(EventHandler):
             case "ON":
                 doorbell.unlock_com(com_id)
             case "OFF":
-                doorbell.unlock_com(com_id)
+                doorbell.lock_com(com_id)
 
     def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, door_id = user_data
