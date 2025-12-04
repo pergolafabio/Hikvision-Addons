@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.80 - 2025-12-04
+
+### Test
+
+- Added close button for com ports on indoor
+
 ## 3.0.0-beta.78 - 2025-11-25
 
 ### Test
