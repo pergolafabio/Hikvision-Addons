@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.85 - 2025-12-10
+
+### Fix
+
+- fix unique loops for scene / alarm mode
+
 ## 3.0.0-beta.80 - 2025-12-04
 
 ### Test
