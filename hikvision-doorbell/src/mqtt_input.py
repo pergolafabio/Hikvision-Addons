@@ -168,17 +168,17 @@ class MQTTInput():
                 scene_sensor.set_availability(True)
                 self._sensors[doorbell]['scene_sensor'] = scene_sensor
 
-                async def poll_scene_sensor():
+                async def poll_scene_sensor(d=doorbell, s=scene_sensor):
                     while True:
                         try:
-                            xml_string = doorbell._call_isapi("GET", "/ISAPI/VideoIntercom/scene/nowMode")
+                            xml_string = d._call_isapi("GET", "/ISAPI/VideoIntercom/scene/nowMode")
                             root = ET.fromstring(xml_string)
                             element = root[0].text
                             # Error out if we don't find attribute
                             if element is None:
                                 # Print a string representation of the response XML
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
-                            scene_sensor.set_state(element)
+                            s.set_state(element)
                             logger.debug("Scene sensor changed to {}", element)
                         except RuntimeError:
                             # Ignore error to avoid crashing application
@@ -187,7 +187,12 @@ class MQTTInput():
                         logger.debug("Polling scene sensor every 15 sec")
                         
                 loop = asyncio.get_event_loop()
-                scene_sensor_task = loop.create_task(poll_scene_sensor())
+                # scene_sensor_task = loop.create_task(poll_scene_sensor())
+                new_task = loop.create_task(poll_scene_sensor())
+                if not hasattr(self, '_scene_sensor_tasks'):
+                    self._scene_sensor_tasks = {}
+            
+                self._scene_sensor_tasks[doorbell] = new_task
 
                 ##################
                 # alarm state poll sensor
@@ -203,17 +208,17 @@ class MQTTInput():
                 alarm_sensor.set_availability(True)
                 self._sensors[doorbell]['alarm_sensor'] = alarm_sensor
 
-                async def poll_alarm_sensor():
+                async def poll_alarm_sensor(d=doorbell, a=alarm_sensor):
                     while True:
                         try:
-                            xml_string = doorbell._call_isapi("GET", "/ISAPI/SecurityCP/AlarmControlByPhone")
+                            xml_string = d._call_isapi("GET", "/ISAPI/SecurityCP/AlarmControlByPhone")
                             root = ET.fromstring(xml_string)
                             element = root[0].text
                             # Error out if we don't find attribute
                             if element is None:
                                 # Print a string representation of the response XML
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
-                            alarm_sensor.set_state(element)
+                            a.set_state(element)
                             logger.debug("Alarm sensor changed to {}", element)
                         except RuntimeError:
                             # Ignore error to avoid crashing application
@@ -222,7 +227,12 @@ class MQTTInput():
                         logger.debug("Polling alarm sensor every 15 sec")
                         
                 loop = asyncio.get_event_loop()
-                alarm_sensor_task = loop.create_task(poll_alarm_sensor())
+                # alarm_sensor_task = loop.create_task(poll_alarm_sensor())
+                new_task = loop.create_task(poll_alarm_sensor())
+                if not hasattr(self, '_alarm_sensor_tasks'):
+                    self._alarm_sensor_tasks = {}
+            
+                self._alarm_sensor_tasks[doorbell] = new_task
 
                 ###########
                 # atHome Button
