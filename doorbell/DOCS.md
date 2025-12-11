@@ -12,15 +12,17 @@ Configure the connection to the doorbells. If a value is not defined, the defaul
 
 For each of your doorbells, repeat the following configuration:
 
-| Option        | Default       | Description                           |
-| --------      | ----          | ----                                  |
-| name          |               | Custom name for this doorbell (visibile in the HA UI and the sensors names)
-| ip            |               | IP address of the doorbell
-| port          | 8000          | (Optional) Port of the doorbell
-| username      | admin         | Username to access the doorbell
-| password      |               | Password to access the doorbell
-| output_relays | 2             | (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
-| scenes        | false         | (optional) Extra Scene buttons for indoor panels 
+| Option          | Default       | Description                           |
+| --------        | ----          | ----                                  |
+| name            |               | Custom name for this doorbell (visibile in the HA UI and the sensors names)
+| ip              |               | IP address of the doorbell
+| port            | 8000          | (Optional) Port of the doorbell
+| username        | admin         | Username to access the doorbell
+| password        |               | Password to access the doorbell
+| output_relays   | 2             | (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
+| scenes          | false         | (optional) Extra Scene buttons for indoor panels
+| call_state_poll | 5             | (optional) Make the call state poll every 5 sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer... 
+
 
 #### Example config
 The following configuration setups two doorbells, named `Front door` and `Rear door` and an `Indoor` panel
@@ -28,17 +30,20 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
 - name: "Front door"
   ip: 192.168.0.1
   username: admin
-  password: password  
+  password: password
+  output_relays: 2
 
 - name: "Rear door"
   ip: 192.168.0.2
   username: admin
   password: password
+  call_state_poll: 10
 
 - name: "Indoor"
   ip: 192.168.0.3
   username: admin
   password: password
+  scenes: true
 
 - name: "Indoor Extension"
   ip: 192.168.0.4
@@ -111,6 +116,8 @@ For each of your doorbells, the following entities are available:
   These are special entities that do not have a state associated to them (therefore are not visible in the list of HA entities, but under each `Device info` page). 
   
   **NOTE**: The device triggers are discovered *once the associated event is triggered on the device at least once.*
+
+   **NOTE**: Devices that run newer firmare like 3.7.x dont support the ring event anymore, you need to manually poll it now using the call_state_poll in the config.*
   
   **NOTE**: For some reason there is no "door not closed" device trigger, here is a workaround:
 

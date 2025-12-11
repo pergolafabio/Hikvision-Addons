@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.25- 2025-11-12
+
+### Changed
+
+- Put the call sensor back to idle after 60 sec, some devices dont have the "dismissed" event so sensor stays in "ringing" state
+- COM ports on Indoor stations do now have the ability to also CLOSE instead of OPEN only
+- Add support for DS-KIT6Q 10509
+- Fix polling for scene / alarm mode when configured on multiple Indoor Stations
+- Added an optional polling for the call state sensor, for devices running newer firmware 3.7.x, where ringing event is not in the SDK anymore, there is a new addon-config "call_state_poll", you can configure it with an integer to poll every xx seconds
+
 ## 3.0.24- 2024-10-07
 
 ### Fix
