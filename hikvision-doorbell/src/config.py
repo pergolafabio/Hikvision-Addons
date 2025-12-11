@@ -72,7 +72,7 @@ class AppConfig(GoodConf):
         password: str
         output_relays: Optional[int] = None
         scenes: Optional[bool] = False
-        #call_state_poll: Optional[int] = None
+        call_state_poll: Optional[int] = None
 
     class HomeAssistant(BaseModel):
         url: AnyHttpUrl = Field(description="Base url of Home Assistant")
