@@ -152,6 +152,8 @@ class MQTTHandler(EventHandler):
                 call_sensor.set_availability(True)
                 self._sensors[doorbell]['call'] = call_sensor
 
+
+                '''
                 # If polling is defined, create a loop to update the call state periodically
 
                 if not doorbell._config.call_state_poll is None:
@@ -188,7 +190,7 @@ class MQTTHandler(EventHandler):
                         self._call_sensor_tasks = {}
                 
                     self._call_sensor_tasks[doorbell] = new_task
-
+                '''
             ##################
             # Doors
             # Create switches for output relays used to open doors
