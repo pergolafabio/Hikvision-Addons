@@ -1,0 +1,83 @@
+configuration:
+  # Translation for the entire 'doorbells' section/list
+  doorbells:
+    name: Doorbell List
+    description: Add one or more Hikvision doorbells.
+    fields:
+      # Translations for the fields *inside* each doorbell entry
+      name:
+        name: Name
+        description: >-
+          The name that will be used for the MQTT device.
+      ip:
+        name: Ip address
+        description: >-
+          The IP address of your Hikvision device.
+      port:
+        name: Port
+        description: >-
+          The port to connect to your Hikvision device. If not specified, the default port 8000 will be used
+      username:
+        name: Username
+        description: >-
+          This must be an admin user to login to the device.
+      password:
+        name: Password
+        description: >-
+          The password for the admin user.
+      output_relays:
+        name: Output Relays
+        description: >-
+          (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
+      scenes:
+        name: Scenes
+        description: >-
+          (optional) Poll scenes/alarm state every 15 seconds, only for Indoor Panels that support scenes
+      call_state_poll:
+        name: Call State Poll Interval
+        description: >-
+          (optional) Make the call state poll every x sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer...
+  doorbells_entry: # <--- ADD THIS KEY BACK
+    name: Doorbell
+    description: A single Hikvision device configuration.
+
+#  Translation for the 'system' section
+  system:
+    name: System
+    description: >-
+      System configuration options.
+    fields:
+      log_level:
+        name: Log Level
+        description: >-
+          NONE|ERROR|INFO|DEBUG.
+      sdk_log_level:
+        name: SDK Log Level
+        description: >-
+          NONE|ERROR|INFO|DEBUG.
+# Translation for the 'mqtt' section
+  mqtt:
+    name: Mqtt
+    description: >-
+      (optional) MQTT configuration to connect to an external MQTT broker. when not configured, the built-in MQTT broker of Home Assistant will be used.
+    fields:
+      host:
+        name: Host
+        description: >-
+          The hostname or IP address of the MQTT broker.
+      port:
+        name: Port
+        description: >-
+          The port of the MQTT broker.
+      ssl:
+        name: Use SSL
+        description: >-
+          Whether to use SSL to connect to the MQTT broker.
+      username:
+        name: Username
+        description: >-
+          The username to connect to the MQTT broker.
+      password:
+        name: Password
+        description: >-
+          The password to connect to the MQTT broker. 
