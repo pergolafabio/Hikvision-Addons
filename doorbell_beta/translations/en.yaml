@@ -13,7 +13,7 @@ configuration:
         description: >-
           The name that will be used for the MQTT device.
       ip:
-        name: Ip address
+        name: Ip Address
         description: >-
           The IP address of your Hikvision device.
       port:
