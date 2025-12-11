@@ -3,6 +3,9 @@ configuration:
   doorbells:
     name: Doorbell List
     description: Add one or more Hikvision doorbells.
+    item:
+      name: Doorbell
+      description: A single Hikvision device configuration.
     fields:
       # Translations for the fields *inside* each doorbell entry
       name:
@@ -37,10 +40,6 @@ configuration:
         name: Call State Poll Interval
         description: >-
           (optional) Make the call state poll every x sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer...
-  doorbells_entry:
-    name: Doorbell
-    description: A single Hikvision device configuration.
-
 #  Translation for the 'system' section
   system:
     name: System
