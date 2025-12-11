@@ -19,12 +19,9 @@ options:
   doorbells:
     - name: ""
       ip: ""
-      port: null
       username: admin
       password: ""
-      output_relays: null
       scenes: false
-      call_state_poll: null
   system:
     log_level: INFO
     sdk_log_level: NONE
