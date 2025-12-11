@@ -50,7 +50,7 @@ configuration:
         name: Log Level
         description: >-
           NONE|ERROR|INFO|DEBUG.
-      log_sdk_log_level:
+      sdk_log_level:
         name: SDK Log Level
         description: >-
           NONE|ERROR|INFO|DEBUG.
