@@ -2,11 +2,8 @@ configuration:
   # Translation for the entire 'doorbells' section/list
   doorbells:
     name: Doorbell List
-    description: Add one or more Hikvision doorbells.
-    item:
-      name: Doorbell
-      description: A single Hikvision device configuration.
-    fields:
+    description: Add one or more Hikvision doorbells
+    keys:
       # Translations for the fields *inside* each doorbell entry
       name:
         name: Name
