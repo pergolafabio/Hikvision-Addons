@@ -37,7 +37,7 @@ configuration:
         name: Call State Poll Interval
         description: >-
           (optional) Make the call state poll every x sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer...
-  doorbells_entry: # <--- ADD THIS KEY BACK
+  doorbells_entry: 
     name: Doorbell
     description: A single Hikvision device configuration.
 
