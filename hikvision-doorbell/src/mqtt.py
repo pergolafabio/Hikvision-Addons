@@ -152,6 +152,42 @@ class MQTTHandler(EventHandler):
                 call_sensor.set_availability(True)
                 self._sensors[doorbell]['call'] = call_sensor
 
+                # If polling is defined, create a loop to update the call state periodically
+
+                if not doorbell._config.call_state_poll is None:
+
+                    call_state_poll_sec = doorbell._config.call_state_poll
+                    
+                    async def poll_call_sensor(d=doorbell, c=call_sensor):
+                        while True:
+                            try:
+                                logger.info("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
+                                url = "/ISAPI/VideoIntercom/callStatus?format=json"
+                                requestBody = ""
+                                try:
+                                    response = d._call_isapi("GET", url, requestBody)
+                                    logger.debug("Received call status with response: {} " , response)
+                                    call_state = json.loads(response)["CallStatus"]["status"]
+                                    # Error out if we don't find state
+                                    if call_state is None:
+                                        # Print a string representation of the response JSON
+                                        raise RuntimeError(f'Unexpected JSON response: {response}')
+                                    c.set_state(call_state)
+                                    logger.info("Call sensor changed to {} for doorbell: {}", call_state, d._config.name)
+                                except SDKError as err:
+                                    logger.error("Error while getting call status with ISAPI: {}", err)
+                                   
+                            except RuntimeError:
+                                # Ignore error to avoid crashing application
+                                pass
+                            await asyncio.sleep(call_state_poll_sec)
+                            
+                    loop = asyncio.get_event_loop()
+                    new_task = loop.create_task(poll_call_sensor())
+                    if not hasattr(self, '_call_sensor_tasks'):
+                        self._call_sensor_tasks = {}
+                
+                    self._call_sensor_tasks[doorbell] = new_task
 
             ##################
             # Doors

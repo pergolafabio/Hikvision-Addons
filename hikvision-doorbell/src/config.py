@@ -70,8 +70,9 @@ class AppConfig(GoodConf):
         port: Optional[int] = 8000
         username: str
         password: str
-        output_relays: Optional[int] = None   # TODO: validate it is in acceppable range!
+        output_relays: Optional[int] = None
         scenes: Optional[bool] = False
+        call_state_poll: Optional[int] = None
 
     class HomeAssistant(BaseModel):
         url: AnyHttpUrl = Field(description="Base url of Home Assistant")
