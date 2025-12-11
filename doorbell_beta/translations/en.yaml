@@ -1,9 +1,10 @@
 configuration:
+  # 1. Translation for the entire 'doorbells' section/list
   doorbells:
-    name: Doorbells
-    description: >-
-      List of Hikvision doorbells to connect to Home Assistant. At least one doorbell must be configured.
+    name: Doorbell List
+    description: Add one or more Hikvision doorbells.
     fields:
+      # Translations for the fields *inside* each doorbell entry
       name:
         name: Name
         description: >-
@@ -36,6 +37,10 @@ configuration:
         name: Call State Poll Interval
         description: >-
           (optional) Make the call state poll every x sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer...
+# 2. Special translation for the list entry itself (e.g., the name of an item in the list)
+  doorbells_entry:
+    name: Doorbell
+# 3. Translation for the 'system' section
   system:
     name: System
     description: >-
@@ -49,6 +54,7 @@ configuration:
         name: SDK Log Level
         description: >-
           NONE|ERROR|INFO|DEBUG.
+# 4. Translation for the 'mqtt' section
   mqtt:
     name: Mqtt
     description: >-
