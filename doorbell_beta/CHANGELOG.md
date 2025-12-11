@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.87 - 2025-12-10
+
+### Change
+
+- Added an optional poll sensor for callstate, for devices running newer firmware 3.7.x, where ringing event is not in the SDK anymore
+
 ## 3.0.0-beta.85 - 2025-12-10
 
 ### Fix
