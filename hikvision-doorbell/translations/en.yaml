@@ -1,0 +1,16 @@
+---
+configuration:
+  doorbells:
+    name: Doorbells
+    description: >-
+      Configure one or more doorbells to connect to. See the 'Documentation' tab for more details.
+
+  system:
+    name: "System options"
+    description: >-
+      Configure general options for the add-on itself, such as its logs. See the 'Documentation' tab for more details.
+
+  mqtt:
+    name: "MQTT broker"
+    description: >-
+      Optional settings to configure the connection to an external broker. By default the add-on auto-discovers the Mosquitto add-on, if available.

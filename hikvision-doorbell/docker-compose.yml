@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  doorbell:
+    image: ghcr.io/pergolafabio/hikvision-doorbell:dev
+    build:
+      args:       
+        # Change this according to your architecture (so the correct native C libraries are used)
+        - BUILD_ARCH=amd64
+        # - BUILD_ARCH=aarch64
+      context: .
+    env_file:
+      # Create a copy of development.env.example and set your variables accordingly
+      - development.env
+    tty: true   # To read stdin commands
+
+  home-assistant:
+    container_name: home-assistant
+    image: homeassistant/home-assistant:2023.2
+    volumes:
+      - /etc/localtime:/etc/localtime:ro    # To use host local time
+      - ../blueprints:/config/blueprints/automation/    # Test local blueprints
+      - config:/config
+    mem_limit: 600m
+    stop_grace_period: 5m
+    ports:
+      - 8123:8123
+  
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    volumes:
+      - /etc/localtime:/etc/localtime:ro    # To use host local time
+      - ./tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - 1883:1883
+      - 9001:9001
+
+volumes:
+  config: {}

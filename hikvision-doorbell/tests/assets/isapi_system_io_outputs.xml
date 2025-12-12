@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IOOutputPortList version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+    <IOOutputPort version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+        <id>1</id>
+        <name>COM1</name>
+        <IOUseType>electricLock</IOUseType>
+    </IOOutputPort>
+    <IOOutputPort version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+        <id>2</id>
+        <name>COM2</name>
+        <IOUseType>electricLock</IOUseType>
+    </IOOutputPort>
+</IOOutputPortList>
