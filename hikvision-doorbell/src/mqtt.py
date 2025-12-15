@@ -416,7 +416,7 @@ class MQTTHandler(EventHandler):
             user_pointer: c_void_p):
         
         # if not doorbell._type is DeviceType.INDOOR:
-        #    call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
+        call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
 
         # Extract the type of alarm as a Python enum
         try:
