@@ -79,7 +79,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-KV9503 (no call event)
 - Seems other rebranded devices confirmed working like: VDM10 made by Metzler 
 - ...
-- This is just a confirmed list of users, proabbly other devices are working too...
+- This is just a confirmed list, probably other devices are working too...
 - DS-KV8102-IM (First generation not supported, only open lock works)
 - DS-K1T502DBFWX (Not supported at all)
 - DS-HD1 and DS-HD2 not supported? They dont support ISAPI?
@@ -94,7 +94,6 @@ Make sure to read the full documentation here! [Readme](DOCS.md)
 This is an active open-source project. We are always open to people who want to
 use the code or contribute to it. Thank you for being involved! :heart_eyes:
 
-Have a look at the [documentation folder](docs/) for more information.
 
 ### Contributors
 <a href="https://github.com/pergolafabio/Hikvision-Addons/graphs/contributors">
