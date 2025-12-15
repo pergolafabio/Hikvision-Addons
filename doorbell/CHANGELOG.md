@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.26- 2025-12-15
+
+### Changed
+
+- Added also a call sensor for indoor stations, there is no event for indoor stations, so you need to manually poll it with the call_state_poll config option, usefull when you dont have access to outdoor station (appertment building)
+
 ## 3.0.25- 2025-11-12
 
 ### Changed

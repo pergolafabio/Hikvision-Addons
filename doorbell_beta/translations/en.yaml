@@ -1,7 +1,7 @@
 configuration:
   # Translation for the entire 'doorbells' section/list
   doorbells:
-    name: Doorbell List
+    name: Doorbell List (Add your device here with the correct settings, MQTT is noot needed ir you use the built-in broker, if your device doesnt provide the RING event, there is an call_state_poll option to manually poll the call state)
     description: Add one or more Hikvision doorbells.
     item:
       name: Doorbell

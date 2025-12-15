@@ -135,59 +135,59 @@ class MQTTHandler(EventHandler):
             sanitized_doorbell_name = sanitize_doorbell_name(doorbell_name)
 
             # No Callsensor for indoor
-            if not doorbell._type is DeviceType.INDOOR:
+            # if not doorbell._type is DeviceType.INDOOR:
                 
-                ##################
-                # Call state
-                call_sensor_info = SensorInfo(
-                    name="Call state",
-                    unique_id=f"{device.identifiers}-call_state",
-                    device=device,
-                    default_entity_id=f"{sanitized_doorbell_name}_call_state",
-                    icon="mdi:bell")
+            ##################
+            # Call state
+            call_sensor_info = SensorInfo(
+                name="Call state",
+                unique_id=f"{device.identifiers}-call_state",
+                device=device,
+                default_entity_id=f"{sanitized_doorbell_name}_call_state",
+                icon="mdi:bell")
 
-                settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
-                call_sensor = Sensor(settings)
-                call_sensor.set_state("idle")
-                call_sensor.set_availability(True)
-                self._sensors[doorbell]['call'] = call_sensor
+            settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
+            call_sensor = Sensor(settings)
+            call_sensor.set_state("idle")
+            call_sensor.set_availability(True)
+            self._sensors[doorbell]['call'] = call_sensor
 
-                # If polling is defined, create a loop to update the call state periodically
+            # If polling is defined, create a loop to update the call state periodically
 
-                if not doorbell._config.call_state_poll is None:
+            if not doorbell._config.call_state_poll is None:
 
-                    call_state_poll_sec = doorbell._config.call_state_poll
-                    
-                    async def poll_call_sensor(d=doorbell, c=call_sensor):
-                        while True:
+                call_state_poll_sec = doorbell._config.call_state_poll
+                
+                async def poll_call_sensor(d=doorbell, c=call_sensor):
+                    while True:
+                        try:
+                            logger.info("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
+                            url = "/ISAPI/VideoIntercom/callStatus?format=json"
+                            requestBody = ""
                             try:
-                                logger.info("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
-                                url = "/ISAPI/VideoIntercom/callStatus?format=json"
-                                requestBody = ""
-                                try:
-                                    response = d._call_isapi("GET", url, requestBody)
-                                    logger.debug("Received call status with response: {} " , response)
-                                    call_state = json.loads(response)["CallStatus"]["status"]
-                                    # Error out if we don't find state
-                                    if call_state is None:
-                                        # Print a string representation of the response JSON
-                                        raise RuntimeError(f'Unexpected JSON response: {response}')
-                                    c.set_state(call_state)
-                                    logger.info("Call sensor changed to {} for doorbell: {}", call_state, d._config.name)
-                                except SDKError as err:
-                                    logger.error("Error while getting call status with ISAPI: {}", err)
-                                   
-                            except RuntimeError:
-                                # Ignore error to avoid crashing application
-                                pass
-                            await asyncio.sleep(call_state_poll_sec)
-                            
-                    loop = asyncio.get_event_loop()
-                    new_task = loop.create_task(poll_call_sensor())
-                    if not hasattr(self, '_call_sensor_tasks'):
-                        self._call_sensor_tasks = {}
-                
-                    self._call_sensor_tasks[doorbell] = new_task
+                                response = d._call_isapi("GET", url, requestBody)
+                                logger.debug("Received call status with response: {} " , response)
+                                call_state = json.loads(response)["CallStatus"]["status"]
+                                # Error out if we don't find state
+                                if call_state is None:
+                                    # Print a string representation of the response JSON
+                                    raise RuntimeError(f'Unexpected JSON response: {response}')
+                                c.set_state(call_state)
+                                logger.info("Call sensor changed to {} for doorbell: {}", call_state, d._config.name)
+                            except SDKError as err:
+                                logger.error("Error while getting call status with ISAPI: {}", err)
+                                
+                        except RuntimeError:
+                            # Ignore error to avoid crashing application
+                            pass
+                        await asyncio.sleep(call_state_poll_sec)
+                        
+                loop = asyncio.get_event_loop()
+                new_task = loop.create_task(poll_call_sensor())
+                if not hasattr(self, '_call_sensor_tasks'):
+                    self._call_sensor_tasks = {}
+            
+                self._call_sensor_tasks[doorbell] = new_task
                 
             ##################
             # Doors
@@ -415,8 +415,8 @@ class MQTTHandler(EventHandler):
             buffer_length,
             user_pointer: c_void_p):
         
-        if not doorbell._type is DeviceType.INDOOR:
-            call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
+        # if not doorbell._type is DeviceType.INDOOR:
+        #    call_sensor = cast(Sensor, self._sensors[doorbell]['call'])
 
         # Extract the type of alarm as a Python enum
         try:
