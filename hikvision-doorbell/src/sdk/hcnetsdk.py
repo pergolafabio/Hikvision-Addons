@@ -588,11 +588,11 @@ class NET_DVR_MIME_UNIT(Structure):
         ("byRes", BYTE * 16),
     ]
 
-#class NET_DVR_JPEGPARA(Structure):
-#    _fields_ = [
-#        ("wPicSize", WORD),
-#        ("wPicQuality", WORD)
-#    ]
+class NET_DVR_JPEGPARA(Structure):
+    _fields_ = [
+        ("wPicSize", WORD),
+        ("wPicQuality", WORD)
+    ]
 
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
     _fields_ = [

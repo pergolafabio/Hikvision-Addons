@@ -12,6 +12,11 @@ After having cloned the repository, run the following commands from the `hikvisi
 
 - Install the required packages
 ```bash
+sudo apt update
+sudo apt install python3.10-venv python3.10-dev
+cd ~/Hikvision-Addons/hikvision-doorbell
+python3.10 -m venv venv310
+source venv310/bin/activate
 pip install -r requirements.txt
 ```
 

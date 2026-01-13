@@ -9,6 +9,7 @@ from home_assistant import sanitize_doorbell_name
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
+#from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
 import xml.etree.ElementTree as ET
 
 from sdk.utils import SDKError
@@ -150,7 +151,7 @@ class MQTTInput():
             call_status_button = Button(settings, self._call_status_callback, doorbell)
             call_status_button.set_availability(True)
             self._sensors[doorbell]['call_status'] = call_status_button
-            
+
             """
             ###########
             # Take_snapshot button
@@ -433,25 +434,37 @@ class MQTTInput():
             call_status_button.set_attributes(attributes)
     """
     def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        try:
+            import os
+            from ctypes import c_char, c_ulong, byref, c_long
+            from doorbell import Doorbell # Ensure this import matches your project structure
+            
+            logger.info("Indoor Panel (.72) triggered. Connecting internally to Outdoor Station (.70)...")
+            
+            # 1. Manual Connection to the Outdoor Station
+            # We assume the username/password are the same as the Indoor Panel
+            sdk = doorbell._sdk
+            device_info = NET_DVR_DEVICEINFO_V30()
+            
+            # Manually point to the Outdoor Station IP
+            outdoor_ip = "192.168.0.70" 
+            
+            # Login to the Outdoor Station directly
+            user_id = sdk.NET_DVR_Login_V30(
+                outdoor_ip.encode('utf-8'), 
+                8000, 
+                doorbell._config.username.encode('utf-8'), 
+                doorbell._config.password.encode('utf-8'), 
+                byref(device_info)
+            )
+
+            if user_id < 0:
+                logger.error("Internal Login Failed: Could not connect to Outdoor Station at {}. Error {}", 
+                            outdoor_ip, sdk.NET_DVR_GetLastError())
+                return
+
             try:
-                import os
-                from ctypes import c_char, c_ulong, byref, c_long
-                logger.info("Button pressed: Take Snapshot for {}", doorbell._config.name)
-                
-                # 1. Redirection logic (Indoor -> Outdoor)
-                target_doorbell = doorbell
-                if doorbell._type == DeviceType.INDOOR:
-                    registry = getattr(self, '_doorbells', None)
-                    if registry:
-                        for _, db in registry.items():
-                            if db._type != DeviceType.INDOOR:
-                                target_doorbell = db
-                                logger.info("Redirecting request to Outdoor Station: {}", db._config.name)
-                                break
-                
-                # 2. SDK Capture to Memory
-                sdk = target_doorbell._sdk
-                user_id = target_doorbell.user_id
+                # 2. SDK Capture to Memory (from the Outdoor Station)
                 lpJpegPara = NET_DVR_JPEGPARA()
                 lpJpegPara.wPicSize = 2      
                 lpJpegPara.wPicQuality = 1   
@@ -460,6 +473,7 @@ class MQTTInput():
                 sJpegBuffer = (c_char * buffer_size)()
                 lpRetSize = c_ulong()
 
+                # Outdoor stations always use Channel 1
                 res = sdk.NET_DVR_CaptureJPEGPicture_NEW(
                     user_id, c_long(1), byref(lpJpegPara), sJpegBuffer, buffer_size, byref(lpRetSize)
                 )
@@ -467,31 +481,25 @@ class MQTTInput():
                 if res:
                     image_data = sJpegBuffer[:lpRetSize.value]
                     
-                    # 3. Environment Detection & Path Logic
-                    # If /config exists, we are in an Add-on. Otherwise, use local project dir.
-                    if os.path.isdir("/config"):
-                        output_dir = "/config/www"
-                        logger.debug("Environment: Home Assistant Add-on detected")
-                    else:
-                        # When in VS Code/Ubuntu, save to a 'www' folder in your current directory
-                        output_dir = os.path.join(os.getcwd(), "www")
-                        logger.debug("Environment: Local/VS Code detected. Path: {}", output_dir)
-                    
-                    # Ensure the directory exists
+                    # 3. Save Logic
+                    output_dir = "/config/www" if os.path.isdir("/config") else os.path.join(os.getcwd(), "www")
                     os.makedirs(output_dir, exist_ok=True)
-                    
                     filename = os.path.join(output_dir, "doorbell_snap.jpg")
                     
-                    # 4. Save file
                     with open(filename, "wb") as f:
                         f.write(image_data)
                     
-                    logger.info("SUCCESS: Snapshot saved to {}", filename)
+                    logger.info("SUCCESS: Snapshot saved from Outdoor Station via internal jump.")
                 else:
-                    logger.error("SDK FAILURE: Error {} on device {}", sdk.NET_DVR_GetLastError(), target_doorbell._config.name)
+                    logger.error("SDK FAILURE: Error {} during capture from {}", 
+                                sdk.NET_DVR_GetLastError(), outdoor_ip)
+            
+            finally:
+                # 4. Always logout from the Outdoor Station to free up connections
+                sdk.NET_DVR_Logout(user_id)
 
-            except Exception as e:
-                logger.exception("CALLBACK CRASHED: {}", e)
+        except Exception as e:
+            logger.error("Internal snapshot jump exception: {}", str(e))
     """
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
