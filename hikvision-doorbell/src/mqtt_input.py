@@ -19,7 +19,7 @@ class MQTTInput():
 
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         logger.debug("Setting up MQTTInput")
-
+        # self._doorbells = doorbells
         mqtt_settings = Settings.MQTT(
             host=config.host,
             port=config.port,
@@ -150,6 +150,21 @@ class MQTTInput():
             call_status_button = Button(settings, self._call_status_callback, doorbell)
             call_status_button.set_availability(True)
             self._sensors[doorbell]['call_status'] = call_status_button
+            
+            """
+            ###########
+            # Take_snapshot button
+            button_info = ButtonInfo(
+                name="Take Snapshot",
+                unique_id=f"{sanitized_doorbell_name}_take_snapshot",
+                device=device,
+                icon="mdi:camera",
+                default_entity_id=f"{sanitized_doorbell_name}_take_snapshot")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
+            take_snapshot_button.set_availability(True)
+            self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
+            """
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -416,6 +431,68 @@ class MQTTInput():
                 "CallStatus": "Error while getting call status with error code: " + str(err.args[1])
             }
             call_status_button.set_attributes(attributes)
+    """
+    def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+            try:
+                import os
+                from ctypes import c_char, c_ulong, byref, c_long
+                logger.info("Button pressed: Take Snapshot for {}", doorbell._config.name)
+                
+                # 1. Redirection logic (Indoor -> Outdoor)
+                target_doorbell = doorbell
+                if doorbell._type == DeviceType.INDOOR:
+                    registry = getattr(self, '_doorbells', None)
+                    if registry:
+                        for _, db in registry.items():
+                            if db._type != DeviceType.INDOOR:
+                                target_doorbell = db
+                                logger.info("Redirecting request to Outdoor Station: {}", db._config.name)
+                                break
+                
+                # 2. SDK Capture to Memory
+                sdk = target_doorbell._sdk
+                user_id = target_doorbell.user_id
+                lpJpegPara = NET_DVR_JPEGPARA()
+                lpJpegPara.wPicSize = 2      
+                lpJpegPara.wPicQuality = 1   
+
+                buffer_size = 2 * 1024 * 1024
+                sJpegBuffer = (c_char * buffer_size)()
+                lpRetSize = c_ulong()
+
+                res = sdk.NET_DVR_CaptureJPEGPicture_NEW(
+                    user_id, c_long(1), byref(lpJpegPara), sJpegBuffer, buffer_size, byref(lpRetSize)
+                )
+
+                if res:
+                    image_data = sJpegBuffer[:lpRetSize.value]
+                    
+                    # 3. Environment Detection & Path Logic
+                    # If /config exists, we are in an Add-on. Otherwise, use local project dir.
+                    if os.path.isdir("/config"):
+                        output_dir = "/config/www"
+                        logger.debug("Environment: Home Assistant Add-on detected")
+                    else:
+                        # When in VS Code/Ubuntu, save to a 'www' folder in your current directory
+                        output_dir = os.path.join(os.getcwd(), "www")
+                        logger.debug("Environment: Local/VS Code detected. Path: {}", output_dir)
+                    
+                    # Ensure the directory exists
+                    os.makedirs(output_dir, exist_ok=True)
+                    
+                    filename = os.path.join(output_dir, "doorbell_snap.jpg")
+                    
+                    # 4. Save file
+                    with open(filename, "wb") as f:
+                        f.write(image_data)
+                    
+                    logger.info("SUCCESS: Snapshot saved to {}", filename)
+                else:
+                    logger.error("SDK FAILURE: Error {} on device {}", sdk.NET_DVR_GetLastError(), target_doorbell._config.name)
+
+            except Exception as e:
+                logger.exception("CALLBACK CRASHED: {}", e)
+    """
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)
