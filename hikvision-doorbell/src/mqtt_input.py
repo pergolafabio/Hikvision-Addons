@@ -446,7 +446,7 @@ class MQTTInput():
                 
                 # 1. Manual Connection to the Outdoor Station
                 device_info = NET_DVR_DEVICEINFO_V30()
-                outdoor_ip = "192.168.0.70" 
+                outdoor_ip = "192.168.10.100" 
                 
                 user_id = sdk.NET_DVR_Login_V30(
                     outdoor_ip.encode('utf-8'), 
