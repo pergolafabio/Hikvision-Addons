@@ -441,12 +441,15 @@ class MQTTInput():
                 
                 # Use the correct attribute name found in your doorbell.py
                 sdk = doorbell._sdk
-                
-                logger.info("Snapshot triggered for {}. Connecting to Outdoor Station...", doorbell._config.name)
+                outdoor_ip = doorbell._config.outdoor_ip
+                if outdoor_ip is None:
+                    logger.error("Outdoor IP not configured for doorbell: {}", doorbell._config.name)
+                    return
+                logger.info("Snapshot triggered for {}. Connecting to Outdoor Station on IP: {}", doorbell._config.name, outdoor_ip)
                 
                 # 1. Manual Connection to the Outdoor Station
                 device_info = NET_DVR_DEVICEINFO_V30()
-                outdoor_ip = "192.168.10.100" 
+
                 
                 user_id = sdk.NET_DVR_Login_V30(
                     outdoor_ip.encode('utf-8'), 
