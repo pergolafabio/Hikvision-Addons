@@ -9,7 +9,7 @@ from home_assistant import sanitize_doorbell_name
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
-#from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
+from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
 import xml.etree.ElementTree as ET
 
 from sdk.utils import SDKError
@@ -152,7 +152,7 @@ class MQTTInput():
             call_status_button.set_availability(True)
             self._sensors[doorbell]['call_status'] = call_status_button
 
-            """
+
             ###########
             # Take_snapshot button
             button_info = ButtonInfo(
@@ -165,7 +165,6 @@ class MQTTInput():
             take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
             take_snapshot_button.set_availability(True)
             self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
-            """
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -432,75 +431,82 @@ class MQTTInput():
                 "CallStatus": "Error while getting call status with error code: " + str(err.args[1])
             }
             call_status_button.set_attributes(attributes)
-    """
+    
     def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-        try:
-            import os
-            from ctypes import c_char, c_ulong, byref, c_long
-            from doorbell import Doorbell # Ensure this import matches your project structure
-            
-            logger.info("Indoor Panel (.72) triggered. Connecting internally to Outdoor Station (.70)...")
-            
-            # 1. Manual Connection to the Outdoor Station
-            # We assume the username/password are the same as the Indoor Panel
-            sdk = doorbell._sdk
-            device_info = NET_DVR_DEVICEINFO_V30()
-            
-            # Manually point to the Outdoor Station IP
-            outdoor_ip = "192.168.0.70" 
-            
-            # Login to the Outdoor Station directly
-            user_id = sdk.NET_DVR_Login_V30(
-                outdoor_ip.encode('utf-8'), 
-                8000, 
-                doorbell._config.username.encode('utf-8'), 
-                doorbell._config.password.encode('utf-8'), 
-                byref(device_info)
-            )
-
-            if user_id < 0:
-                logger.error("Internal Login Failed: Could not connect to Outdoor Station at {}. Error {}", 
-                            outdoor_ip, sdk.NET_DVR_GetLastError())
-                return
-
             try:
-                # 2. SDK Capture to Memory (from the Outdoor Station)
-                lpJpegPara = NET_DVR_JPEGPARA()
-                lpJpegPara.wPicSize = 2      
-                lpJpegPara.wPicQuality = 1   
-
-                buffer_size = 2 * 1024 * 1024
-                sJpegBuffer = (c_char * buffer_size)()
-                lpRetSize = c_ulong()
-
-                # Outdoor stations always use Channel 1
-                res = sdk.NET_DVR_CaptureJPEGPicture_NEW(
-                    user_id, c_long(1), byref(lpJpegPara), sJpegBuffer, buffer_size, byref(lpRetSize)
+                import os
+                import re
+                from datetime import datetime
+                from ctypes import c_char, c_ulong, byref, c_long
+                
+                # Use the correct attribute name found in your doorbell.py
+                sdk = doorbell._sdk
+                
+                logger.info("Snapshot triggered for {}. Connecting to Outdoor Station...", doorbell._config.name)
+                
+                # 1. Manual Connection to the Outdoor Station
+                device_info = NET_DVR_DEVICEINFO_V30()
+                outdoor_ip = "192.168.0.70" 
+                
+                user_id = sdk.NET_DVR_Login_V30(
+                    outdoor_ip.encode('utf-8'), 
+                    8000, 
+                    doorbell._config.username.encode('utf-8'), 
+                    doorbell._config.password.encode('utf-8'), 
+                    byref(device_info)
                 )
 
-                if res:
-                    image_data = sJpegBuffer[:lpRetSize.value]
-                    
-                    # 3. Save Logic
-                    output_dir = "/config/www" if os.path.isdir("/config") else os.path.join(os.getcwd(), "www")
-                    os.makedirs(output_dir, exist_ok=True)
-                    filename = os.path.join(output_dir, "doorbell_snap.jpg")
-                    
-                    with open(filename, "wb") as f:
-                        f.write(image_data)
-                    
-                    logger.info("SUCCESS: Snapshot saved from Outdoor Station via internal jump.")
-                else:
-                    logger.error("SDK FAILURE: Error {} during capture from {}", 
-                                sdk.NET_DVR_GetLastError(), outdoor_ip)
-            
-            finally:
-                # 4. Always logout from the Outdoor Station to free up connections
-                sdk.NET_DVR_Logout(user_id)
+                if user_id < 0:
+                    logger.error("Login Failed for {}: Error {}", outdoor_ip, sdk.NET_DVR_GetLastError())
+                    return
 
-        except Exception as e:
-            logger.error("Internal snapshot jump exception: {}", str(e))
-    """
+                try:
+                    # 2. SDK Capture to Memory
+                    lpJpegPara = NET_DVR_JPEGPARA()
+                    lpJpegPara.wPicSize = 2      
+                    lpJpegPara.wPicQuality = 1   
+
+                    buffer_size = 2 * 1024 * 1024
+                    sJpegBuffer = (c_char * buffer_size)()
+                    lpRetSize = c_ulong()
+
+                    res = sdk.NET_DVR_CaptureJPEGPicture_NEW(
+                        user_id, c_long(1), byref(lpJpegPara), sJpegBuffer, buffer_size, byref(lpRetSize)
+                    )
+
+                    if res:
+                        image_data = sJpegBuffer[:lpRetSize.value]
+                        
+                        # 3. Dynamic Path Logic
+                        # Sanitize doorbell name for folder creation (replace spaces with underscores)
+                        folder_name = re.sub(r'\s+', '_', doorbell._config.name.lower())
+                        
+                        # Determine base path: HA Add-on uses /media, otherwise use Home folder
+                        if os.path.isdir("/media"):
+                            base_path = "/media"
+                        else:
+                            base_path = os.path.expanduser("~")
+
+                        # Construct full directory path: base/doorbell_name
+                        output_dir = os.path.join(base_path, folder_name)
+                        os.makedirs(output_dir, exist_ok=True)
+                        
+                        # Generate filename with timestamp
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        filename = os.path.join(output_dir, f"snapshot_{timestamp}.jpg")
+                        
+                        with open(filename, "wb") as f:
+                            f.write(image_data)
+                        
+                        logger.info("SUCCESS: Snapshot saved to {}", filename)
+                    else:
+                        logger.error("SDK FAILURE: Error {} during capture", sdk.NET_DVR_GetLastError())
+                
+                finally:
+                    sdk.NET_DVR_Logout(user_id)
+
+            except Exception as e:
+                logger.error("Internal snapshot jump exception: {}", str(e))
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)
