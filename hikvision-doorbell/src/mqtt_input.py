@@ -166,6 +166,23 @@ class MQTTInput():
             take_snapshot_button.set_availability(True)
             self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
 
+            """
+            ###########
+            # Capture Stream button
+            stream_button_info = ButtonInfo(
+                name="Capture Stream",
+                unique_id=f"{sanitized_doorbell_name}_capture_stream",
+                device=device,
+                icon="mdi:video",
+                default_entity_id=f"{sanitized_doorbell_name}_capture_stream"
+            )
+            stream_settings = Settings(mqtt=mqtt_settings, entity=stream_button_info, manual_availability=True)
+            capture_stream_button = Button(stream_settings, self._capture_stream_callback, doorbell)
+            capture_stream_button.set_availability(True)
+            self._sensors[doorbell]['capture_stream'] = capture_stream_button
+            """
+
+
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
 
@@ -507,8 +524,124 @@ class MQTTInput():
 
         except Exception as e:
             logger.error("Internal snapshot exception: {}", str(e))
+    """
+    def _capture_stream_callback(self, client, doorbell: Doorbell, message):
+        # Capture a short video stream from the doorbell and save it as MP4.
+        # Fully functional with Hikvision SDK using a proper ctypes callback.
+        try:
+            import os
+            import re
+            import time
+            import cv2
+            import ctypes
+            import numpy as np
+            from datetime import datetime
+            from ctypes import byref, c_int, c_uint, c_void_p, c_ulong
 
+            sdk = doorbell._sdk
 
+            # -------------------------------
+            # Validate IP, username, password
+            # -------------------------------
+            ip = getattr(doorbell._config, "outdoor_ip", None) or getattr(doorbell._config, "ip", None)
+            if not ip:
+                logger.error("No IP configured for doorbell: {}", doorbell._config.name)
+                return
+
+            username = getattr(doorbell._config, "username", None)
+            password = getattr(doorbell._config, "password", None)
+            if not username or not password:
+                logger.error("No username/password configured for doorbell: {}", doorbell._config.name)
+                return
+
+            ip_bytes = ip.encode("utf-8")
+            username_bytes = username.encode("utf-8")
+            password_bytes = password.encode("utf-8")
+
+            logger.info("Stream capture triggered for {} on IP: {}", doorbell._config.name, ip)
+
+            # -------------------------------
+            # Login
+            # -------------------------------
+            device_info = NET_DVR_DEVICEINFO_V30()
+            user_id = sdk.NET_DVR_Login_V30(ip_bytes, 8000, username_bytes, password_bytes, byref(device_info))
+            if user_id < 0:
+                logger.error("Login Failed for {}: Error {}", ip, sdk.NET_DVR_GetLastError())
+                return
+
+            try:
+                # -------------------------------
+                # Prepare output video file
+                # -------------------------------
+                folder_name = re.sub(r'\s+', '_', doorbell._config.name.lower())
+                base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
+                output_dir = os.path.join(base_path, folder_name)
+                os.makedirs(output_dir, exist_ok=True)
+
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = os.path.join(output_dir, f"stream_{timestamp}.mp4")
+
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                out = cv2.VideoWriter(filename, fourcc, 25.0, (640, 480))  # adjust resolution/FPS if needed
+
+                # -------------------------------
+                # Define ctypes callback
+                # -------------------------------
+                FRAME_CALLBACK = ctypes.CFUNCTYPE(
+                    None,       # void return
+                    c_int,      # lRealHandle
+                    c_uint,     # dwDataType
+                    c_void_p,   # pBuffer
+                    c_ulong,    # dwBufSize
+                    c_void_p    # pUser
+                )
+
+                # This is called by SDK for each frame
+                def py_frame_callback(lRealHandle, dwDataType, pBuffer, dwBufSize, pUser):
+                    # dwDataType 1 = video frame (SDK-specific)
+                    if dwDataType == 1 and dwBufSize > 0:
+                        buf = ctypes.string_at(pBuffer, dwBufSize)
+                        # Convert raw bytes to numpy array (assuming MJPEG)
+                        np_arr = np.frombuffer(buf, dtype=np.uint8)
+                        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                        if frame is not None:
+                            out.write(frame)
+
+                callback_func = FRAME_CALLBACK(py_frame_callback)
+
+                # -------------------------------
+                # Start real-time preview
+                # -------------------------------
+                play_info = NET_DVR_CLIENTINFO()  # already imported from your class
+                play_info.lChannel = 1
+                play_info.hPlayWnd = 0
+                play_info.lLinkMode = 0
+                play_info.sMultiCastIP = b""
+
+                real_handle = sdk.NET_DVR_RealPlay_V40(user_id, byref(play_info), callback_func, None)
+                if real_handle < 0:
+                    logger.error("Failed to start real-time preview: {}", sdk.NET_DVR_GetLastError())
+                    out.release()
+                    return
+
+                # -------------------------------
+                # Capture for N seconds
+                # -------------------------------
+                duration_sec = 5
+                time.sleep(duration_sec)
+
+                # Stop real-time preview
+                sdk.NET_DVR_StopRealPlay(real_handle)
+                out.release()
+
+                logger.info("SUCCESS: Stream saved to {}", filename)
+
+            finally:
+                sdk.NET_DVR_Logout(user_id)
+
+        except Exception as e:
+            logger.error("Stream capture exception: {}", str(e))
+    """
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)

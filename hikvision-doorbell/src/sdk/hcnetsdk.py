@@ -594,6 +594,18 @@ class NET_DVR_JPEGPARA(Structure):
         ("wPicQuality", WORD)
     ]
 
+"""
+from ctypes import Structure, c_int, c_char_p, c_char
+
+class NET_DVR_CLIENTINFO(Structure):
+    _fields_ = [
+        ("lChannel", c_int),
+        ("lLinkMode", c_int),
+        ("hPlayWnd", c_int),
+        ("sMultiCastIP", c_char * 16)
+    ]
+"""
+
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
     _fields_ = [
         ("dwSize", DWORD),
