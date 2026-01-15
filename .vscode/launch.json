@@ -14,16 +14,16 @@
             "justMyCode": true,
             "envFile": "${workspaceFolder}/hikvision-doorbell/development.env"
         },
-        {
-            "name": "Python: hik.py",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/hikvision-doorbell/src/hik.py",
-            "cwd": "${workspaceFolder}/hikvision-doorbell",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "envFile": "${workspaceFolder}/hikvision-doorbell/development.env"
-        },
+//        {
+//            "name": "Python: hik.py",
+//           "type": "python",
+//           "request": "launch",
+//            "program": "${workspaceFolder}/hikvision-doorbell/src/hik.py",
+//            "cwd": "${workspaceFolder}/hikvision-doorbell",
+//            "console": "integratedTerminal",
+//            "justMyCode": true,
+//            "envFile": "${workspaceFolder}/hikvision-doorbell/development.env"
+//        },
         {
             "name": "Python: debug tests",
             "type": "python",

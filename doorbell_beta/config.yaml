@@ -41,7 +41,7 @@ schema:
       output_relays: "int?"
       scenes: "bool?"
       call_state_poll: "int?"
-      outdoor_ip: "str?"
+      # outdoor_ip: "str?"
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?

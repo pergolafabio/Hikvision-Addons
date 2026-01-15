@@ -13,6 +13,9 @@ startup: application
 boot: auto
 stdin: true
 homeassistant_api: true
+map:
+  - media:rw
+full_access: true
 
 # Default options when used as an HA add-on
 options:

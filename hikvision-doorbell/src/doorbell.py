@@ -31,6 +31,9 @@ class DeviceType(IntEnum):
     HD = 31
     AccessControlTerminal = 861
 
+def sanitize_doorbell_name(doorbell_name: str) -> str:
+    """Given a doorbell name, lowercase it and substitute whitespaces and `-` with `_`"""
+    return re.sub(r"\s|-", "_", doorbell_name.lower())
 
 class Doorbell():
     """A doorbell device.
@@ -168,6 +171,52 @@ class Doorbell():
             self._call_isapi("PUT", url, requestBody)
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
+
+    def take_snapshot(self): 
+        """ Take a snapshot and store in the /media folder
+        """
+        import os
+        import re
+        from datetime import datetime
+        from ctypes import c_char, c_ulong, byref, c_long
+        from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
+
+        # Prepare JPEG parameters
+        lpJpegPara = NET_DVR_JPEGPARA()
+        lpJpegPara.wPicSize = 2
+        lpJpegPara.wPicQuality = 1
+
+        # Allocate buffer
+        buffer_size = 2 * 1024 * 1024  # 2MB buffer
+        sJpegBuffer = (c_char * buffer_size)()
+        lpRetSize = c_ulong()
+
+        # Capture snapshot
+        result = self._sdk.NET_DVR_CaptureJPEGPicture_NEW(self.user_id, c_long(1), byref(lpJpegPara), sJpegBuffer, buffer_size, byref(lpRetSize)
+        )
+        if not result:
+            logger.error("SDK Failure: Error {} during capture", self._sdk.NET_DVR_GetLastError())
+            return
+
+        image_data = sJpegBuffer[:lpRetSize.value]
+
+        # Sanitize doorbell name for folder creation
+        folder_name = re.sub(r'\s+', '_', self._config.name.lower())
+
+        # Determine base path
+        base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
+        output_dir = os.path.join(base_path, folder_name)
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = os.path.join(output_dir, f"snapshot_{timestamp}.jpg")
+
+        # Save snapshot to file
+        with open(filename, "wb") as f:
+            f.write(image_data)
+
+        logger.info("Snapshot saved to {}", filename)
 
     def callsignal(self, cmd_type: int):
         """ Answer the specified door using the NET_DVR_VIDEO_CALL_PARAM.

@@ -595,6 +595,23 @@ class NET_DVR_JPEGPARA(Structure):
     ]
 
 """
+from ctypes import Structure, c_int, c_uint, c_void_p, c_byte, sizeof
+
+class NET_DVR_PREVIEWINFO(Structure):
+    _fields_ = [
+        ("lChannel", c_int),            # Channel number (Use 1 for Indoor Station)
+        ("dwStreamType", c_uint),       # 0: Main stream, 1: Sub-stream
+        ("dwLinkMode", c_uint),         # 0: TCP, 1: UDP, 2: Multicast, 3: RTP, 4: RTP/RTSP, 5: RTP/HTTP
+        ("hPlayWnd", c_void_p),         # Handle to the display window (None for background capture)
+        ("bBlocked", c_int),            # 0: Non-blocking, 1: Blocking
+        ("bPassbackRecord", c_int),     # 0: Do not record, 1: Record
+        ("byPreviewMode", c_byte),      # 0: Normal, 1: Delayed
+        ("byStreamID", c_byte * 32),    # Stream ID (Used if lChannel is 0xFFFFFFFF)
+        ("byProtoType", c_byte),        # 0: Private, 1: RTSP
+        ("byRes", c_byte * 222)         # Reserved padding
+    ]
+
+
 from ctypes import Structure, c_int, c_char_p, c_char
 
 class NET_DVR_CLIENTINFO(Structure):

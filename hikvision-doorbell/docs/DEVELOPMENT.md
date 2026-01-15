@@ -18,6 +18,7 @@ cd ~/Hikvision-Addons/hikvision-doorbell
 python3.10 -m venv venv310
 source venv310/bin/activate
 pip install -r requirements.txt
+deactivate
 ```
 
 - Export the required environment variables to configure the software (see `development.env.example` for reference)

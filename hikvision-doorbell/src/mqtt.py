@@ -3,13 +3,13 @@ from ctypes import c_void_p
 from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
 
-from doorbell import DeviceType, Doorbell, Registry
+from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from event import EventHandler
 from paho.mqtt.client import MQTTMessage
 from ha_mqtt_discoverable import Settings, DeviceInfo, Discoverable
 from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, SensorInfo, Sensor, SwitchInfo, Switch, DeviceTrigger, DeviceTriggerInfo
 from loguru import logger
-from home_assistant import sanitize_doorbell_name
+# from home_assistant import sanitize_doorbell_name
 from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           NET_DVR_ALARMINFO_V30,
                           NET_DVR_VIDEO_INTERCOM_ALARM,
