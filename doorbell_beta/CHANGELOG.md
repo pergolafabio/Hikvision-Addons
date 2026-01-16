@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.96 - 2026-01-16
+
+### Test
+
+- remove outdoor_ip trying another way to capture a screenshot from indoor panel
+
 ## 3.0.0-beta.95 - 2026-01-14
 
 ### Test
