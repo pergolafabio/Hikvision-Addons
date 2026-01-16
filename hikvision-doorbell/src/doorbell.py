@@ -1,12 +1,13 @@
-from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_int, c_uint, c_void_p, pointer, sizeof, cast
+from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_ulong, c_int, c_uint, c_void_p, c_long, create_string_buffer, pointer, sizeof, cast
 from enum import IntEnum
 import re
 import json
+import os
+from datetime import datetime
 from typing import Callable, Optional
 from loguru import logger
 from config import AppConfig
-from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_CALL_STATUS, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
-
+from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
 
@@ -172,51 +173,264 @@ class Doorbell():
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
 
-    def take_snapshot(self): 
-        """ Take a snapshot and store in the /media folder
-        """
-        import os
-        import re
-        from datetime import datetime
-        from ctypes import c_char, c_ulong, byref, c_long
-        from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
-
-        # Prepare JPEG parameters
-        lpJpegPara = NET_DVR_JPEGPARA()
-        lpJpegPara.wPicSize = 2
-        lpJpegPara.wPicQuality = 1
-
-        # Allocate buffer
-        buffer_size = 2 * 1024 * 1024  # 2MB buffer
-        sJpegBuffer = (c_char * buffer_size)()
-        lpRetSize = c_ulong()
-
-        # Capture snapshot
-        result = self._sdk.NET_DVR_CaptureJPEGPicture_NEW(self.user_id, c_long(1), byref(lpJpegPara), sJpegBuffer, buffer_size, byref(lpRetSize)
-        )
-        if not result:
-            logger.error("SDK Failure: Error {} during capture", self._sdk.NET_DVR_GetLastError())
+    def get_device_channels_info(self):
+        """Get information about available channels"""
+        if not hasattr(self, 'user_id') or self.user_id < 0:
+            logger.error("Not logged in")
             return
+        
+        # Get device configuration to find channels
+        device_info = NET_DVR_DEVICEINFO_V30()
+        logger.info(f"Trying to retrieve channels")
+        # First, get basic device info
+        result = self._sdk.NET_DVR_GetDVRConfig(
+            self.user_id,
+            0,  # NET_DVR_GET_DEVICECFG
+            0,
+            byref(device_info),
+            sizeof(device_info)
+        )
+        
+        if result:
+            logger.info(f"Device supports {device_info.byChanNum} analog channels")
+            logger.info(f"Device supports {device_info.byIPChanNum} IP channels")
+            logger.info(f"Device supports {device_info.byHighDChanNum} high-def channels")
 
-        image_data = sJpegBuffer[:lpRetSize.value]
+    def take_snapshot(self):
 
-        # Sanitize doorbell name for folder creation
-        folder_name = re.sub(r'\s+', '_', self._config.name.lower())
+        try:
+            
+            # APPROACH 1: Direct capture on most likely channels
+            logger.info("Trying Approach 1: Direct capture on likely channels")
+            priority_channels = [
+                1,     # Sometimes main stream
+                0,     # Device itself (usually no camera)
+                2,     # Sometimes sub stream
+                33,    # Most common for linked IP camera on indoor stations
+                34,    # Secondary IP channel
+                35,    # Tertiary IP channel
+                99,    # Video intercom channel
+                100,   # Extended channel
+                200,   # Digital channel
+                201,   # Digital channel
+            ]
+            
+            # Different parameter combinations to try
+            param_combinations = [
+                #(0xFF, 1, 2*1024*1024),  # Original size, low quality, 2MB buffer
+                (0xFF, 2, 1024*1024)   # Original size, medium quality, 1MB buffer
+                #(2, 1, 512*1024),        # D1, low quality, 512KB buffer
+                #(3, 2, 1024*1024),       # VGA, medium quality, 1MB buffer
+            ]
+            
+            for channel in priority_channels:
+                logger.info(f"Testing channel {channel}")
+                
+                for pic_size, quality, buffer_size in param_combinations:
+                    logger.debug(f"  Params: size={pic_size}, quality={quality}, buffer={buffer_size}")
+                    
+                    # Try NET_DVR_CaptureJPEGPicture first
+                    try:
+                        jpeg_para = NET_DVR_JPEGPARA()
+                        jpeg_para.wPicSize = pic_size
+                        jpeg_para.wPicQuality = quality
+                        
+                        buffer = create_string_buffer(buffer_size)
+                        size = c_ulong(0)
+                        
+                        result = self._sdk.NET_DVR_CaptureJPEGPicture(
+                            self.user_id,
+                            channel,
+                            byref(jpeg_para),
+                            buffer,
+                            buffer_size,
+                            byref(size)
+                        )
+                        
+                        if result and size.value > 100:
+                            image_data = buffer.raw[:size.value]
+                            # Quick JPEG validation
+                            if len(image_data) >= 2 and image_data[:2] == b'\xff\xd8':
+                                filename = self._save_snapshot_result(image_data, channel, "direct")
+                                logger.info(f"✓ SUCCESS Approach 1: Channel {channel}, {size.value} bytes")
+                                return filename
+                            
+                    except Exception as e:
+                        logger.debug(f"  NET_DVR_CaptureJPEGPicture failed: {e}")
+                    
+                    # Try NET_DVR_CaptureJPEGPicture_NEW if available
+                    if hasattr(self._sdk, 'NET_DVR_CaptureJPEGPicture_NEW'):
+                        try:
+                            jpeg_para = NET_DVR_JPEGPARA()
+                            jpeg_para.wPicSize = pic_size
+                            jpeg_para.wPicQuality = quality
+                            
+                            buffer = create_string_buffer(buffer_size)
+                            size = c_ulong(0)
+                            
+                            result = self._sdk.NET_DVR_CaptureJPEGPicture_NEW(
+                                self.user_id,
+                                channel,
+                                byref(jpeg_para),
+                                buffer,
+                                buffer_size,
+                                byref(size)
+                            )
+                            
+                            if result and size.value > 100:
+                                image_data = buffer.raw[:size.value]
+                                if len(image_data) >= 2 and image_data[:2] == b'\xff\xd8':
+                                    filename = self._save_snapshot_result(image_data, channel, "direct_new")
+                                    logger.info(f"✓ SUCCESS Approach 1 (NEW): Channel {channel}, {size.value} bytes")
+                                    return filename
+                                
+                        except Exception as e:
+                            logger.debug(f"  NET_DVR_CaptureJPEGPicture_NEW failed: {e}")
+            
+            # APPROACH 2: Try to "wake up" camera with preview first
+            logger.info("Approach 1 failed, trying Approach 2: Preview then capture")
+            
+            # Try starting a realplay to wake up the camera
+            preview_handle = -1
+            try:
+                if hasattr(self._sdk, 'NET_DVR_RealPlay_V40'):
+                    preview_info = NET_DVR_CLIENTINFO()
+                    preview_info.hPlayWnd = 0  # No window
+                    preview_info.lChannel = 33  # Try channel 33 for preview
+                    preview_info.lLinkMode = 0  # TCP
+                    preview_info.sMultiCastIP = None
+                    
+                    preview_handle = self._sdk.NET_DVR_RealPlay_V40(self.user_id, byref(preview_info), None, None, 0)
+                    
+                    if preview_handle >= 0:
+                        logger.info(f"Preview started on handle {preview_handle}")
+                        
+                        # Wait for camera to initialize
+                        import time
+                        time.sleep(3)
+                        
+                        # Now try capture again
+                        for channel in [33, 1, 2]:
+                            for pic_size, quality, buffer_size in [(0xFF, 1, 2*1024*1024), (2, 1, 1024*1024)]:
+                                try:
+                                    jpeg_para = NET_DVR_JPEGPARA()
+                                    jpeg_para.wPicSize = pic_size
+                                    jpeg_para.wPicQuality = quality
+                                    
+                                    buffer = create_string_buffer(buffer_size)
+                                    size = c_ulong(0)
+                                    
+                                    result = self._sdk.NET_DVR_CaptureJPEGPicture(
+                                        self.user_id,
+                                        channel,
+                                        byref(jpeg_para),
+                                        buffer,
+                                        buffer_size,
+                                        byref(size)
+                                    )
+                                    
+                                    if result and size.value > 100:
+                                        image_data = buffer.raw[:size.value]
+                                        if len(image_data) >= 2 and image_data[:2] == b'\xff\xd8':
+                                            filename = self._save_snapshot_result(image_data, channel, "preview_wake")
+                                            logger.info(f"✓ SUCCESS Approach 2: Channel {channel} after preview")
+                                            
+                                            # Stop preview
+                                            self._sdk.NET_DVR_StopRealPlay(preview_handle)
+                                            return filename
+                                            
+                                except Exception as e:
+                                    logger.debug(f"  Capture after preview failed: {e}")
+                        
+                        # Stop preview if we started it
+                        self._sdk.NET_DVR_StopRealPlay(preview_handle)
+                        
+            except Exception as e:
+                logger.debug(f"Preview approach failed: {e}")
+                if preview_handle >= 0:
+                    try:
+                        self._sdk.NET_DVR_StopRealPlay(preview_handle)
+                    except:
+                        pass
+            
+            # APPROACH 3: Try capture from preview handle (different method)
+            logger.info("Approach 2 failed, trying Approach 3: Capture from preview handle")
+            
+            try:
+                if hasattr(self._sdk, 'NET_DVR_RealPlay_V40') and hasattr(self._sdk, 'NET_DVR_CapturePicture'):
+                    preview_info = NET_DVR_CLIENTINFO()
+                    preview_info.hPlayWnd = 0
+                    preview_info.lChannel = 33
+                    preview_info.lLinkMode = 0
+                    preview_info.sMultiCastIP = None
+                    
+                    preview_handle = self._sdk.NET_DVR_RealPlay_V40(self.user_id, byref(preview_info), None, None, 0)
+                    
+                    if preview_handle >= 0:
+                        logger.info(f"Preview handle: {preview_handle}")
+                        time.sleep(2)  # Wait for stream
+                        
+                        # Try capture from the preview handle
+                        buffer = create_string_buffer(2 * 1024 * 1024)
+                        size = c_ulong(0)
+                        
+                        result = self._sdk.NET_DVR_CapturePicture(preview_handle, buffer, 2*1024*1024, byref(size))
+                        
+                        if result and size.value > 100:
+                            image_data = buffer.raw[:size.value]
+                            if len(image_data) >= 2 and image_data[:2] == b'\xff\xd8':
+                                filename = self._save_snapshot_result(image_data, 33, "preview_capture")
+                                logger.info(f"✓ SUCCESS Approach 3: Capture from preview handle, {size.value} bytes")
+                                
+                                self._sdk.NET_DVR_StopRealPlay(preview_handle)
+                                return filename
+                        
+                        self._sdk.NET_DVR_StopRealPlay(preview_handle)
+                        
+            except Exception as e:
+                logger.debug(f"Preview capture approach failed: {e}")
+            
+            logger.error("All snapshot approaches failed")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Exception in take_snapshot_alternative: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None
 
-        # Determine base path
-        base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
-        output_dir = os.path.join(base_path, folder_name)
-        os.makedirs(output_dir, exist_ok=True)
+    def _save_snapshot_result(self, image_data, channel, method):
+        """Helper to save snapshot result"""
+        try:
+            # Create filename with timestamp and details
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            folder_name = re.sub(r'\s+', '_', self._config.name.lower())
+            
+            # Determine base path
+            base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
+            output_dir = os.path.join(base_path, folder_name)
+            os.makedirs(output_dir, exist_ok=True)
+            
+            filename = os.path.join(output_dir, f"snapshot_{timestamp}_ch{channel}_{method}.jpg")
+            
+            with open(filename, "wb") as f:
+                f.write(image_data)
+            
+            logger.info(f"Snapshot saved: {filename} ({len(image_data)} bytes)")
+            return filename
+            
+        except Exception as e:
+            logger.error(f"Failed to save snapshot: {e}")
+            # Fallback to temp directory
+            try:
+                temp_file = f"/tmp/snapshot_{timestamp}_ch{channel}.jpg"
+                with open(temp_file, "wb") as f:
+                    f.write(image_data)
+                return temp_file
+            except:
+                return None
 
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = os.path.join(output_dir, f"snapshot_{timestamp}.jpg")
-
-        # Save snapshot to file
-        with open(filename, "wb") as f:
-            f.write(image_data)
-
-        logger.info("Snapshot saved to {}", filename)
 
     def callsignal(self, cmd_type: int):
         """ Answer the specified door using the NET_DVR_VIDEO_CALL_PARAM.

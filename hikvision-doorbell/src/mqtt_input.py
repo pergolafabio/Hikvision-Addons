@@ -152,19 +152,19 @@ class MQTTInput():
             call_status_button.set_availability(True)
             self._sensors[doorbell]['call_status'] = call_status_button
 
-            if not doorbell._type is DeviceType.INDOOR:
-                ###########
-                # Take_snapshot button
-                button_info = ButtonInfo(
-                    name="Take Snapshot",
-                    unique_id=f"{sanitized_doorbell_name}_take_snapshot",
-                    device=device,
-                    icon="mdi:camera",
-                    default_entity_id=f"{sanitized_doorbell_name}_take_snapshot")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
-                take_snapshot_button.set_availability(True)
-                self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
+            # if not doorbell._type is DeviceType.INDOOR:
+            ###########
+            # Take_snapshot button
+            button_info = ButtonInfo(
+                name="Take Snapshot",
+                unique_id=f"{sanitized_doorbell_name}_take_snapshot",
+                device=device,
+                icon="mdi:camera",
+                default_entity_id=f"{sanitized_doorbell_name}_take_snapshot")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
+            take_snapshot_button.set_availability(True)
+            self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
 
             """
             ###########
@@ -449,10 +449,9 @@ class MQTTInput():
             }
             call_status_button.set_attributes(attributes)
 
-
     def _take_snapshot_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell = user_data
-        logger.debug("Received take snapshot commmand, doorbell: {}", doorbell._config.name)
+        logger.info("Received take snapshot commmand, doorbell: {}", doorbell._config.name)
         doorbell.take_snapshot()
 
     """
