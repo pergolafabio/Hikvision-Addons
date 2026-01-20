@@ -638,7 +638,10 @@ class MQTTInput():
         try:
             http_method, url, *request_body = text_string.split()
         except ValueError:
-            logger.warning("Invalid ISAPI input: {}", text_string if text_string.strip() else "<empty>")
+            logger.warning(
+                "Invalid ISAPI input (expected format: METHOD URL [BODY]): {}",
+                text_string if text_string.strip() else "<empty>",
+            )
             return
 
         # If the user has not provided a request body, default to an empty string
