@@ -20,6 +20,7 @@ Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, the a
 - Home Assistant! :-)
 - Advanced Camera Card: https://github.com/dermotduffy/advanced-camera-card
 - Go2rtc Addon: https://github.com/AlexxIT/hassio-addons
+- Hass Web Proxy : https://github.com/dermotduffy/hass-web-proxy-integration
 
 ## Get started:
 
@@ -28,8 +29,8 @@ Install the go2rtc Addon, this addon is needed, the once in core doesnt work, si
 ## Step 1: go2rtc Add-On configuration
 
 A simple go2rtc.yml configuration to add the doorbell with ISAPI support:
-IMPORTANT: HTTPS is needed! to have MIC support, i use nginx to access my instance, if you dont use nginx, make sure to enable tls in below config
-If go2rtc setup is configured, you should be able to view the stream by browsing to this page https://user:pass@yourdomain:1985 (then click on links and then: "video+audio+microphone = two way audio from camera", test the stream to test your go2rtc config)
+IMPORTANT: HTTPS is needed! to have MIC support when you accees HA, i use the Hass Web Proxy to make sure go2rtc is using https in the advanced card
+If go2rtc setup is configured, you should be able to view the stream by browsing to this page http://hass-ip:1984 (then click on links and then: "video+audio+microphone = two way audio from camera", then make sure you use 'External WebRTC Viewer', this makes an https websiite from your local hass-ip) 
 
 More info here:
 
@@ -44,12 +45,9 @@ streams:
     - isapi://admin:xxx@192.168.0.70:80/
 api:
   listen: ":1984"    # default ":1984", HTTP API port ("" - disabled)
-  username: "user"  # default "", Basic auth for WebUI
-  password: "pass"   # default "", Basic auth for WebUI
+  username: ""  # default "", Basic auth for WebUI
+  password: ""   # default "", Basic auth for WebUI
   origin: "*"        # default "", allow CORS requests (only * supported)
-  #tls_listen: ":1985" # default "", enable HTTPS server
-  #tls_cert: /ssl/fullchain.pem
-  #tls_key: /ssl/privkey.pem
 
 ```
 ## Step 2: Advanced Card configuration
@@ -73,7 +71,7 @@ The "phone-hangup" button:
 
 So in below example screenshot, the first 3 icons are just for starting two way audi / mute / unmute, BUT without a real call!! When you actually have an incoming doorbell ring, you need to use the phone/hangup buttons.
 
-IMPORTANT: If you are missing the first icon, the microphone button, that means your go2rtc addon is not working correctly, remember, https and a valid ssl is needed!
+IMPORTANT: If you are missing the first icon, the microphone button, that means your go2rtc addon is not working correctly, remember, https and a valid ssl is needed when accessing HA!
 
 ![Ivms](advanced.card.png)
 
@@ -82,10 +80,8 @@ IMPORTANT: If you are missing the first icon, the microphone button, that means 
           cameras:
             - live_provider: go2rtc
               go2rtc:
-                url: https://yourdomain.com:1985
+                url: http://hass-ip:1984
                 stream: deurbel
-                modes:
-                  - mse
           menu:
             style: outside
             position: bottom
