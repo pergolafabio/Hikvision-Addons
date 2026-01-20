@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.97 - 2026-01-20
+
+### Test
+
+- use 3.10.8-slim image
+
 ## 3.0.0-beta.96 - 2026-01-16
 
 ### Test
