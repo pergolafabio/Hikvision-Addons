@@ -1,0 +1,82 @@
+configuration:
+  # Translation for the entire 'doorbells' section/list
+  doorbells:
+    name: Lista dzwonków do drzwi (dodaj tutaj swoje urządzenie z prawidłowymi ustawieniami, protokół MQTT nie jest potrzebny, jeśli używasz wbudowanego brokera. Jeśli twoje urządzenie nie obsługuje zdarzenia RING, dostępna jest opcja call_state_poll umożliwiająca ręczne sprawdzenie stanu połączenia)
+    description: Dodaj jeden lub więcej dzwonków Hikvision.
+    item:
+      name: Dzwonek
+      description: Konfiguracja pojedynczego urządzenia Hikvision.
+    fields:
+      # Translations for the fields *inside* each doorbell entry
+      name:
+        name: Nazwa
+        description: >-
+          Nazwa, która będzie używana dla urządzenia MQTT.
+      ip:
+        name: Adres IP
+        description: >-
+          Adres IP Twojego urządzenia Hikvision.
+      port:
+        name: Port
+        description: >-
+          Port do połączenia z urządzeniem Hikvision. Jeśli nie zostanie określony, zostanie użyty domyślny port 8000.
+      username:
+        name: Nazwa użytkownika
+        description: >-
+          Aby zalogować się na urządzeniu, należy posiadać uprawnienia administratora.
+      password:
+        name: Hasło
+        description: >-
+          Hasło użytkownika admin.
+      output_relays:
+        name: Przekaźniki wyjściowe
+        description: >-
+          (opcjonalnie) Ustaw tę opcję, jeśli nie widzisz prawidłowej liczby przełączników drzwi lub jeśli na swoim wewnętrznym urządzeniu podłączyłeś bezpieczny moduł sterowania drzwiami.
+      scenes:
+        name: Sceny
+        description: >-
+          (opcjonalnie) Odpytuj sceny/stan alarmu co 15 sekund, tylko dla paneli wewnętrznych obsługujących sceny.
+      call_state_poll:
+        name: Interwał sondowania stanu połączeń
+        description: >-
+          (opcjonalnie) Wykonuj sondowanie stanu połączenia co x sekund w przypadku urządzeń, które nie obsługują zdarzenia dzwonienia, na przykład urządzeń z systemem 3.7.x lub nowszym...
+#  Translation for the 'system' section
+  system:
+    name: System
+    description: >-
+      Opcje konfiguracji systemu.
+    fields:
+      log_level:
+        name: Poziom dziennika
+        description: >-
+          NONE|ERROR|INFO|DEBUG.
+      sdk_log_level:
+        name: Poziom dziennika SDK
+        description: >-
+          NONE|ERROR|INFO|DEBUG.
+# Translation for the 'mqtt' section
+  mqtt:
+    name: Mqtt
+    description: >-
+      (opcjonalnie) Konfiguracja MQTT umożliwiająca połączenie z zewnętrznym brokerem MQTT. Jeśli nie zostanie skonfigurowany, użyty zostanie wbudowany broker MQTT Home Assistant.
+    fields:
+      host:
+        name: Host
+        description: >-
+          Nazwa hosta lub adres IP brokera MQTT.
+      port:
+        name: Port
+        description: >-
+          Port brokera MQTT.
+      ssl:
+        name: Użyj SSL
+        description: >-
+          Czy używać protokołu SSL do łączenia się z brokerem MQTT.
+      username:
+        name: Nazwa użytkownika
+        description: >-
+          Nazwa użytkownika umożliwiająca połączenie z brokerem MQTT.
+      password:
+        name: Hasło
+        description: >-
+          Hasło umożliwiające połączenie z brokerem MQTT.
