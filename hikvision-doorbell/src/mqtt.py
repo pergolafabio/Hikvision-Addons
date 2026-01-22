@@ -2,7 +2,6 @@ import asyncio
 from ctypes import c_void_p
 from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
-
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from event import EventHandler
 from paho.mqtt.client import MQTTMessage

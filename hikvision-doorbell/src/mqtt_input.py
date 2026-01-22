@@ -5,7 +5,6 @@ from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor
-# from home_assistant import sanitize_doorbell_name
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
@@ -165,23 +164,6 @@ class MQTTInput():
             take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
             take_snapshot_button.set_availability(True)
             self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
-
-            """
-            ###########
-            # Capture Stream button
-            stream_button_info = ButtonInfo(
-                name="Capture Stream",
-                unique_id=f"{sanitized_doorbell_name}_capture_stream",
-                device=device,
-                icon="mdi:video",
-                default_entity_id=f"{sanitized_doorbell_name}_capture_stream"
-            )
-            stream_settings = Settings(mqtt=mqtt_settings, entity=stream_button_info, manual_availability=True)
-            capture_stream_button = Button(stream_settings, self._capture_stream_callback, doorbell)
-            capture_stream_button.set_availability(True)
-            self._sensors[doorbell]['capture_stream'] = capture_stream_button
-            """
-
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -451,7 +433,7 @@ class MQTTInput():
 
     def _take_snapshot_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell = user_data
-        logger.info("Received take snapshot commmand, doorbell: {}", doorbell._config.name)
+        logger.info("Received take snapshot command, doorbell: {}", doorbell._config.name)
         doorbell.take_snapshot()
 
     """

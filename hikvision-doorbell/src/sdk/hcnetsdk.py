@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_int, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
+from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_int, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint, c_uint16, c_ubyte, c_uint32
 from enum import Enum, IntEnum
 import re
 
@@ -665,6 +665,55 @@ class NET_DVR_IPADDR(Structure):
     _fields_ = [
         ("sIpV4", char * 16),
         ("sIpV6", BYTE * 128),
+    ]
+
+class NET_DVR_INDOOR_UNIT_RELATEDEV(Structure):
+    _fields_ = [
+        ("struOutdoorUnit", NET_DVR_IPADDR),
+        ("struManageUnit", NET_DVR_IPADDR),
+        ("struSIPServer", NET_DVR_IPADDR),
+        ("struAgainUnit", NET_DVR_IPADDR),
+        ("byOutDoorType", c_ubyte),
+        ("byOutInConnectMode", c_ubyte),
+        ("byIndoorConnectMode", c_ubyte),
+        ("byRes1", c_ubyte),
+        ("struIndoorUnit", NET_DVR_IPADDR),
+        ("byRes", c_ubyte * 300),
+    ]
+
+class NET_DVR_OUTDOOR_UNIT_RELATEDEV(Structure):
+    _fields_ = [
+        ("struSIPServer", NET_DVR_IPADDR),
+        ("struManageUnit", NET_DVR_IPADDR),
+        ("struAgainUnit", NET_DVR_IPADDR),
+        ("byRes", c_ubyte * 400),
+    ]
+
+class NET_DVR_AGAIN_RELATEDEV(Structure):
+    _fields_ = [
+        ("struSIPServer", NET_DVR_IPADDR),
+        ("struCenterAddr", NET_DVR_IPADDR),
+        ("wCenterPort", c_uint16),
+        ("byRes1", c_ubyte * 2),
+        ("struIndoorUnit", NET_DVR_IPADDR),
+        ("struAgainAddr", NET_DVR_IPADDR),
+        ("byRes", c_ubyte * 444),            # [cite: 115]
+    ]
+
+class NET_DVR_VIDEO_INTERCOM_UNIT_RELATEDEV_UNION(Union):
+    _fields_ = [
+        ("dwRes", c_uint32 * 256),
+        ("struIndoorUnit", NET_DVR_INDOOR_UNIT_RELATEDEV),
+        ("struOutdoorUnit", NET_DVR_OUTDOOR_UNIT_RELATEDEV),
+        ("struAgainUnit", NET_DVR_AGAIN_RELATEDEV),
+    ]
+
+class NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG(Structure):
+    _fields_ = [
+        ("dwSize", c_uint32),
+        ("dwNum", c_uint32),
+        ("struuRelatedDev", NET_DVR_VIDEO_INTERCOM_UNIT_RELATEDEV_UNION * 16),
+        ("byRes", c_ubyte * 256),
     ]
 
 class NET_DVR_ACS_EVENT_INFO(Structure):
