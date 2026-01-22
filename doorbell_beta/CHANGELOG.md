@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.98 - 2026-01-22
+
+### Test
+
+- Snapshot command added again, if its taken from indoor , it will get the IP from linked outdoor station and trys to login with same admin credentials
+
 ## 3.0.0-beta.97 - 2026-01-20
 
 ### Test
