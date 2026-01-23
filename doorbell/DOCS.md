@@ -33,22 +33,13 @@ The following configuration setups two doorbells, named `Front door` and `Rear d
   password: password
   output_relays: 2
 
-- name: "Rear door"
-  ip: 192.168.0.2
-  username: admin
-  password: password
-  call_state_poll: 10
-
 - name: "Indoor"
   ip: 192.168.0.3
   username: admin
   password: password
   scenes: true
+  call_state_poll: 5
 
-- name: "Indoor Extension"
-  ip: 192.168.0.4
-  username: admin
-  password: password
 ```
 
 ### System
@@ -194,7 +185,10 @@ The input string must be in the format
   | setupAlarm  | Turn on the alarm on the indoor panel
   | closeAlarm  | Turn off the alarm on the indoor panel
   | muteAudioOutput   | Mutes the audio output of the doorbell / indoor station
-  | unmuteAudioOutput | Unmutes the audio output of the doorbell / indoor station  
+  | unmuteAudioOutput | Unmutes the audio output of the doorbell / indoor station
+  | takeSnapshot  | Take a snapshot and save it to the /media drive
+  | callStatus   | Manually get the Call Status
+  | callerInfo | Manually get the Caller Info
 
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 

@@ -24,8 +24,8 @@ deactivate
 - Export the required environment variables to configure the software (see `development.env.example` for reference)
 ```bash
 export DOORBELLS='[{"name":"outdoor", "ip": "192.168.0.1", "username": "user", "password": "password"}]'
-export HOME_ASSISTANT__URL=http://localhost:8123
-export HOME_ASSISTANT__TOKEN=<secret_token>
+export DOORBELLS='[{"name":"DS-KH9310", "ip": "192.168.0.72", "username": "admin", "password": "Password01"}]'
+export MQTT__HOST=''
 ```
 
 - Launch the application

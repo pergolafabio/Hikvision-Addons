@@ -55,6 +55,24 @@ class InputReader():
             # Ignore error to avoid crashing application
             pass
 
+    def _send_callstatus(self, doorbell: Doorbell, command: str):
+        url = "/ISAPI/VideoIntercom/callStatus?format=json"
+        requestBody = ""
+        try:
+            doorbell._call_isapi("GET", url, requestBody)
+        except RuntimeError:
+            # Ignore error to avoid crashing application
+            pass
+
+    def _send_callerinfo(self, doorbell: Doorbell, command: str):
+        url = "/ISAPI/VideoIntercom/callerInfo?format=json"
+        requestBody = ""
+        try:
+            doorbell._call_isapi("GET", url, requestBody)
+        except RuntimeError:
+            # Ignore error to avoid crashing application
+            pass
+
     def _send_scene(self, doorbell: Doorbell, command: str):
         url = "/ISAPI/VideoIntercom/scene/nowMode"
         requestBody = "<SceneNowMode><nowMode>" + command  + "</nowMode></SceneNowMode>"
@@ -155,6 +173,15 @@ class InputReader():
             case "unmuteAudioOutput":
                 logger.info("Unmute audio output")
                 doorbell.unmute_audio_output()
+            case "takeSnapshot":
+                logger.info("Take snapshot")
+                doorbell.take_snapshot()
+            case "callStatus":
+                logger.info("Getting call status")
+                self._send_callstatus(doorbell, "callStatus")
+            case "callerInfo":
+                logger.info("Getting caller info")
+                self._send_callerinfo(doorbell, "callerInfo")
             case "debug":
                 # This is a special command that accept the name of a method,
                 # calls the method on the doorbell instance and outputs the result
