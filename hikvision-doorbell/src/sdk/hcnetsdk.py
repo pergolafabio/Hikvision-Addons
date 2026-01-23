@@ -1,4 +1,4 @@
-from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint
+from ctypes import CFUNCTYPE, Structure, POINTER, c_char_p, c_int, c_ushort, c_ulong, c_long, c_bool, c_char, c_byte, c_void_p, c_short, Union, sizeof, c_uint, c_uint16, c_ubyte, c_uint32
 from enum import Enum, IntEnum
 import re
 
@@ -588,11 +588,48 @@ class NET_DVR_MIME_UNIT(Structure):
         ("byRes", BYTE * 16),
     ]
 
-#class NET_DVR_JPEGPARA(Structure):
-#    _fields_ = [
-#        ("wPicSize", WORD),
-#        ("wPicQuality", WORD)
-#    ]
+class NET_DVR_JPEGPARA(Structure):
+    _fields_ = [
+        ("wPicSize", WORD),
+        ("wPicQuality", WORD)
+    ]
+
+class NET_DVR_CLIENTINFO(Structure):
+    """
+    Client information structure for NET_DVR_RealPlay_V40
+    """
+    _fields_ = [
+        ("lChannel", c_long),             # Channel number
+        ("lLinkMode", c_long),            # Link mode: 0-TCP, 1-UDP, 2-MCAST
+        ("hPlayWnd", c_void_p),           # Play window handle, can be 0
+        ("sMultiCastIP", c_char_p),       # Multicast IP address, NULL for TCP/UDP
+        ("byProtoType", c_byte),          # Protocol type: 0-private, 1-RTSP
+        ("byKey", c_byte),                # Not used, set to 0
+        ("byRes", c_byte * 2),            # Reserved
+        ("byStreamType", c_byte),         # Stream type: 0-main stream, 1-sub stream, 2-stream 3, 3-transcode
+        ("byDisplayBufNum", c_byte),      # Display buffer frame number, 0-default
+        ("byNPQMode", c_byte),            # NPQ mode: 0-off, 1-on
+        ("byRes1", c_byte * 209),         # Reserved
+    ]
+
+class NET_DVR_PREVIEWINFO(Structure):
+    """Preview information structure - FIXED for DS-KD8003"""
+    _fields_ = [
+        ("lChannel", c_long),           # CHANGED: Use c_long instead of c_int for 64-bit compatibility
+        ("dwStreamType", c_uint),       # 0: Main stream, 1: Sub-stream
+        ("dwLinkMode", c_uint),         # 0: TCP, 1: UDP, 2: Multicast, 3: RTP, 4: RTP/RTSP, 5: RTP/HTTP
+        ("hPlayWnd", c_void_p),         # Handle to the display window (None for background capture)
+        ("bBlocked", c_int),            # 0: Non-blocking, 1: Blocking
+        ("bPassbackRecord", c_int),     # 0: Do not record, 1: Record
+        ("byPreviewMode", c_byte),      # 0: Normal, 1: Delayed
+        ("byStreamID", c_byte * 32),    # Stream ID (Used if lChannel is 0xFFFFFFFF)
+        ("byProtoType", c_byte),        # 0: Private, 1: RTSP
+        ("byRes1", c_byte),             # Additional reserved
+        ("byVideoCodingType", c_byte),  # Video coding type
+        ("dwDisplayBufNum", c_uint),    # Display buffer number
+        ("byNPQMode", c_byte),          # NPQ mode
+        ("byRes", c_byte * 215)         # Adjusted reserved padding for exact size
+    ]
 
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):
     _fields_ = [
@@ -628,6 +665,55 @@ class NET_DVR_IPADDR(Structure):
     _fields_ = [
         ("sIpV4", char * 16),
         ("sIpV6", BYTE * 128),
+    ]
+
+class NET_DVR_INDOOR_UNIT_RELATEDEV(Structure):
+    _fields_ = [
+        ("struOutdoorUnit", NET_DVR_IPADDR),
+        ("struManageUnit", NET_DVR_IPADDR),
+        ("struSIPServer", NET_DVR_IPADDR),
+        ("struAgainUnit", NET_DVR_IPADDR),
+        ("byOutDoorType", c_ubyte),
+        ("byOutInConnectMode", c_ubyte),
+        ("byIndoorConnectMode", c_ubyte),
+        ("byRes1", c_ubyte),
+        ("struIndoorUnit", NET_DVR_IPADDR),
+        ("byRes", c_ubyte * 300),
+    ]
+
+class NET_DVR_OUTDOOR_UNIT_RELATEDEV(Structure):
+    _fields_ = [
+        ("struSIPServer", NET_DVR_IPADDR),
+        ("struManageUnit", NET_DVR_IPADDR),
+        ("struAgainUnit", NET_DVR_IPADDR),
+        ("byRes", c_ubyte * 400),
+    ]
+
+class NET_DVR_AGAIN_RELATEDEV(Structure):
+    _fields_ = [
+        ("struSIPServer", NET_DVR_IPADDR),
+        ("struCenterAddr", NET_DVR_IPADDR),
+        ("wCenterPort", c_uint16),
+        ("byRes1", c_ubyte * 2),
+        ("struIndoorUnit", NET_DVR_IPADDR),
+        ("struAgainAddr", NET_DVR_IPADDR),
+        ("byRes", c_ubyte * 444),            # [cite: 115]
+    ]
+
+class NET_DVR_VIDEO_INTERCOM_UNIT_RELATEDEV_UNION(Union):
+    _fields_ = [
+        ("dwRes", c_uint32 * 256),
+        ("struIndoorUnit", NET_DVR_INDOOR_UNIT_RELATEDEV),
+        ("struOutdoorUnit", NET_DVR_OUTDOOR_UNIT_RELATEDEV),
+        ("struAgainUnit", NET_DVR_AGAIN_RELATEDEV),
+    ]
+
+class NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG(Structure):
+    _fields_ = [
+        ("dwSize", c_uint32),
+        ("dwNum", c_uint32),
+        ("struuRelatedDev", NET_DVR_VIDEO_INTERCOM_UNIT_RELATEDEV_UNION * 16),
+        ("byRes", c_ubyte * 256),
     ]
 
 class NET_DVR_ACS_EVENT_INFO(Structure):

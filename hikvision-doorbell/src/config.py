@@ -73,6 +73,7 @@ class AppConfig(GoodConf):
         output_relays: Optional[int] = None
         scenes: Optional[bool] = False
         call_state_poll: Optional[int] = None
+        # outdoor_ip: Optional[str] = None
 
     class HomeAssistant(BaseModel):
         url: AnyHttpUrl = Field(description="Base url of Home Assistant")

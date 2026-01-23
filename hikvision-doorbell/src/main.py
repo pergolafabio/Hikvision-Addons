@@ -5,7 +5,7 @@ import sys
 from config import AppConfig
 from doorbell import Doorbell, Registry
 from event import ConsoleHandler, EventManager
-from home_assistant import HomeAssistantAPI
+# from home_assistant import HomeAssistantAPI
 from mqtt import MQTTHandler
 from mqtt_input import MQTTInput
 from sdk.utils import SDKConfig, SDKError, loadSDK, setupSDK, shutdownSDK

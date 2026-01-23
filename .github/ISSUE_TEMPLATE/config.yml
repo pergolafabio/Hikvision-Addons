@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: I have a question or need support
+    url: https://community.home-assistant.io/t/add-on-hikvision-doorbell-integration/532796
+    about: We use GitHub for tracking bugs and discuss new features, check out our thread in the Home Assistant community forum to get help.

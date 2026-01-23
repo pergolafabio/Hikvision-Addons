@@ -2,13 +2,13 @@ import json
 import asyncio
 from typing import Any, cast
 from config import AppConfig
-from doorbell import DeviceType, Doorbell, Registry
+from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor
-from home_assistant import sanitize_doorbell_name
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
+from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
 import xml.etree.ElementTree as ET
 
 from sdk.utils import SDKError
@@ -19,7 +19,7 @@ class MQTTInput():
 
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         logger.debug("Setting up MQTTInput")
-
+        # self._doorbells = doorbells
         mqtt_settings = Settings.MQTT(
             host=config.host,
             port=config.port,
@@ -150,6 +150,20 @@ class MQTTInput():
             call_status_button = Button(settings, self._call_status_callback, doorbell)
             call_status_button.set_availability(True)
             self._sensors[doorbell]['call_status'] = call_status_button
+
+            # if not doorbell._type is DeviceType.INDOOR:
+            ###########
+            # Take_snapshot button
+            button_info = ButtonInfo(
+                name="Take Snapshot",
+                unique_id=f"{sanitized_doorbell_name}_take_snapshot",
+                device=device,
+                icon="mdi:camera",
+                default_entity_id=f"{sanitized_doorbell_name}_take_snapshot")
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
+            take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
+            take_snapshot_button.set_availability(True)
+            self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -417,6 +431,11 @@ class MQTTInput():
             }
             call_status_button.set_attributes(attributes)
 
+    def _take_snapshot_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
+        doorbell = user_data
+        logger.info("Received take snapshot command, doorbell: {}", doorbell._config.name)
+        doorbell.take_snapshot()
+
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)
 
@@ -520,8 +539,15 @@ class MQTTInput():
         text_entity.set_text(text_string)
         
         # Decode the HTTP method, URL and request body by splitting the input string
-        http_method, url, *request_body = text_string.split()
-        
+        try:
+            http_method, url, *request_body = text_string.split()
+        except ValueError:
+            logger.warning(
+                "Invalid ISAPI input (expected format: METHOD URL [BODY]): {}",
+                text_string if text_string.strip() else "<empty>",
+            )
+            return
+
         # If the user has not provided a request body, default to an empty string
         if not request_body:
             request_body = [""]

@@ -1,37 +1,41 @@
-# TODO: temporarily use non-slim image for pip install with git
-FROM python:3.10.8
-# FROM python:3.10.8-slim
+FROM python:3.10.8-slim AS builder
 
-# The build arguments are populated by Home Assistant during the image build
-# Use this build argument to know for which platform we are building
 ARG BUILD_ARCH
+WORKDIR /build
 
-WORKDIR /app
-RUN echo "Building for ${BUILD_ARCH}"
-
-# Install the required dependencies from the package manager
-RUN apt-get update \
-    && apt-get install -y libffi-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    libffi-dev \
+    gcc \
+    libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Hikvision SDK
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+
+# Build final image
+FROM python:3.10.8-slim
+
+ARG BUILD_ARCH
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libffi7 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+
 COPY lib-${BUILD_ARCH} /app/lib-${BUILD_ARCH}
 
-# Main application
 COPY src/ /app/
-
-# Default configuration file
 COPY default_config.yaml /app/
 
-# Enable python module to get stacktraces from C native calls
 ENV PYTHONFAULTHANDLER=true
-# Required env variable to load Hikvision ssl and crypto libraries instead of system libraries
 ENV LD_LIBRARY_PATH=/app/lib-${BUILD_ARCH}
+ENV PYTHONUNBUFFERED=1
 
 ENTRYPOINT [ "python3"]
-
 CMD ["/app/main.py" ]

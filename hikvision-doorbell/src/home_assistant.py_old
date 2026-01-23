@@ -1,3 +1,5 @@
+#######################  OLD CODE FROM hik.py  ##########################
+
 import asyncio
 from ctypes import c_void_p
 import re

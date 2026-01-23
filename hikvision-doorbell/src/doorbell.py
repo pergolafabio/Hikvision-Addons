@@ -1,12 +1,13 @@
-from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_int, c_uint, c_void_p, pointer, sizeof, cast
+from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_ulong, c_int, c_uint, c_void_p, c_long, create_string_buffer, pointer, sizeof, cast
 from enum import IntEnum
 import re
 import json
+import os
+from datetime import datetime
 from typing import Callable, Optional
 from loguru import logger
 from config import AppConfig
-from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_CALL_STATUS, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
-
+from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
 
@@ -31,6 +32,9 @@ class DeviceType(IntEnum):
     HD = 31
     AccessControlTerminal = 861
 
+def sanitize_doorbell_name(doorbell_name: str) -> str:
+    """Given a doorbell name, lowercase it and substitute whitespaces and `-` with `_`"""
+    return re.sub(r"\s|-", "_", doorbell_name.lower())
 
 class Doorbell():
     """A doorbell device.
@@ -168,6 +172,152 @@ class Doorbell():
             self._call_isapi("PUT", url, requestBody)
 
         logger.info(" Door {} unlocked by SDK", lock_id + 1)
+
+    def get_outdoor_ip(self) -> Optional[str]:
+            """
+            Retrieves the IP address of the linked Main Door Station.
+            Command: 16006 (NET_DVR_GET_VIDEO_INTERCOM_RELATEDEV_CFG)
+            """
+
+            # 1. Initialize the structure
+            config_struct = NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG()
+            config_struct.dwSize = sizeof(NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG)
+            lp_returned = c_ulong(0)
+            
+            # Command 16006: Related Device Config
+            # Channel 0xFFFFFFFF: Required for this command
+            result = self._sdk.NET_DVR_GetDVRConfig(
+                self.user_id,
+                16006, 
+                0xFFFFFFFF,
+                byref(config_struct),
+                sizeof(config_struct),
+                byref(lp_returned)
+            )
+
+            if not result:
+                error_code = self._sdk.NET_DVR_GetLastError()
+                logger.error("Failed to get intercom config. Error: {}", error_code)
+                return None
+
+            if config_struct.dwNum == 0:
+                logger.warning("No related devices found for {}", self._config.name)
+                return None
+
+            # For an Indoor Station, we usually want the 'struOutdoorUnit' (Main Door Station)
+            try:
+                # Access the first linked device in the union
+                raw_ip = config_struct.struuRelatedDev[0].struIndoorUnit.struOutdoorUnit.sIpV4
+                ip_address = raw_ip.decode('ascii').strip('\x00')
+                
+                if not ip_address:
+                    # Fallback: check the OutdoorUnit view of the union
+                    raw_ip = config_struct.struuRelatedDev[0].struOutdoorUnit.struMainOutdoorUnit.sIpV4
+                    ip_address = raw_ip.decode('ascii').strip('\x00')
+
+                if ip_address:
+                    logger.info("Found linked Door Station IP: {}", ip_address)
+                    return ip_address
+                
+                return None
+            except Exception as e:
+                logger.error("Error parsing IP from related device union: {}", e)
+                return None
+ 
+    def take_snapshot(self):
+
+        target_user_id = self.user_id
+        temp_user_id = -1
+
+        try:
+            # Step 1: Handle Indoor logic by logging into the linked Outdoor station
+            if self._type == DeviceType.INDOOR:
+                logger.info("Indoor station detected, fetching linked Outdoor IP for snapshot...")
+                outdoor_ip = self.get_outdoor_ip()
+                
+                if not outdoor_ip:
+                    logger.error("Could not find linked outdoor IP for {}", self._config.name)
+                    return None
+                
+                # Create a temporary session for the outdoor station
+                device_info = NET_DVR_DEVICEINFO_V30()
+                temp_user_id = self._sdk.NET_DVR_Login_V30(
+                    bytes(outdoor_ip, 'utf8'),
+                    self._config.port,
+                    bytes(self._config.username, 'utf8'),
+                    bytes(self._config.password, 'utf8'),
+                    device_info
+                )
+
+                if temp_user_id < 0:
+                    logger.error("Failed to login to linked Outdoor station at {} Error {}", outdoor_ip, self._sdk.NET_DVR_GetLastError())
+                    return None
+                
+                target_user_id = temp_user_id
+                logger.debug("Temporary session established (ID: {}) for IP: {}", target_user_id, outdoor_ip)
+            else:
+                logger.debug("Direct snapshot for device type: {}", self._type.name)
+
+            # Step 2: Capture Logic
+            priority_channels = [1]
+            param_combinations = [(0xFF, 2, 1024*1024)] 
+            
+            filename = None
+            for channel in priority_channels:
+                for pic_size, quality, buffer_size in param_combinations:
+                    try:
+                        jpeg_para = NET_DVR_JPEGPARA()
+                        jpeg_para.wPicSize = pic_size
+                        jpeg_para.wPicQuality = quality
+                        buffer = create_string_buffer(buffer_size)
+                        size = c_ulong(0)
+                        
+                        result = self._sdk.NET_DVR_CaptureJPEGPicture_NEW(
+                            target_user_id, 
+                            channel,
+                            byref(jpeg_para),
+                            buffer,
+                            buffer_size,
+                            byref(size)
+                        )
+                        
+                        if result and size.value > 100:
+                            image_data = buffer.raw[:size.value]
+                            if image_data.startswith(b'\xff\xd8'):
+                                filename = self._save_snapshot_result(image_data)
+                                break 
+                    except Exception as e:
+                        logger.debug("Capture attempt failed on channel {}: {}", channel, e)
+                if filename: break
+
+            return filename
+            
+        except Exception as e:
+            logger.error("Exception in take_snapshot: {}", e)
+            return None
+        finally:
+            # Step 3: Cleanup temporary session if it was created
+            if temp_user_id >= 0:
+                logger.debug("Logging out of temporary session {}", temp_user_id)
+                self._sdk.NET_DVR_Logout_V30(temp_user_id)
+
+
+    def _save_snapshot_result(self, image_data,):
+        """Helper to save snapshot result"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            folder_name = re.sub(r'\s+', '_', self._config.name.lower())
+            base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
+            output_dir = os.path.join(base_path, folder_name)
+            os.makedirs(output_dir, exist_ok=True)
+            filename = os.path.join(output_dir, f"snapshot_{timestamp}.jpg")
+            with open(filename, "wb") as f:
+                f.write(image_data)
+            logger.info(f"Snapshot saved: {filename}")
+            return filename
+            
+        except Exception as e:
+            logger.error(f"Failed to save snapshot: {e}")
 
     def callsignal(self, cmd_type: int):
         """ Answer the specified door using the NET_DVR_VIDEO_CALL_PARAM.
