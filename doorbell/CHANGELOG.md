@@ -1,12 +1,22 @@
 # Changelog
 
-## 3.0.26- 2025-12-15
+## 3.0.27 - 2026-01-23 (unreleased)
+
+### Changed
+
+- Using a slim image now, makes the Add-on / image 5 x times smaller 1GB => 200MB
+- Added:  Extra input commands to align with all MQTT entities (callerInfo/callStatus/takeSnapshot)
+- Added:  An extra button (Take Snapshot), this takes a snapshot from the outdoor station and saves the image in the /media drive! (For now :-) ) When you are pressing the button from an indoor station, it will login to the outdoor station first, this works ONLY when the admin credentials are the same, could be usefull for people that only have access to indoor stations
+- Fix: gracefully handle invalid ISAPI input strings
+
+
+## 3.0.26 - 2025-12-15
 
 ### Changed
 
 - Added also a call sensor for indoor stations, there is no event for indoor stations, so you need to manually poll it with the call_state_poll config option, usefull when you dont have access to outdoor station (appertment building)
 
-## 3.0.25- 2025-11-12
+## 3.0.25 - 2025-11-12
 
 ### Changed
 
