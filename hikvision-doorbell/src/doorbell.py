@@ -250,7 +250,7 @@ class Doorbell():
                 )
 
                 if temp_user_id < 0:
-                    logger.error("Failed to login to linked Outdoor station at {}", outdoor_ip)
+                    logger.error("Failed to login to linked Outdoor station at {} Error {}", outdoor_ip, self._sdk.NET_DVR_GetLastError())
                     return None
                 
                 target_user_id = temp_user_id
