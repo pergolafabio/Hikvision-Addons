@@ -17,11 +17,11 @@ def test_AppConfig():
 
 @pytest.fixture(autouse=True)
 def setup_test_env(monkeypatch):
-    # This prevents ha_token_from_env from raising the ValueError
     monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_test_token")
-    # This ensures requests doesn't even try to hit the network
+    # Change the patch to return a mock object that doesn't explode
     with patch("requests.get") as mock_get:
-        mock_get.side_effect = Exception("Network disabled in tests")
+        # Instead of mock_get.side_effect = Exception(...), do this:
+        mock_get.return_value.status_code = 404
         yield
 
 
