@@ -35,15 +35,14 @@ def test_load_config_missing_token(monkeypatch):
     # Ensure environment is clean
     monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
     monkeypatch.delenv("HOME_ASSISTANT__TOKEN", raising=False)
-    
-    # We expect a ValidationError because we are providing a URL but NO token
+
+    # We expect a ValidationError because we provide a HA block but no token
     with pytest.raises(ValidationError):
-        config = AppConfig()
-        # Manually load data that includes HA but triggers the token factory
-        config.load_data({
-            "doorbells": [],
-            "home_assistant": {"url": "http://localhost:8123"}
-        })
+        # Pass the dictionary directly into the class constructor
+        AppConfig(
+            doorbells=[],
+            home_assistant={"url": "http://localhost:8123"}
+        )
 
 
 def test_load_config_mqtt():
