@@ -1,6 +1,6 @@
 from enum import Enum
 import os
-from typing import Any, Optional
+from typing import Any, Optional, ClassVar
 from goodconf import GoodConf
 from pydantic import Field, BaseModel, AnyHttpUrl, field_validator, ConfigDict # Update imports
 import requests
@@ -62,7 +62,7 @@ class AppConfig(GoodConf):
         file_env_var="CONFIG_FILE_PATH",
     )
     
-    default_files = ["/data/options.json", "default_config.yaml"]
+    default_files: ClassVar[list[str]] = ["/data/options.json", "default_config.yaml"]
 
     class Doorbell(BaseModel):
         name: str = Field(description="Custom name of the doorbell")
