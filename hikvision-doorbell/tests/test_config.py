@@ -10,10 +10,10 @@ def mock_env(monkeypatch):
     monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_token_for_testing")
 
 def test_AppConfig():
-    # Don't pass default_files here, it's a ClassVar now
-    config = AppConfig()  
-    # If you want to empty the files for testing:
-    config.default_files = [] 
+    # FIX: Set the ClassVar on the Class, not the instance
+    AppConfig.default_files = [] 
+    config = AppConfig()
+    # If doorbells is now optional, this will pass
     config.load()
 
 @pytest.fixture(autouse=True)
@@ -31,9 +31,15 @@ def test_load_config_from_json():
     config.load("tests/assets/test_config.json")
 
 
-def test_load_config_missing_token():
+def test_load_config_missing_token(monkeypatch):
+    # FIX: Ensure environment is totally clean for this test
+    monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
+    monkeypatch.delenv("HOME_ASSISTANT__TOKEN", raising=False)
+    
     with pytest.raises(ValidationError):
-        config = AppConfig()  # type: ignore
+        # By loading a config that doesn't have the token, 
+        # the factory returns "", and min_length=1 triggers the error.
+        config = AppConfig()
         config.load("tests/assets/test_config_wrong.json")
 
 
