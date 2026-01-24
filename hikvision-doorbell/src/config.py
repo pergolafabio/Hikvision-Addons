@@ -109,10 +109,10 @@ class AppConfig(GoodConf):
             return level
 
     doorbells: list[Doorbell] = Field(description="List of doorbells to connect to")
-    home_assistant: Optional[HomeAssistant]
+    home_assistant: Optional[HomeAssistant] = None
     # Use a factory function to automatically load the MQTT configuration using the supervisor API, if MQTT is available
     mqtt: Optional[MQTT] = Field(default_factory=mqtt_config_from_supervisor)
-    system: System
+    system: System = System()
 
     @validator('mqtt', pre=True)
     def load_mqtt_config(cls, v):

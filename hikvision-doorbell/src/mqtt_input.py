@@ -26,6 +26,12 @@ class MQTTInput():
             username=config.username,
             password=config.password
         )
+
+        # Initialize storage
+        self._sensors = {}
+        self._scene_sensor_tasks = {}
+        self._alarm_sensor_tasks = {}
+
         for doorbell in doorbells.values():
             self._sensors[doorbell] = {}
 
@@ -43,8 +49,8 @@ class MQTTInput():
                 device_class="restart",
                 device=device,
                 default_entity_id=f"{sanitized_doorbell_name}_reboot")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            reboot_button = Button(settings, self._reboot_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            reboot_button = Button(settings, self._reboot_callback)
             reboot_button.set_availability(True)
             
             # Consider only indoor units for the next sensors
@@ -59,8 +65,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:phone-cancel",
                 default_entity_id=f"{sanitized_doorbell_name}_reject_call")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            reject_button = Button(settings, self._reject_call_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            reject_button = Button(settings, self._reject_call_callback)
             reject_button.set_availability(True)
 
             ###########
@@ -71,8 +77,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:phone-cancel",
                 default_entity_id=f"{sanitized_doorbell_name}_hangup_call")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            hangup_button = Button(settings, self._hangup_call_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            hangup_button = Button(settings, self._hangup_call_callback)
             hangup_button.set_availability(True)
             
             ###########
@@ -83,8 +89,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:phone-check",
                 default_entity_id=f"{sanitized_doorbell_name}_answer_call")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            answer_button = Button(settings, self._answer_call_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            answer_button = Button(settings, self._answer_call_callback)
             answer_button.set_availability(True)
 
             ###########
@@ -95,8 +101,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:volume-mute",
                 default_entity_id=f"{sanitized_doorbell_name}_mute_audio_output")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            mute_button = Button(settings, self._mute_audio_output_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            mute_button = Button(settings, self._mute_audio_output_callback)
             mute_button.set_availability(True)
 
             ###########
@@ -107,8 +113,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:volume-high",
                 default_entity_id=f"{sanitized_doorbell_name}_unmute_audio_output")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            unmute_button = Button(settings, self._unmute_audio_output_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            unmute_button = Button(settings, self._unmute_audio_output_callback)
             unmute_button.set_availability(True)
 
             ###########
@@ -120,8 +126,8 @@ class MQTTInput():
                 # enabled_by_default=False,
                 # entity_category="diagnostic",
                 default_entity_id=f"{sanitized_doorbell_name}_isapi_request")
-            settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True)
-            isapi_text = Text(settings, self._isapi_input_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell)
+            isapi_text = Text(settings, self._isapi_input_callback)
             isapi_text.set_availability(True)
             self._sensors[doorbell]['isapi_text'] = isapi_text
      
@@ -133,8 +139,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:phone-log",
                 default_entity_id=f"{sanitized_doorbell_name}_caller_info")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            caller_info_button = Button(settings, self._caller_info_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            caller_info_button = Button(settings, self._caller_info_callback)
             caller_info_button.set_availability(True)
             self._sensors[doorbell]['caller_info'] = caller_info_button
             
@@ -146,8 +152,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:phone-log",
                 default_entity_id=f"{sanitized_doorbell_name}_call_status")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            call_status_button = Button(settings, self._call_status_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            call_status_button = Button(settings, self._call_status_callback)
             call_status_button.set_availability(True)
             self._sensors[doorbell]['call_status'] = call_status_button
 
@@ -160,8 +166,8 @@ class MQTTInput():
                 device=device,
                 icon="mdi:camera",
                 default_entity_id=f"{sanitized_doorbell_name}_take_snapshot")
-            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-            take_snapshot_button = Button(settings, self._take_snapshot_callback, doorbell)
+            settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+            take_snapshot_button = Button(settings, self._take_snapshot_callback)
             take_snapshot_button.set_availability(True)
             self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
 
@@ -177,36 +183,30 @@ class MQTTInput():
                     default_entity_id=f"{sanitized_doorbell_name}_scene",
                     icon="mdi:shield")
 
-                settings = Settings(mqtt=mqtt_settings, entity=scene_sensor_info, manual_availability=True)
+                settings = Settings(mqtt=mqtt_settings, entity=scene_sensor_info, manual_availability=True, user_data=doorbell)
                 scene_sensor = Sensor(settings)
                 scene_sensor.set_availability(True)
                 self._sensors[doorbell]['scene_sensor'] = scene_sensor
 
-                async def poll_scene_sensor(d=doorbell, s=scene_sensor):
+                async def poll_scene_sensor(d: Doorbell, s: Sensor):
                     while True:
                         try:
                             xml_string = d._call_isapi("GET", "/ISAPI/VideoIntercom/scene/nowMode")
                             root = ET.fromstring(xml_string)
-                            element = root[0].text
-                            # Error out if we don't find attribute
-                            if element is None:
-                                # Print a string representation of the response XML
+                            if len(root) > 0 and root[0].text is not None:
+                                element = root[0].text
+                                s.set_state(element)
+                                logger.info("Scene poll sensor: {}", element)
+                            else:
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
-                            s.set_state(element)
-                            logger.debug("Scene sensor changed to {}", element)
-                        except RuntimeError:
-                            # Ignore error to avoid crashing application
-                            pass
-                        await asyncio.sleep(15)
-                        logger.debug("Polling scene sensor every 15 sec")
+                        except Exception as e:
+                            logger.error("Error polling scene sensor for {}: {}", d._config.name, e)
                         
+                        await asyncio.sleep(15)
+                
                 loop = asyncio.get_event_loop()
-                # scene_sensor_task = loop.create_task(poll_scene_sensor())
-                new_task = loop.create_task(poll_scene_sensor())
-                if not hasattr(self, '_scene_sensor_tasks'):
-                    self._scene_sensor_tasks = {}
-            
-                self._scene_sensor_tasks[doorbell] = new_task
+                # Store the task using the doorbell as the key
+                self._scene_sensor_tasks[doorbell] = loop.create_task(poll_scene_sensor(doorbell, scene_sensor))
 
                 ##################
                 # alarm state poll sensor
@@ -217,36 +217,30 @@ class MQTTInput():
                     default_entity_id=f"{sanitized_doorbell_name}_alarm",
                     icon="mdi:alarm-check")
 
-                settings = Settings(mqtt=mqtt_settings, entity=alarm_sensor_info, manual_availability=True)
+                settings = Settings(mqtt=mqtt_settings, entity=alarm_sensor_info, manual_availability=True, user_data=doorbell)
                 alarm_sensor = Sensor(settings)
                 alarm_sensor.set_availability(True)
                 self._sensors[doorbell]['alarm_sensor'] = alarm_sensor
 
-                async def poll_alarm_sensor(d=doorbell, a=alarm_sensor):
+                async def poll_alarm_sensor(d: Doorbell, a: Sensor):
                     while True:
                         try:
                             xml_string = d._call_isapi("GET", "/ISAPI/SecurityCP/AlarmControlByPhone")
                             root = ET.fromstring(xml_string)
-                            element = root[0].text
-                            # Error out if we don't find attribute
-                            if element is None:
-                                # Print a string representation of the response XML
+                            if len(root) > 0 and root[0].text is not None:
+                                element = root[0].text
+                                a.set_state(element)
+                                logger.info("Alarm poll sensor: {}", element)
+                            else:
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
-                            a.set_state(element)
-                            logger.debug("Alarm sensor changed to {}", element)
-                        except RuntimeError:
-                            # Ignore error to avoid crashing application
-                            pass
-                        await asyncio.sleep(15)
-                        logger.debug("Polling alarm sensor every 15 sec")
+                        except Exception as e:
+                            logger.error("Error polling alarm sensor for {}: {}", d._config.name, e)
                         
+                        await asyncio.sleep(15)
+
                 loop = asyncio.get_event_loop()
-                # alarm_sensor_task = loop.create_task(poll_alarm_sensor())
-                new_task = loop.create_task(poll_alarm_sensor())
-                if not hasattr(self, '_alarm_sensor_tasks'):
-                    self._alarm_sensor_tasks = {}
-            
-                self._alarm_sensor_tasks[doorbell] = new_task
+                # Store the task using the doorbell as the key
+                self._alarm_sensor_tasks[doorbell] = loop.create_task(poll_alarm_sensor(doorbell, alarm_sensor))
 
                 ###########
                 # atHome Button
@@ -256,8 +250,8 @@ class MQTTInput():
                     device=device,
                     icon="mdi:shield-home",
                     default_entity_id=f"{sanitized_doorbell_name}_at_home")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                at_home_button = Button(settings, self._at_home_callback, doorbell)
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                at_home_button = Button(settings, self._at_home_callback)
                 at_home_button.set_availability(True)
 
                 ###########
@@ -268,8 +262,8 @@ class MQTTInput():
                     device=device,
                     icon="mdi:shield-lock",
                     default_entity_id=f"{sanitized_doorbell_name}_go_out")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                go_out_button = Button(settings, self._go_out_callback, doorbell)
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                go_out_button = Button(settings, self._go_out_callback)
                 go_out_button.set_availability(True)
 
                 ###########
@@ -280,8 +274,8 @@ class MQTTInput():
                     device=device,
                     icon="mdi:shield-moon",
                     default_entity_id=f"{sanitized_doorbell_name}_go_to_bed")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                go_to_bed_button = Button(settings, self._go_to_bed_callback, doorbell)
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                go_to_bed_button = Button(settings, self._go_to_bed_callback)
                 go_to_bed_button.set_availability(True)
 
                 ###########
@@ -292,8 +286,8 @@ class MQTTInput():
                     device=device,
                     icon="mdi:shield-star",
                     default_entity_id=f"{sanitized_doorbell_name}_custom")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                custom_button = Button(settings, self._custom_callback, doorbell)
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                custom_button = Button(settings, self._custom_callback)
                 custom_button.set_availability(True)
 
                 ###########
@@ -304,8 +298,8 @@ class MQTTInput():
                     device=device,
                     icon="mdi:alarm",
                     default_entity_id=f"{sanitized_doorbell_name}_setupAlarm")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                setupAlarm_button = Button(settings, self._setupAlarm_callback, doorbell)
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                setupAlarm_button = Button(settings, self._setupAlarm_callback)
                 setupAlarm_button.set_availability(True)
 
                 ###########
@@ -316,8 +310,8 @@ class MQTTInput():
                     device=device,
                     icon="mdi:alarm-off",
                     default_entity_id=f"{sanitized_doorbell_name}_closeAlarm")
-                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True)
-                closeAlarm_button = Button(settings, self._closeAlarm_callback, doorbell)
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                closeAlarm_button = Button(settings, self._closeAlarm_callback)
                 closeAlarm_button.set_availability(True)
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
@@ -431,8 +425,8 @@ class MQTTInput():
             }
             call_status_button.set_attributes(attributes)
 
-    def _take_snapshot_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
-        doorbell = user_data
+    def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+    # Doorbell is now passed directly as the second argument (user_data)
         logger.info("Received take snapshot command, doorbell: {}", doorbell._config.name)
         doorbell.take_snapshot()
 
@@ -554,7 +548,8 @@ class MQTTInput():
 
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
-            response = doorbell._call_isapi(http_method, url, request_body[0])
+            # Use the first element if it exists, otherwise an empty string
+            response = doorbell._call_isapi(http_method, url, request_body[0] if request_body else "")
             attributes = {
                 "request": text_string,
                 "response": response

@@ -112,6 +112,9 @@ class MQTTHandler(EventHandler):
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: {}", self.name)
+
+        # Initialize task storage at the start
+        self._call_sensor_tasks: dict[Doorbell, asyncio.Task] = {}
         
         # Save the MQTT settings as an attribute
         self._mqtt_settings = Settings.MQTT(
@@ -156,37 +159,36 @@ class MQTTHandler(EventHandler):
             if not doorbell._config.call_state_poll is None:
 
                 call_state_poll_sec = doorbell._config.call_state_poll
-                
+
                 async def poll_call_sensor(d=doorbell, c=call_sensor):
+
+                    url = "/ISAPI/VideoIntercom/callStatus?format=json"
+                    requestBody = None  # GET requests usually don't have a body
                     while True:
                         try:
-                            logger.info("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
-                            url = "/ISAPI/VideoIntercom/callStatus?format=json"
-                            requestBody = ""
-                            try:
-                                response = d._call_isapi("GET", url, requestBody)
-                                logger.debug("Received call status with response: {} " , response)
-                                call_state = json.loads(response)["CallStatus"]["status"]
-                                # Error out if we don't find state
-                                if call_state is None:
-                                    # Print a string representation of the response JSON
-                                    raise RuntimeError(f'Unexpected JSON response: {response}')
-                                c.set_state(call_state)
-                                logger.info("Call sensor changed to {} for doorbell: {}", call_state, d._config.name)
-                            except SDKError as err:
-                                logger.error("Error while getting call status with ISAPI: {}", err)
+                            logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
+                            response = d._call_isapi("GET", url, requestBody)
+                            data = json.loads(response)
+                            
+                            # Use .get() to avoid KeyErrors if the device returns an error object
+                            call_status_obj = data.get("CallStatus")
+                            if call_status_obj:
+                                call_state = call_status_obj.get("status")
+                                if call_state:
+                                    c.set_state(call_state)
+                                    logger.info("Call sensor polling for : {} changed to {}", d._config.name, call_state)
+                            else:
+                                logger.warning("Unexpected ISAPI response from {}: {}", d._config.name, response)
                                 
-                        except RuntimeError:
-                            # Ignore error to avoid crashing application
-                            pass
+                        except (SDKError, json.JSONDecodeError) as err:
+                            logger.error("Communication error with {}: {}", d._config.name, err)
+                        except Exception as e:
+                            logger.exception("Unexpected error in polling loop: {}", e)
+                            
                         await asyncio.sleep(call_state_poll_sec)
                         
                 loop = asyncio.get_event_loop()
-                new_task = loop.create_task(poll_call_sensor())
-                if not hasattr(self, '_call_sensor_tasks'):
-                    self._call_sensor_tasks = {}
-            
-                self._call_sensor_tasks[doorbell] = new_task
+                self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
                 
             ##################
             # Doors
