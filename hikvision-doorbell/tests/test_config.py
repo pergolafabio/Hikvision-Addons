@@ -10,10 +10,11 @@ def mock_env(monkeypatch):
     monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_token_for_testing")
 
 def test_AppConfig():
-    # It's better to pass default_files=[] to avoid loading local files during tests
-    config = AppConfig(default_files=[])  
-    # You don't need to call .load() if you aren't passing a file, 
-    # but if you do, ensure it doesn't crash on missing files
+    # Don't pass default_files here, it's a ClassVar now
+    config = AppConfig()  
+    # If you want to empty the files for testing:
+    config.default_files = [] 
+    config.load()
 
 @pytest.fixture(autouse=True)
 def setup_test_env(monkeypatch):

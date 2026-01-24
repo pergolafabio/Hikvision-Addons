@@ -76,7 +76,12 @@ class AppConfig(GoodConf):
 
     class HomeAssistant(BaseModel):
         url: AnyHttpUrl = Field(description="Base url of Home Assistant")
-        token: str = Field(description="Auth token", default_factory=ha_token_from_env)
+        # Add min_length=1 to ensure "" triggers a ValidationError
+        token: str = Field(
+            description="Auth token", 
+            default_factory=ha_token_from_env,
+            min_length=1  
+        )
 
         @field_validator('url')
         @classmethod
@@ -104,7 +109,7 @@ class AppConfig(GoodConf):
             except KeyError:
                 raise ValueError(f"Supported levels: {[e.name for e in SDKLogLevel]}")
 
-    doorbells: list[Doorbell] = Field(description="List of doorbells")
+    doorbells: list[Doorbell] = Field(default_factory=list, description="List of doorbells")
     home_assistant: Optional[HomeAssistant] = None
     mqtt: Optional[MQTT] = Field(default_factory=mqtt_config_from_supervisor)
     system: System = System()
