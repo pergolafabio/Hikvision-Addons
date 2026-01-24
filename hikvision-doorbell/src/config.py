@@ -86,7 +86,7 @@ class AppConfig(GoodConf):
         @field_validator('url')
         @classmethod
         def check_url_path(cls, v: AnyHttpUrl):
-            if v.path and v.path.endswith('/'):
+            if str(v).endswith('/'):
                 raise ValueError("Url must not end with /")
             return v
 

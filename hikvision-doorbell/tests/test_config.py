@@ -32,15 +32,18 @@ def test_load_config_from_json():
 
 
 def test_load_config_missing_token(monkeypatch):
-    # FIX: Ensure environment is totally clean for this test
+    # Ensure environment is clean
     monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
     monkeypatch.delenv("HOME_ASSISTANT__TOKEN", raising=False)
     
+    # We expect a ValidationError because we are providing a URL but NO token
     with pytest.raises(ValidationError):
-        # By loading a config that doesn't have the token, 
-        # the factory returns "", and min_length=1 triggers the error.
         config = AppConfig()
-        config.load("tests/assets/test_config_wrong.json")
+        # Manually load data that includes HA but triggers the token factory
+        config.load_data({
+            "doorbells": [],
+            "home_assistant": {"url": "http://localhost:8123"}
+        })
 
 
 def test_load_config_mqtt():
