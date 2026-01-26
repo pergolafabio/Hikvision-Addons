@@ -102,8 +102,8 @@ class AppConfig(GoodConf):
         # Use a factory function to read SUPERVISOR_TOKEN if this this field is not set by HOME_ASSISTANT__TOKEN
         token: str = Field(description="Authentication token to access the API", default_factory=ha_token_from_env)
 
-        @field_validator('url')  # CHANGED
-        @classmethod  # ADDED
+        @field_validator('url')
+        @classmethod
         def check_url_path(cls, v):
             if v.path and v.path.endswith('/'):
                 raise ValueError("Url must not end with /")
@@ -120,8 +120,8 @@ class AppConfig(GoodConf):
         log_level: LogLevel = LogLevel.WARNING
         sdk_log_level: SDKLogLevel = SDKLogLevel.NONE
 
-        @field_validator('sdk_log_level', mode='before')  # CHANGED
-        @classmethod  # ADDED
+        @field_validator('sdk_log_level', mode='before')
+        @classmethod
         def from_string_to_enum(cls, v):
             '''Convert from a string representation fo the SDKLogLevel enum to the actual enum instance'''
             try:
@@ -130,10 +130,10 @@ class AppConfig(GoodConf):
                 raise ValueError(f"Supported log levels: {list(value.name for value in SDKLogLevel)}")
             return level
 
-    doorbells: list[Doorbell] = Field(description="List of doorbells to connect to")
-    home_assistant: Optional[HomeAssistant] = None  # ADDED = None
+    doorbells: list[Doorbell] = Field(default_factory=list, description="List of doorbells to connect to")
+    home_assistant: Optional[HomeAssistant] = None 
     # Use a factory function to automatically load the MQTT configuration using the supervisor API, if MQTT is available
-    mqtt: Optional[MQTT] = None  # CHANGED: Remove default_factory
+    mqtt: Optional[MQTT] = None
     system: System
 
     @field_validator('mqtt', mode='before')

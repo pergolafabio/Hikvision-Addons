@@ -10,10 +10,11 @@ def mock_env(monkeypatch):
     monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_token_for_testing")
 
 def test_AppConfig():
-    # FIX: Set the ClassVar on the Class, not the instance
-    AppConfig.default_files = [] 
-    config = AppConfig()
-    # If doorbells is now optional, this will pass
+    AppConfig.default_files = []
+    config = AppConfig(
+        doorbells=[],
+        system={"log_level": "WARNING", "sdk_log_level": "NONE"}  # Provide system
+    )
     config.load()
 
 @pytest.fixture(autouse=True)
