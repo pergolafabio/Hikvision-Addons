@@ -106,7 +106,7 @@ class AppConfig(GoodConf):
 
     doorbells: list[Doorbell] = Field(default_factory=list, description="List of doorbells")
     home_assistant: Optional[HomeAssistant] = None
-    mqtt: Optional[MQTT] = Field(default=None, validate_default=True)
+    mqtt: Optional[MQTT] = None
     system: System = System()
 
     @field_validator('mqtt', mode='before')
