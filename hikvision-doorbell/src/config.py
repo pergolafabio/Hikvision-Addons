@@ -30,13 +30,14 @@ def mqtt_config_from_supervisor():
         
         if response.status_code == 200:
             data = response.json().get('data', {})
-            return AppConfig.MQTT(
-                host=data.get('host'),
-                port=data.get('port'),
-                ssl=data.get('ssl', False),
-                username=data.get('username'),
-                password=data.get('password')
-            )
+            # Return a DICT instead of the Class instance
+            return {
+                "host": data.get('host'),
+                "port": data.get('port'),
+                "ssl": data.get('ssl', False),
+                "username": data.get('username'),
+                "password": data.get('password')
+            }
         elif response.status_code == 400:
             logger.error("MQTT service not available in Supervisor")
     except Exception as e:
@@ -117,7 +118,10 @@ class AppConfig(GoodConf):
     @field_validator('mqtt', mode='before')
     @classmethod
     def load_mqtt_config(cls, v):
-        # Use user-supplied values if they exist, otherwise fallback to supervisor
-        if v:
+        # If 'v' is a dict and has a host, the user configured it manually
+        if isinstance(v, dict) and v.get('host'):
             return v
+        
+        # Otherwise, try to get it from the supervisor
+        logger.debug("MQTT config empty, fetching from supervisor")
         return mqtt_config_from_supervisor()
