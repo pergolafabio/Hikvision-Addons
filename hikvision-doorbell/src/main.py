@@ -26,12 +26,6 @@ async def main():
         logger.error("Configuration error: {}", e)
         sys.exit(1)
 
-    if config.mqtt is None:
-        data = mqtt_config_from_supervisor()
-        if data:
-            config.mqtt = AppConfig.MQTT(**data)
-            logger.info("MQTT configuration loaded from Supervisor")
-
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
     logger.add(sys.stdout, colorize=True, level=config.system.log_level.value)
