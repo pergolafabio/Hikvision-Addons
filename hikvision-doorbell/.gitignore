@@ -6,3 +6,9 @@
 
 # Environment variables for local development
 development.env
+
+# Ignore any folder starting with 'venv'
+venv*/
+
+# Ignore the standard hidden venv folder
+.venv/
