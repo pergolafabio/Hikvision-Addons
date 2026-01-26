@@ -25,25 +25,19 @@ def mqtt_config_from_supervisor():
     logger.debug("Requesting MQTT service configuration from supervisor")
     
     try:
-        # One request with a timeout to prevent hanging
-        response = requests.get("http://supervisor/services/mqtt", headers=auth_headers, timeout=2)
-        
+        response = requests.get("http://supervisor/services/mqtt", headers=auth_headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get('data', {})
-            # Return a DICT instead of the Class instance
+            # RETURN A DICT, NOT AppConfig.MQTT(...)
             return {
                 "host": data.get('host'),
-                "port": data.get('port'),
+                "port": int(data.get('port')),
                 "ssl": data.get('ssl', False),
                 "username": data.get('username'),
                 "password": data.get('password')
             }
-        elif response.status_code == 400:
-            logger.error("MQTT service not available in Supervisor")
     except Exception as e:
-        # Gracefully handle the 'Temporary failure in name resolution' in tests
-        logger.debug("Supervisor MQTT service not reachable: {}", e)
-    
+        logger.error(f"Supervisor API unreachable: {e}")
     return None
 
 
@@ -112,16 +106,18 @@ class AppConfig(GoodConf):
 
     doorbells: list[Doorbell] = Field(default_factory=list, description="List of doorbells")
     home_assistant: Optional[HomeAssistant] = None
-    mqtt: Optional[MQTT] = Field(default_factory=mqtt_config_from_supervisor)
+    mqtt: Optional[MQTT] = Field(default=None, validate_default=True)
     system: System = System()
 
     @field_validator('mqtt', mode='before')
     @classmethod
     def load_mqtt_config(cls, v):
-        # If 'v' is a dict and has a host, the user configured it manually
+        # If the user actually typed something in the HA config UI for MQTT, use it
         if isinstance(v, dict) and v.get('host'):
             return v
         
-        # Otherwise, try to get it from the supervisor
-        logger.debug("MQTT config empty, fetching from supervisor")
-        return mqtt_config_from_supervisor()
+        # If v is None, empty, or missing, go to the supervisor
+        logger.debug("MQTT config not found in options, fetching from supervisor")
+        config_data = mqtt_config_from_supervisor()
+        
+        return config_data
