@@ -33,6 +33,10 @@ async def main():
         if 'doorbells' not in data:
             data['doorbells'] = []
         
+        # If mqtt is an empty dict, remove it (will be loaded from supervisor)
+        if data.get('mqtt') == {}:
+            del data['mqtt']
+
         # Create config using Pydantic validation
         config = AppConfig(**data)
         
