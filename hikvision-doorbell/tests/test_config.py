@@ -1,13 +1,9 @@
-from config import AppConfig
+from config import AppConfig, LogLevel
+from sdk.utils import SDKLogLevel
 import pytest
 import os
 from pydantic import ValidationError
 from unittest.mock import patch
-
-# This fixture will run before every test and provide a dummy token
-@pytest.fixture(autouse=True)
-def mock_env(monkeypatch):
-    monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_token_for_testing")
 
 def test_AppConfig():
     AppConfig.default_files = []
@@ -15,15 +11,22 @@ def test_AppConfig():
         doorbells=[],
         system={"log_level": "WARNING", "sdk_log_level": "NONE"}  # Provide system
     )
-    config.load()
+    assert config.doorbells == []
+    assert config.system.log_level == LogLevel.WARNING
+    assert config.system.sdk_log_level == SDKLogLevel.NONE
 
 @pytest.fixture(autouse=True)
 def setup_test_env(monkeypatch):
     monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_test_token")
     # Change the patch to return a mock object that doesn't explode
-    with patch("requests.get") as mock_get:
+    with patch("config.requests.get") as mock_get:
         # Instead of mock_get.side_effect = Exception(...), do this:
-        mock_get.return_value.status_code = 404
+        # Create a proper mock that won't trigger exceptions
+        mock_response = type('MockResponse', (), {})()
+        mock_response.status_code = 404
+        mock_response.text = "Not found"
+        mock_response.json = lambda: {'data': {}}
+        mock_get.return_value = mock_response
         yield
 
 
