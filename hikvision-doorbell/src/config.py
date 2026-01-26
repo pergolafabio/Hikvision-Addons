@@ -108,16 +108,3 @@ class AppConfig(GoodConf):
     home_assistant: Optional[HomeAssistant] = None
     mqtt: Optional[MQTT] = None
     system: System = System()
-
-    @field_validator('mqtt', mode='before')
-    @classmethod
-    def load_mqtt_config(cls, v):
-        # If the user actually typed something in the HA config UI for MQTT, use it
-        if isinstance(v, dict) and v.get('host'):
-            return v
-        
-        # If v is None, empty, or missing, go to the supervisor
-        logger.debug("MQTT config not found in options, fetching from supervisor")
-        config_data = mqtt_config_from_supervisor()
-        
-        return config_data

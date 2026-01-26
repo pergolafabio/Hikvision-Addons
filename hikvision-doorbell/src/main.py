@@ -8,6 +8,7 @@ from event import ConsoleHandler, EventManager
 # from home_assistant import HomeAssistantAPI
 from mqtt import MQTTHandler
 from mqtt_input import MQTTInput
+from config import mqtt_config_from_supervisor
 from sdk.utils import SDKConfig, SDKError, loadSDK, setupSDK, shutdownSDK
 from loguru import logger
 
@@ -24,6 +25,12 @@ async def main():
     except RuntimeError as e:
         logger.error("Configuration error: {}", e)
         sys.exit(1)
+
+    if config.mqtt is None:
+        data = mqtt_config_from_supervisor()
+        if data:
+            config.mqtt = AppConfig.MQTT(**data)
+            logger.info("MQTT configuration loaded from Supervisor")
 
     # Remove the default handler installed by loguru (it redirects to stderr)
     logger.remove()
