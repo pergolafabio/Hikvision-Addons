@@ -1,6 +1,8 @@
 import asyncio
 import signal
 import socket
+import os
+import json
 import sys
 from config import AppConfig
 from doorbell import Doorbell, Registry
@@ -17,13 +19,37 @@ from input import InputReader
 
 async def main():
     """Main entrypoint of the application"""
-
     try:
-        # Disable type warnings since the object is populated at runtime using goodconf library
-        config = AppConfig()  # type:ignore
-        config.load()
-    except RuntimeError as e:
+        # Load data from file
+        config_file = "/data/options.json"
+        data = {}
+        if os.path.exists(config_file):
+            with open(config_file, 'r') as f:
+                data = json.load(f)
+        
+        # Ensure required fields exist
+        if 'system' not in data:
+            data['system'] = {}
+        if 'doorbells' not in data:
+            data['doorbells'] = []
+        
+        # Create config using Pydantic validation
+        config = AppConfig(**data)
+        
+        # MANUALLY LOAD MQTT FROM SUPERVISOR if not provided
+        if config.mqtt is None:
+            try:
+                mqtt_data = mqtt_config_from_supervisor()
+                if mqtt_data:
+                    config.mqtt = AppConfig.MQTT(**mqtt_data)
+                    logger.info("MQTT configuration loaded from Supervisor")
+            except Exception as mqtt_error:
+                logger.warning(f"Could not load MQTT from supervisor: {mqtt_error}")
+            
+    except Exception as e:
         logger.error("Configuration error: {}", e)
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
     # Remove the default handler installed by loguru (it redirects to stderr)
