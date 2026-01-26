@@ -18,8 +18,8 @@ class MQTTInput():
     _sensors: dict[Doorbell, dict[str, Discoverable[Any]]] = {}
 
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
+        self._doorbells = doorbells
         logger.debug("Setting up MQTTInput")
-        # self._doorbells = doorbells
         mqtt_settings = Settings.MQTT(
             host=config.host,
             port=config.port,
@@ -314,7 +314,25 @@ class MQTTInput():
                 closeAlarm_button = Button(settings, self._closeAlarm_callback)
                 closeAlarm_button.set_availability(True)
 
+    def _get_doorbell_from_args(self, doorbell, message):
+        # If the library actually worked, return the object
+        if isinstance(doorbell, Doorbell):
+            return doorbell
+
+        topic = message.topic.lower()
+        
+        for d in self._doorbells.values():
+            name = d._config.name.lower()
+            sanitized = sanitize_doorbell_name(d._config.name).lower()
+            
+            # Check if the name or the sanitized name exists anywhere in the topic
+            if name in topic or sanitized in topic or name.replace("-", "_") in topic:
+                return d
+            
+        return None
+
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received reboot command for doorbell: {}", doorbell._config.name)
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
@@ -323,6 +341,7 @@ class MQTTInput():
             logger.error("Error while rebooting device: {}", err)
         
     def _reject_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received reject command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/callSignal?format=json"
@@ -346,6 +365,7 @@ class MQTTInput():
                     logger.error("Error while rejecting the call with SDK: {}", err)
 
     def _hangup_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received hangup command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/callSignal?format=json"
@@ -369,6 +389,7 @@ class MQTTInput():
                     logger.error("Error while hanging up the call with SDK: {}", err)           
 
     def _answer_call_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received answer command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/callSignal?format=json"
@@ -392,6 +413,8 @@ class MQTTInput():
                     logger.error("Error while answering call with SDK: {}", err)
            
     def _caller_info_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        
         logger.info("Trying to get caller info for doorbell: {}", doorbell._config.name)
         url = "/ISAPI/VideoIntercom/callerInfo?format=json"
         requestBody = ""
@@ -407,11 +430,14 @@ class MQTTInput():
                 "CallerInfo": "Error while getting caller info with error code: " + str(err.args[1])
             }
             caller_info_button.set_attributes(attributes)
-            
+
     def _call_status_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        
         logger.info("Trying to get call status for doorbell: {}", doorbell._config.name)
         url = "/ISAPI/VideoIntercom/callStatus?format=json"
         requestBody = ""
+
         call_status_button = cast(Button, self._sensors[doorbell]['call_status'])
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
@@ -426,11 +452,13 @@ class MQTTInput():
             call_status_button.set_attributes(attributes)
 
     def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-    # Doorbell is now passed directly as the second argument (user_data)
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received take snapshot command, doorbell: {}", doorbell._config.name)
         doorbell.take_snapshot()
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+
         logger.info("Received at home command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/scene/nowMode"
@@ -444,6 +472,7 @@ class MQTTInput():
             logger.error("Error setting scene: {}", err)
 
     def _go_out_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received go out command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/scene/nowMode"
@@ -457,6 +486,7 @@ class MQTTInput():
             logger.error("Error setting scene: {}", err)
 
     def _go_to_bed_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received go to bed command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/scene/nowMode"
@@ -470,6 +500,7 @@ class MQTTInput():
             logger.error("Error setting scene: {}", err)
 
     def _custom_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received custom command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/VideoIntercom/scene/nowMode"
@@ -483,6 +514,7 @@ class MQTTInput():
             logger.error("Error setting scene: {}", err)
 
     def _setupAlarm_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received setupAlarm command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/SecurityCP/AlarmControlByPhone"
@@ -496,6 +528,7 @@ class MQTTInput():
             logger.error("Error setting scene: {}", err)
 
     def _closeAlarm_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received closeAlarm command for doorbell: {}", doorbell._config.name)
 
         url = "/ISAPI/SecurityCP/AlarmControlByPhone"
@@ -509,6 +542,7 @@ class MQTTInput():
             logger.error("Error setting scene: {}", err)
 
     def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received mute audio output command for doorbell: {}", doorbell._config.name)
 
         try:
@@ -517,6 +551,7 @@ class MQTTInput():
             logger.error("Error muting: {}", err)
 
     def _unmute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received unmute audio output command for doorbell: {}", doorbell._config.name)
 
         try:
@@ -525,6 +560,7 @@ class MQTTInput():
             logger.error("Error unmuting: {}", err)
 
     def _isapi_input_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received input text for doorbell: {}", doorbell._config.name)
 
         text_string = message.payload.decode('utf-8')

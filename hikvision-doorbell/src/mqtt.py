@@ -163,7 +163,7 @@ class MQTTHandler(EventHandler):
                 async def poll_call_sensor(d=doorbell, c=call_sensor):
 
                     url = "/ISAPI/VideoIntercom/callStatus?format=json"
-                    requestBody = None  # GET requests usually don't have a body
+                    requestBody = ""
                     while True:
                         try:
                             logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
@@ -206,7 +206,7 @@ class MQTTHandler(EventHandler):
                     device=device,
                     default_entity_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
                 settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
-                door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
+                door_switch = Switch(settings, lambda client, _, message, d=doorbell, i=door_id: self.door_switch_callback(client, (d, i), message))
                 door_switch.off()
                 door_switch.set_availability(True)
                 self._sensors[doorbell][f'door_{door_id}'] = door_switch
@@ -226,7 +226,8 @@ class MQTTHandler(EventHandler):
                         device=device,
                         default_entity_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
                     settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True, assume_state=False)
-                    com_switch = Switch(settings, self.com_switch_callback, (doorbell, com_id))
+                    # Change the lambda to capture doorbell and com_id as defaults
+                    com_switch = Switch(settings, lambda client, _, message, d=doorbell, i=com_id: self.com_switch_callback(client, (d, i), message))
                     com_switch.off()
                     com_switch.set_availability(True)
                     self._sensors[doorbell][f'com_{com_id}'] = com_switch
