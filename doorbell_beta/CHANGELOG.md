@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0-beta.xx - 2026-xx-xx
+## 3.0.0-beta.116 - 2026-01-27
 
 ### Test
 
