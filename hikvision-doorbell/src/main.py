@@ -1,9 +1,9 @@
 import asyncio
 import signal
-import socket
 import os
 import json
 import sys
+import traceback
 from dotenv import load_dotenv
 from config import AppConfig
 from doorbell import Doorbell, Registry
@@ -50,7 +50,6 @@ async def main():
             doorbells_json = os.getenv('DOORBELLS')
             if doorbells_json:
                 try:
-                    import json
                     data['doorbells'] = json.loads(doorbells_json)
                 except json.JSONDecodeError as e:
                     logger.error(f"Invalid DOORBELLS JSON in .env: {e}")
@@ -126,7 +125,7 @@ async def main():
             
     except Exception as e:
         logger.error("Configuration error: {}", e)
-        import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
