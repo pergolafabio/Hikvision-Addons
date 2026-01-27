@@ -28,6 +28,7 @@ import datetime
 
 from sdk.utils import SDKError
 
+_current_mqtt_handler = None
 
 def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
     """Build and instance of DeviceInfo from the ISAPI /deviceinfo endpoint, if available, otherwise skip populating additional fields"""
@@ -113,6 +114,9 @@ class MQTTHandler(EventHandler):
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: {}", self.name)
+
+        global _current_mqtt_handler
+        _current_mqtt_handler = self
 
         # Initialize task storage at the start
         self._call_sensor_tasks: dict[Doorbell, asyncio.Task] = {}
@@ -463,7 +467,7 @@ class MQTTHandler(EventHandler):
                 
                 # Start the snapshot task without waiting for it
                 asyncio.create_task(take_and_publish_snapshot())
-                
+
                 # After 60 seconds, put the sensor back to idle
                 await asyncio.sleep(60)
                 logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
@@ -569,3 +573,8 @@ class MQTTHandler(EventHandler):
         # Serialize the payload, if provided as part of the trigger
         json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
         device_trigger.trigger(json_payload)
+
+def get_mqtt_handler():
+    """Get the current MQTTHandler instance"""
+    global _current_mqtt_handler
+    return _current_mqtt_handler

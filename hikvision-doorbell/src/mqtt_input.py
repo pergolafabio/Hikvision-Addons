@@ -468,17 +468,75 @@ class MQTTInput():
         requestBody = ""
 
         call_status_button = cast(Button, self._sensors[doorbell]['call_status'])
+
+        # Get the MQTT handler instance from mqtt.py
+        try:
+            from mqtt import get_mqtt_handler
+            mqtt_handler = get_mqtt_handler()
+            if not mqtt_handler:
+                logger.warning("MQTT handler not initialized yet")
+                mqtt_handler = None
+        except ImportError as e:
+            logger.error("Could not import mqtt module: {}", e)
+            mqtt_handler = None
+
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
         try:
             response = doorbell._call_isapi("GET", url, requestBody)
-            logger.info("Received call status: {} and show it as an attribute" , response)
-            call_status_button.set_attributes(json.loads(response))
+            logger.info("Received call status: {} and show it as an attribute", response)
+            
+            # Parse the JSON response
+            data = json.loads(response)
+            call_status_obj = data.get("CallStatus")
+            
+            if call_status_obj:
+                # 1. Update button attributes with the full JSON
+                call_status_button.set_attributes(data)
+                
+                # 2. Extract call state and update the call sensor from mqtt.py
+                call_state = call_status_obj.get("status")
+                if call_state:
+                    if mqtt_handler and doorbell in mqtt_handler._sensors:
+                        call_sensor = mqtt_handler._sensors[doorbell].get('call')
+                        if call_sensor:
+                            # Update the sensor state
+                            call_sensor.set_state("test")
+                            logger.info("Updated call sensor state to: {}", call_state)
+                        else:
+                            logger.debug("Call sensor not found in mqtt_handler._sensors")
+                    else:
+                        logger.debug("MQTT handler not available or doorbell not in sensors")
+                else:
+                    logger.warning("No call state found in response")
+            else:
+                logger.warning("No CallStatus object found in response")
+                call_status_button.set_attributes(data)
+            
         except SDKError as err:
             logger.error("Error while getting call status with ISAPI: {}", err)
             attributes = {
                 "CallStatus": "Error while getting call status with error code: " + str(err.args[1])
             }
             call_status_button.set_attributes(attributes)
+            
+            # Also update the call sensor to error state if available
+            if mqtt_handler and doorbell in mqtt_handler._sensors:
+                call_sensor = mqtt_handler._sensors[doorbell].get('call')
+                if call_sensor:
+                    call_sensor.set_state("error")
+                    call_sensor.set_attributes(attributes)
+        except json.JSONDecodeError as e:
+            logger.error("Invalid JSON response from doorbell: {}", e)
+            attributes = {
+                "CallStatus": f"Invalid JSON response: {str(e)}"
+            }
+            call_status_button.set_attributes(attributes)
+            
+            if mqtt_handler and doorbell in mqtt_handler._sensors:
+                call_sensor = mqtt_handler._sensors[doorbell].get('call')
+                if call_sensor:
+                    call_sensor.set_state("error")
+                    call_sensor.set_attributes(attributes)
 
     def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
