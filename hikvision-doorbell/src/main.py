@@ -4,10 +4,10 @@ import socket
 import os
 import json
 import sys
+from dotenv import load_dotenv
 from config import AppConfig
 from doorbell import Doorbell, Registry
 from event import ConsoleHandler, EventManager
-# from home_assistant import HomeAssistantAPI
 from mqtt import MQTTHandler
 from mqtt_input import MQTTInput
 from config import mqtt_config_from_supervisor
@@ -23,7 +23,58 @@ async def main():
         # Load data from file
         config_file = "/data/options.json"
         data = {}
-        if os.path.exists(config_file):
+
+        if not os.path.exists(config_file):
+            # Try to load from environment variables for development
+            env_files = [
+                'development.env',
+                '.env',
+                '../development.env',
+                '../.env'
+            ]
+            
+            loaded = False
+            for env_file in env_files:
+                if os.path.exists(env_file):
+                    load_dotenv(env_file)
+                    logger.info(f"Loaded environment from {env_file}")
+                    loaded = True
+                    break
+            
+            if not loaded:
+                logger.warning("No .env file found, using default values")
+            
+            data = {}
+            
+            # DOORBELLS is a JSON string in .env, parse it
+            doorbells_json = os.getenv('DOORBELLS')
+            if doorbells_json:
+                try:
+                    import json
+                    data['doorbells'] = json.loads(doorbells_json)
+                except json.JSONDecodeError as e:
+                    logger.error(f"Invalid DOORBELLS JSON in .env: {e}")
+                    data['doorbells'] = []
+            else:
+                data['doorbells'] = []
+            
+            # System from env - using __ delimiter
+            data['system'] = {
+                'log_level': os.getenv('SYSTEM__LOG_LEVEL', 'DEBUG'),
+                'sdk_log_level': os.getenv('SYSTEM__SDK_LOG_LEVEL', 'NONE')
+            }
+            
+            # MQTT from env - using __ delimiter
+            mqtt_host = os.getenv('MQTT__HOST')
+            if mqtt_host:
+                data['mqtt'] = {
+                    'host': mqtt_host,
+                    'port': int(os.getenv('MQTT__PORT', '1883')),
+                    'ssl': os.getenv('MQTT__SSL', '').lower() == 'true',
+                    'username': os.getenv('MQTT__USERNAME'),
+                    'password': os.getenv('MQTT__PASSWORD')
+                }
+        else:
             with open(config_file, 'r') as f:
                 data = json.load(f)
         
@@ -47,8 +98,31 @@ async def main():
                 if mqtt_data:
                     config.mqtt = AppConfig.MQTT(**mqtt_data)
                     logger.info("MQTT configuration loaded from Supervisor")
+                # ADD THIS FOR LOCAL DEVELOPMENT:
+                elif not os.getenv('SUPERVISOR_TOKEN'):
+                    mqtt_host = os.getenv('MQTT__HOST') 
+                    if mqtt_host:
+                        config.mqtt = AppConfig.MQTT(
+                            host=mqtt_host,
+                            port=int(os.getenv('MQTT__PORT', '1883')),
+                            ssl=os.getenv('MQTT__SSL', '').lower() == 'true',
+                            username=os.getenv('MQTT__USERNAME'),
+                            password=os.getenv('MQTT__PASSWORD')
+                        )
+                        logger.info(f"Using MQTT from .env: {mqtt_host}")
             except Exception as mqtt_error:
                 logger.warning(f"Could not load MQTT from supervisor: {mqtt_error}")
+                if not os.getenv('SUPERVISOR_TOKEN'):
+                    mqtt_host = os.getenv('MQTT__HOST')
+                    if mqtt_host:
+                        config.mqtt = AppConfig.MQTT(
+                            host=mqtt_host,
+                            port=int(os.getenv('MQTT__PORT', '1883')),
+                            ssl=os.getenv('MQTT__SSL', '').lower() == 'true',
+                            username=os.getenv('MQTT__USERNAME'),
+                            password=os.getenv('MQTT__PASSWORD')
+                        )
+                        logger.info(f"Using MQTT from .env after error: {mqtt_host}")
             
     except Exception as e:
         logger.error("Configuration error: {}", e)
