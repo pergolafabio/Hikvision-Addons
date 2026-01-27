@@ -1,10 +1,12 @@
 import json
 import asyncio
+import os
+import base64
 from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
-from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor
+from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
@@ -13,11 +15,16 @@ import xml.etree.ElementTree as ET
 
 from sdk.utils import SDKError
 
+_current_instance = None
 
 class MQTTInput():
     _sensors: dict[Doorbell, dict[str, Discoverable[Any]]] = {}
+    _last_snapshot_paths: dict[Doorbell, str] = {}
 
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
+        global _current_instance
+        _current_instance = self
+
         self._doorbells = doorbells
         logger.debug("Setting up MQTTInput")
         mqtt_settings = Settings.MQTT(
@@ -170,6 +177,28 @@ class MQTTInput():
             take_snapshot_button = Button(settings, self._take_snapshot_callback)
             take_snapshot_button.set_availability(True)
             self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
+
+            ###########
+            # Snapshot Image entity
+            image_info = ImageInfo(
+                name="Latest Snapshot",
+                unique_id=f"{sanitized_doorbell_name}_snapshot_image",
+                device=device,
+                image_topic=f"hikvision/{sanitized_doorbell_name}/snapshot/image",
+                image_encoding="b64",
+                content_type="image/jpeg",
+                default_entity_id=f"{sanitized_doorbell_name}_snapshot_image")
+            
+            settings = Settings(mqtt=mqtt_settings, entity=image_info, manual_availability=True)
+            snapshot_image = Image(settings)
+            snapshot_image.set_availability(True)
+            self._sensors[doorbell]['snapshot_image'] = snapshot_image
+            
+            # Store the image topic for publishing
+            if not hasattr(self, '_image_topics'):
+                self._image_topics = {}
+            self._image_topics[doorbell] = f"hikvision/{sanitized_doorbell_name}/snapshot/image"
+
 
             if doorbell._config.scenes is True:
                 # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
@@ -454,7 +483,38 @@ class MQTTInput():
     def _take_snapshot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received take snapshot command, doorbell: {}", doorbell._config.name)
-        doorbell.take_snapshot()
+        
+        # Take snapshot and get file path
+        snapshot_path = doorbell.take_snapshot()
+        
+        if snapshot_path and os.path.exists(snapshot_path):
+            # Store the latest snapshot path
+            self._last_snapshot_paths[doorbell] = snapshot_path
+            
+            # Publish the image to MQTT
+            self._publish_snapshot_image(doorbell, snapshot_path)
+        else:
+            logger.warning("Snapshot failed or file not found for doorbell: {}", doorbell._config.name)
+
+    def _publish_snapshot_image(self, doorbell: Doorbell, image_path: str):
+        """Publish snapshot image to MQTT image entity"""
+        try:
+            with open(image_path, 'rb') as f:
+                image_data = f.read()
+            
+            # Encode image to base64
+            image_base64 = base64.b64encode(image_data).decode('utf-8')
+            
+            # Get the image entity
+            image_entity = cast(Image, self._sensors[doorbell]['snapshot_image'])
+            
+            # Publish the image using set_payload (not set_image!)
+            image_entity.set_payload(image_base64)
+            
+            logger.info("Published snapshot image for doorbell: {}", doorbell._config.name)
+            
+        except Exception as e:
+            logger.error("Failed to publish snapshot image: {}", e)
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
@@ -593,3 +653,8 @@ class MQTTInput():
             text_entity.set_attributes(attributes)
         except SDKError as err:
             logger.error("Error while invoking ISAPI endpoint: {}", err)
+
+def get_mqtt_input():
+    """Get the current MQTTInput instance"""
+    global _current_instance
+    return _current_instance

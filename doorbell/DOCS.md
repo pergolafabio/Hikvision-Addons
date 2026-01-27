@@ -88,7 +88,8 @@ Each of you defined doorbell should be visible as a device under `Settings` -> `
 For each of your doorbells, the following entities are available:
 
 - Sensors
-  - `Call state` (_idle_, _ringing_, _dismissed_)
+  - `Call state` (_idle_, _ringing_, _dismissed_,)
+  - `Scene sensor` (Alarm/Scene events (Indoor Station Only))
 - Switches
   - `Door relays` (one for each available relay, open the door connected to the output relay of the device)
 - Buttons
@@ -96,6 +97,7 @@ For each of your doorbells, the following entities are available:
   - `Hangup call` (The device needs to be connected to Hikconnect in to make "hangup" work, if its not possible, you can use "reject" instead)
   - `Reject call`
   - `Reboot`
+  - `Take Snapshot` (Grabs a snapshot from the outdoor station and updates the image entity)
   - ...
 - Device triggers (depending on device model)
   - `Motion detected`

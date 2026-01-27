@@ -1,4 +1,5 @@
 import asyncio
+import os
 from ctypes import c_void_p
 from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
@@ -431,8 +432,41 @@ class MQTTHandler(EventHandler):
             case VideoInterComAlarmType.DOORBELL_RINGING:
                 logger.info("Doorbell ringing, updating sensor {}", call_sensor)
                 call_sensor.set_state('ringing')
-                logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
+
+                # Take snapshot and publish via MQTT
+                async def take_and_publish_snapshot():
+                    """Take snapshot and publish to MQTT"""
+                    try:
+                        # Import here to avoid circular imports
+                        from mqtt_input import get_mqtt_input
+                        
+                        # Take snapshot
+                        snapshot_path = doorbell.take_snapshot()
+                        
+                        if snapshot_path and os.path.exists(snapshot_path):
+                            # Get MQTTInput instance
+                            mqtt_input = get_mqtt_input()
+                            if mqtt_input:
+                                # Store the latest snapshot path
+                                mqtt_input._last_snapshot_paths[doorbell] = snapshot_path
+                                
+                                # Publish the image to MQTT
+                                mqtt_input._publish_snapshot_image(doorbell, snapshot_path)
+                                logger.info(f"Auto-snapshot published to MQTT: {snapshot_path}")
+                            else:
+                                logger.warning("MQTTInput not available, snapshot saved but not published: {}", snapshot_path)
+                        else:
+                            logger.warning("Auto-snapshot failed or file not created")
+                            
+                    except Exception as e:
+                        logger.error(f"Failed to take auto-snapshot: {e}")
+                
+                # Start the snapshot task without waiting for it
+                asyncio.create_task(take_and_publish_snapshot())
+                
+                # After 60 seconds, put the sensor back to idle
                 await asyncio.sleep(60)
+                logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
                 call_sensor.set_state('idle')
             case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
                 logger.info("Call dismissed, updating sensor {}", call_sensor)

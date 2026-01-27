@@ -288,7 +288,11 @@ class Doorbell():
                                 break 
                     except Exception as e:
                         logger.debug("Capture attempt failed on channel {}: {}", channel, e)
-                if filename: break
+                    if filename: break
+
+            if filename:
+                # Notify MQTT input to update image (if MQTT is set up)
+                self._notify_snapshot_update(filename)
 
             return filename
             
@@ -301,6 +305,12 @@ class Doorbell():
                 logger.debug("Logging out of temporary session {}", temp_user_id)
                 self._sdk.NET_DVR_Logout_V30(temp_user_id)
 
+    def _notify_snapshot_update(self, filename: str):
+        """Notify that a new snapshot was taken"""
+        # You'll need a way to access the MQTTInput instance
+        # One option is to store a reference to it in the Doorbell class
+        if hasattr(self, '_mqtt_input_ref'):
+            self._mqtt_input_ref.update_snapshot_image(self, filename)
 
     def _save_snapshot_result(self, image_data,):
         """Helper to save snapshot result"""
