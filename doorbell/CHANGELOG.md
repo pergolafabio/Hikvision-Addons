@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.28 - 2026-xx-xx
+
+### Changed/Added
+
+- Updated requirements to offer new functionality!
+- New image entity, take snapshot button updates the image entity
+- Ring event also creates a snapshot automaticly
+- Pressing the call status button manually also updates the call sensor entity
+
 ## 3.0.27 - 2026-01-23
 
 ### Changed
