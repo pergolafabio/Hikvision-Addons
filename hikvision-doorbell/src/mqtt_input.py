@@ -500,7 +500,7 @@ class MQTTInput():
                         call_sensor = mqtt_handler._sensors[doorbell].get('call')
                         if call_sensor:
                             # Update the sensor state
-                            call_sensor.set_state("test")
+                            call_sensor.set_state(call_state)
                             logger.info("Updated call sensor state to: {}", call_state)
                         else:
                             logger.debug("Call sensor not found in mqtt_handler._sensors")
