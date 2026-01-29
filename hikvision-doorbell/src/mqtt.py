@@ -351,7 +351,7 @@ class MQTTHandler(EventHandler):
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             attributes = {
                 'control_source': control_source,
-                'control_source_decoded': control_source_decoded,
+                'number': control_source_decoded,
                 'unlock_type': unlock_type,
                 'card_user_id': card_user_id,
             }
@@ -440,10 +440,12 @@ class MQTTHandler(EventHandler):
         
         match alarm_type:
             case VideoInterComAlarmType.DOORBELL_RINGING:
-                # dev_number = alarm_info.byDevNumber
                 dev_number = bytes(alarm_info.byDevNumber).split(b'\x00')[0].decode('utf-8')
-                logger.info("Doorbell ringing, updating sensor {}", call_sensor)
-                logger.info("TEST: Incoming call from Dev number:{}", dev_number)
+                logger.info("Doorbell ringing, button press from: {}, updating sensor {}", dev_number, call_sensor)
+                attributes = {
+                    'equipment_number': dev_number,
+                }
+                call_sensor.set_attributes(attributes)
                 call_sensor.set_state('ringing')
 
                 # Take snapshot and publish via MQTT
