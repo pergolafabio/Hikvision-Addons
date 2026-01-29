@@ -40,7 +40,7 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/hikvision-doorbell
           # generate Docker tags based on the following events/attributes
-        tags: |
+          tags: |
             # Extract the version part for the tag
             type=match,pattern=doorbell-v(.*),group=1
             # Automatically handle 'latest' for stable and 'beta' for pre-releases
@@ -100,7 +100,7 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/hikvision-doorbell
           # generate Docker tags based on the following events/attributes
-        tags: |
+          tags: |
             # Extract the version part for the tag
             type=match,pattern=doorbell-v(.*),group=1
             # Automatically handle 'latest' for stable and 'beta' for pre-releases
