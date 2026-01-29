@@ -434,7 +434,9 @@ class MQTTHandler(EventHandler):
         
         match alarm_type:
             case VideoInterComAlarmType.DOORBELL_RINGING:
+                dev_number = alarm_info.byDevNumber.decode('utf-8').rstrip('\x00')
                 logger.info("Doorbell ringing, updating sensor {}", call_sensor)
+                logger.info("TEST: Incoming call from Dev number:{}", dev_number)
                 call_sensor.set_state('ringing')
 
                 # Take snapshot and publish via MQTT
