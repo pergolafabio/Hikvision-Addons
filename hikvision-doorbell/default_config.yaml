@@ -1,29 +1,56 @@
-# Default configuration file used if the application is run outside of an HA addon (for instance as a standalone container).
+name: Hikvision Doorbell
+description: Connect your Hikvision doorbells to Home Assistant
+version: '3.0.29'
+image: ghcr.io/pergolafabio/hikvision-doorbell
+slug: hikvision_doorbell
+url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell
+arch:
+- amd64
+- i386
+- aarch64
+stage: stable
+startup: application
+boot: auto
+stdin: true
+homeassistant_api: true
+map:
+  - media:rw
+full_access: true
 
-# If you want to customize the settings, copy this file and set you own values
-# Each option can be overridden by settings environment variables using __ as delimiter for nesting the object.
-# For example to set system.log_level to DEBUG use the env variable SYSTEM__LOG_LEVEL=DEBUG
+# Default options when used as an HA add-on
+options:
+  doorbells:
+    - name: ""
+      ip: ""
+      username: admin
+      password: ""
+      scenes: false
+  system:
+    log_level: INFO
+    sdk_log_level: NONE
+  mqtt: {}
 
-# By default no doorbells are defined
-# For a full list of options, have a look at the docs
-doorbells: []
-# Uncomment the following lines and define each doorbell by repeating the example config:
-#   - name: "Front porch"
-#     ip: 192.168.0.1
-#     port: 8000
-#     username: admin
-#     password: password
+# Schema for the options above
+schema:
+  doorbells:
+    - name: str
+      ip: str
+      port: "int?"
+      username: str
+      password: str
+      output_relays: "int?"
+      scenes: "bool?"
+      call_state_poll: "int?"
+  system:
+    log_level: match(^ERROR|WARNING|INFO|DEBUG$)
+    sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
+  mqtt:
+    host: "str?"
+    port: "int?"
+    ssl: "bool?"
+    username: "str?"
+    password: "str?"    
 
-# Define the following options to enable the MQTT integration
-# mqtt:
-#   host: localhost
-#   # Optionals settings:
-#   port: 1883
-#   ssl: <boolean>  # Set to true to enable SSL
-#   username: <user>
-#   password: <password>
-
-# Configure general system options
-system:
-  log_level: WARNING
-  sdk_log_level: NONE
+# To request MQTT configuration using the supervisor API
+services:
+  - "mqtt:need"
