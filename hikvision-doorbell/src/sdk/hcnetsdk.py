@@ -218,6 +218,17 @@ class DeviceCapabilityType(Enum):
 class DeviceAbilityType(IntEnum):
     IP_VIEW_DEV_ABILITY = 0x014
 
+class UnlockType(Enum):
+    PASSWORD = 1
+    HIJACKING = 2
+    CARD = 3
+    HOUSEHOLDER = 4
+    CENTER_PLATFORM = 5
+    BLUETOOTH = 6
+    QR_CODE = 7
+    FACE = 8
+    FINGERPRINT = 9
+
 
 ###########################
 # Struct

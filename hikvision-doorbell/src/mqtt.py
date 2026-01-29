@@ -19,7 +19,8 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
                           VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
                           VideoInterComAlarmType,
-                          VideoInterComEventType)
+                          VideoInterComEventType,
+                          UnlockType)
 from sdk.acsalarminfo import (AcsAlarmInfoMajor, AcsAlarmInfoMajorAlarm, AcsAlarmInfoMajorException, AcsAlarmInfoMajorOperation, AcsAlarmInfoMajorEvent)
 from typing_extensions import override
 import xml.etree.ElementTree as ET
@@ -341,7 +342,7 @@ class MQTTHandler(EventHandler):
             buffer_length,
             user_pointer: c_void_p):
 
-        async def update_door_entities(door_id: str, control_source: str, control_source_decoded: str, unlock_type: int, card_user_id: int):
+        async def update_door_entities(door_id: str, control_source: str, control_source_decoded: str, unlock_name: str, card_user_id: int):
             """
             Helper function to update the sensor and device trigger of a given door
             """
@@ -352,7 +353,7 @@ class MQTTHandler(EventHandler):
             attributes = {
                 'control_source': control_source,
                 'number': control_source_decoded,
-                'unlock_type': unlock_type,
+                'unlock_type': unlock_name,
                 'card_user_id': card_user_id,
             }
             door_sensor.set_attributes(attributes)
@@ -378,6 +379,15 @@ class MQTTHandler(EventHandler):
                 control_source_decoded = alarm_info.uEventInfo.struUnlockRecord.controlSource_decoded()
                 unlock_type = alarm_info.uEventInfo.struUnlockRecord.byUnlockType
                 card_user_id = alarm_info.uEventInfo.struUnlockRecord.dwCardUserID
+
+                try:
+                    unlock_name = UnlockType(unlock_type).name
+                    print(f"Unlock Method: {unlock_name}")
+                except ValueError:
+                    print(f"Unknown unlock type: {unlock_type}")
+                    unlock_name = "Unknown"
+
+                
                 # card_number = alarm_info.uEventInfo.struAuthInfo.cardNo()
                 # Name of the entity inside the dict array containing all the sensors
                 entity_id = f'door_{door_id}'
@@ -391,9 +401,9 @@ class MQTTHandler(EventHandler):
                     # logger.debug("Changing switches back to OFF position")
                     num_doors = doorbell.get_num_outputs()
                     for door_id in range(num_doors):
-                        await update_door_entities(door_id, control_source, control_source_decoded,unlock_type, card_user_id)
+                        await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id)
                     return
-                await update_door_entities(door_id, control_source, control_source_decoded, unlock_type, card_user_id)
+                await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id)
 
             case VideoInterComEventType.ILLEGAL_CARD_SWIPING_EVENT:
                 control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
@@ -441,9 +451,9 @@ class MQTTHandler(EventHandler):
         match alarm_type:
             case VideoInterComAlarmType.DOORBELL_RINGING:
                 dev_number = bytes(alarm_info.byDevNumber).split(b'\x00')[0].decode('utf-8')
-                logger.info("Doorbell ringing, button press from: {}, updating sensor {}", dev_number, call_sensor)
+                logger.info("Doorbell ringing, button press from button: {}, updating sensor {}", dev_number, call_sensor)
                 attributes = {
-                    'equipment_number': dev_number,
+                    'device_number': dev_number,
                 }
                 call_sensor.set_attributes(attributes)
                 call_sensor.set_state('ringing')
