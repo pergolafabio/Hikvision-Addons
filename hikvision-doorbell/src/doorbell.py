@@ -315,12 +315,12 @@ class Doorbell():
     def _save_snapshot_result(self, image_data,):
         """Helper to save snapshot result"""
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             folder_name = re.sub(r'\s+', '_', self._config.name.lower())
             base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
             output_dir = os.path.join(base_path, folder_name)
             os.makedirs(output_dir, exist_ok=True)
-            filename = os.path.join(output_dir, f"snapshot_{timestamp}.jpg")
+            filename = os.path.join(output_dir, f"snapshot.jpg")
             with open(filename, "wb") as f:
                 f.write(image_data)
             logger.info(f"Snapshot saved: {filename}")

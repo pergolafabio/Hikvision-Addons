@@ -90,8 +90,13 @@ For each of your doorbells, the following entities are available:
 - Sensors
   - `Call state` (_idle_, _ringing_, _dismissed_,)
   - `Scene sensor` (Alarm/Scene events (Indoor Station Only))
+  - `Latest snapshot` (On incoming ring event, it will take a snapshot)
 - Switches
   - `Door relays` (one for each available relay, open the door connected to the output relay of the device)
+- Input Select
+  - `Backlight` (Turn the backlight of the outdoor station to on/off/auto)
+- Input Text
+  - `ISAPI Request` (Custom ISAPI control, see more info below!)
 - Buttons
   - `Answer call` (The device needs to be connected to Hikconnect in to make "answer" work, if its not possible, you can use "reject" instead)
   - `Hangup call` (The device needs to be connected to Hikconnect in to make "hangup" work, if its not possible, you can use "reject" instead)
@@ -126,7 +131,7 @@ For each of your doorbells, the following entities are available:
     <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/dev/hikvision-doorbell/assets/docs_device_triggers_automation.png" width="600px" />
   </p>
 
- - Input Text 
+## Isapi Control
    - `Isapi request` (This input text is usefull for sending ISAPI commands to indoor/outdoor devices. Indoor devices dont have port 80 open to send ISAPI commands, but it does work using this addon, since its based on the SDK. Be carefull using this service, it can crash the add-on/docker if not properly used. An example service is posted below. GET/PUT is mandatory, as well as the ISAPI command, the JSON/XML is optional, depending on the command used. Make sure there is only 1 space between the input. A sample list of usefull ISAPI commands can be found here... [ISAPI](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell/ISAPI.md)
    
    For a full documentation, see here: [SDK Development Guide](https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-doorbell/docs/Device%20Network%20SDK.pdf)
@@ -194,6 +199,9 @@ The input string must be in the format
   | takeSnapshot  | Take a snapshot and save it to the /media drive
   | callStatus   | Manually get the Call Status
   | callerInfo | Manually get the Caller Info
+  | backlightOn | Manually turn on the backlight
+  | backlightOff | Manually turn off the backlight
+  | backlightAuto | Define auto mode on the backlight 
 
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 

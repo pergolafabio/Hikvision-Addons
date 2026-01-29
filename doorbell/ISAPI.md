@@ -20,6 +20,9 @@
 - GET /ISAPI/System/IO/outputs/1
 - PUT /ISAPI/System/IO/outputs/<ID>/trigger <IOPortData><outputState>high</outputState></IOPortData>
 - PUT /ISAPI/System/IO/outputs/<ID>/trigger <IOPortData><outputState>low</outputState></IOPortData>
+- GET /ISAPI/VideoIntercom/SubModuleBacklight?format=json
+- PUT /ISAPI/VideoIntercom/SubModuleBacklight?format=json {"backlightMode":"auto","customBacklightTime":{},"hostSyncEnabled":true}
+- PUT /ISAPI/VideoIntercom/SubModuleBacklight?format=json {"backlightMode":"custom","customBacklightTime":{"beginTime":"21:00:00","endTime":"07:00:00"},"hostSyncEnabled":true}
 ```
 
 And a lot more can be found on the SDK documentation online

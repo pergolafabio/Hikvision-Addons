@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.117 - 2026-01-29
+
+### Changes
+
+- No more timestamp on the snapshot image, since we are now using the image mqtt entity
+- Added a backlight control mode for outdoor stations
+
 ## 3.0.0-beta.116 - 2026-01-27
 
 ### Test

@@ -6,7 +6,7 @@ from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
-from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image
+from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image, SelectInfo, Select
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
@@ -199,12 +199,29 @@ class MQTTInput():
                 self._image_topics = {}
             self._image_topics[doorbell] = f"hikvision/{sanitized_doorbell_name}/snapshot/image"
 
+            ###########
+            # Backlight Control for outdoor stations only
+            if doorbell._type is DeviceType.OUTDOOR:
 
-            if doorbell._config.scenes is True:
-                # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors
+                select_info = SelectInfo(
+                    name="Backlight Mode",
+                    unique_id=f"{sanitized_doorbell_name}_backlight_mode_select",
+                    device=device,
+                    icon="mdi:brightness-4",
+                    options=["on", "off", "auto"],
+                    default_entity_id=f"{sanitized_doorbell_name}_backlight_mode_select"
+                )
 
-                ##################
-                # Scene state poll sensor
+                settings = Settings(mqtt=mqtt_settings, entity=select_info, manual_availability=True, user_data=doorbell)
+                mode_select = Select(settings, self._backlight_mode_callback)
+                mode_select.set_availability(True)
+
+
+            ##################
+            # Scene state poll sensor
+            # Define scene/alarm buttons for indoor stations: "atHome", "goOut", "goToBed", "custom", and 2 poll sensors for indoor stations only if scenes enabled
+            if doorbell._config.scenes is True and doorbell._type is DeviceType.INDOOR:
+
                 scene_sensor_info = SensorInfo(
                     name="Scene",
                     unique_id=f"{device.identifiers}-scene",
@@ -573,6 +590,25 @@ class MQTTInput():
             
         except Exception as e:
             logger.error("Failed to publish snapshot image: {}", e)
+
+    def _backlight_mode_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        
+        # Decode the selected option from the MQTT message
+        command = message.payload.decode("utf-8")
+        logger.info("Received mode change to '{}' for doorbell: {}", command, doorbell._config.name)
+
+        url = "/ISAPI/VideoIntercom/SubModuleBacklight?format=json"
+        requestBody = {
+            "backlightMode": command, 
+            "customBacklightTime":{}
+            }
+
+        try:
+            doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+        except SDKError as err:
+            logger.error("Error while updating mode via ISAPI: {}", err)
+
 
     def _at_home_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
