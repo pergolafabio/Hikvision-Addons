@@ -482,6 +482,15 @@ class NET_DVR_UNLOCK_RECORD_INFO(Structure):
         """Return the controls source number as a string representation, removing the ending `0`s"""
         serial = "".join([str(number) for number in self.byControlSrc[:]])
         return re.sub(r"0*$", "0", serial)
+    
+    def controlSource_decoded(self):
+        """Return the control source as a decoded string (e.g., Card No. or Username)"""
+        # Convert bytes to a string and strip null bytes (\x00)
+        try:
+            return bytes(self.byControlSrc).split(b'\x00')[0].decode('utf-8').strip()
+        except UnicodeDecodeError:
+            # Fallback if there are non-UTF8 characters
+            return "".join([chr(b) for b in self.byControlSrc if b != 0])
 
 
 class NET_DVR_NOTICEDATA_RECEIPT_INFO(Structure):
