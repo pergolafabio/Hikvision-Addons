@@ -87,7 +87,7 @@ class Doorbell():
         logger.debug("Login returned user ID: {}", self.user_id)
         logger.debug("Doorbell serial number: {}, device type: {}",
                      self._device_info.serialNumber(), self._type.name)
-        logger.info("Connected to doorbell: {}", self._config.name)
+        logger.info("Connected to doorbell: {} type: {}", self._config.name, self._type.name)
 
     def setup_alarm(self):
         '''Receive events from the doorbell. authenticate() must be called first.'''

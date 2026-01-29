@@ -201,7 +201,7 @@ class MQTTInput():
 
             ###########
             # Backlight Control for outdoor stations only
-            if doorbell._type is DeviceType.OUTDOOR:
+            if doorbell._type is not DeviceType.INDOOR:
 
                 select_info = SelectInfo(
                     name="Backlight Mode",
