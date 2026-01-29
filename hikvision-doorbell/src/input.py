@@ -55,6 +55,19 @@ class InputReader():
             # Ignore error to avoid crashing application
             pass
 
+    def _send_backlight_mode(self, doorbell: Doorbell, command: str):
+        url = "/ISAPI/VideoIntercom/SubModuleBacklight?format=json"
+        requestBody = {
+            "backlightMode": command, 
+            "customBacklightTime":{}
+            }
+
+        try:
+            doorbell._call_isapi("PUT", url, json.dumps(requestBody))
+        except RuntimeError:
+            # Ignore error to avoid crashing application
+            pass
+
     def _send_callstatus(self, doorbell: Doorbell, command: str):
         url = "/ISAPI/VideoIntercom/callStatus?format=json"
         requestBody = ""
@@ -182,6 +195,15 @@ class InputReader():
             case "callerInfo":
                 logger.info("Getting caller info")
                 self._send_callerinfo(doorbell, "callerInfo")
+            case "backlightOn":
+                logger.info("Turning backlight ON")
+                self._send_backlight_mode(doorbell, "on")
+            case "backlightOff":
+                logger.info("Turning backlight OFF")
+                self._send_backlight_mode(doorbell, "off")
+            case "backlightAuto":
+                logger.info("Turning backlight AUTO")
+                self._send_backlight_mode(doorbell, "auto")
             case "debug":
                 # This is a special command that accept the name of a method,
                 # calls the method on the doorbell instance and outputs the result
