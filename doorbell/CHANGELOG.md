@@ -363,4 +363,4 @@ The app has been completely __overhauled__, with lots of __new features__ and an
 
 ### Deprecated
 - Old __configuration options__
-- Remove __`aarch64`__ folder of the deprecated addon
+- Remove __`aarch64`__ folder of the deprecated app

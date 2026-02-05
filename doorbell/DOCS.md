@@ -128,7 +128,7 @@ For each of your doorbells, the following entities are available:
   Check out the [Automating Home Assistant](https://www.home-assistant.io/getting-started/automation/) guide on automations or the [Automation](https://www.home-assistant.io/docs/automation/) documentation for full details.
   
   <p align="center">
-    <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/dev/hikvision-doorbell/assets/docs_device_triggers_automation.png" width="600px" />
+    <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/main/hikvision-doorbell/assets/docs_device_triggers_automation.png" width="600px" />
   </p>
 
 ## Isapi Control

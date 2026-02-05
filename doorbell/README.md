@@ -32,7 +32,7 @@ You feedback is very welcome! If you have any doubt, would like to report an iss
 Here is an example setup showing two doorbells, an indoor and an outdoor unit:
 
 <p align="center">
-   <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/dev/hikvision-doorbell/assets/docs_sensors.png" width="500px">
+   <img src="https://raw.githubusercontent.com/pergolafabio/Hikvision-Addons/main/hikvision-doorbell/assets/docs_sensors.png" width="500px">
 </p>
 
 Make sure to read the full documentation here! [Readme](DOCS.md)
