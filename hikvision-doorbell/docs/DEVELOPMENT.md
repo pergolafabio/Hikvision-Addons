@@ -43,14 +43,14 @@ python src/main.py
     ```
 - Run the application using the integrated VSCode runner (under `Run and Debug`).
 
-## Testing the addon locally (VSCode devcontainer)
-For more information see the official HA [guide](https://developers.home-assistant.io/docs/add-ons/testing).
+## Testing the app locally (VSCode devcontainer)
+For more information see the official HA [guide](https://developers.home-assistant.io/docs/apps/testing).
 
 Inside the _devcontainer_ use the task `Start Home Assistant` to bootstrap the HA supervisor, who will then proceed to locally install HA.
 
 The local instance is accessible under `http://localhost:7123/`.
 
-The addon should be visible in the add-on store.
+The app should be visible in the app store.
 
 ## Internals
 
@@ -74,7 +74,7 @@ The manual steps to publish a new release are as follows:
    
    Update the `config.yaml`->`version` to point to the new version
 3. `git commit` the changes
-3. `git tag` using the format `<name of the addon>-<version number>`
+3. `git tag` using the format `<name of the app>-<version number>`
     
     e.g: `git tag doorbell-v3.0.0` to release version `3.0.0` of the addon `doorbell`
 4. `git push --tags` to push the tags to the repository and start the automatic release process

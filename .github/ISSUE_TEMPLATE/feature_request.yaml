@@ -10,14 +10,14 @@ body:
       - label: I have searched the existing issues
         required: true
   - type: dropdown
-    id: add-on
+    id: app
     attributes:
-      label: Add-on
-      description: What add-on are you referring to?
+      label: App
+      description: What App are you referring to?
       options:
         - Doorbell
   - type: textarea
     id: feature
     attributes:
       label: Your feature request
-      description: How do you think the add-on could be improved/what is currently missing?
+      description: How do you think the app could be improved/what is currently missing?

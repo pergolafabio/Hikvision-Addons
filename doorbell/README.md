@@ -1,4 +1,4 @@
-# Home Assistant Add-on: Hikvision Doorbell
+# Home Assistant App: Hikvision Doorbell
 
 <p align="center">
    <a href="https://img.shields.io/badge/amd64-yes-green.svg">
@@ -14,7 +14,7 @@
 
 Connect your Hikvision IP door stations to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
 
-__NOTE__: This is the stable version of the addon.
+__NOTE__: This is the stable version of the app.
 You feedback is very welcome! If you have any doubt, would like to report an issue or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!
 
 
@@ -39,7 +39,7 @@ Make sure to read the full documentation here! [Readme](DOCS.md)
 
 ## Getting started
 
-**Note**: **Hikvision Doorbell** requires an MQTT broker to function correctly. Refer to the **Documentation** tab of the add-on to learn how to setup the official **Mosquitto add-on**.
+**Note**: **Hikvision Doorbell** requires an MQTT broker to function correctly. Refer to the **Documentation** tab of the app to learn how to setup the official **Mosquitto app**.
 
 __NOTE__: To use this _stable_ version, enable __Advanced mode__ in you Home Assistant profile:
    - Click on you user name (in the lower-left corner of Home Assistant UI)
@@ -47,20 +47,20 @@ __NOTE__: To use this _stable_ version, enable __Advanced mode__ in you Home Ass
      <p align="center">
      <img src="https://user-images.githubusercontent.com/4510647/221361317-a9076a72-9762-4320-8302-24414e6019f2.png" width="600">
      </p>
-- Click the following button to automatically open the add-on in you Home Assistance UI:
+- Click the following button to automatically open the app in you Home Assistance UI:
    <p align="center">
       <a href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell_beta&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons" target="_blank">
-         <img src="https://my.home-assistant.io/badges/supervisor_addon.svg" alt="Open your Home Assistant instance and show the dashboard of a Supervisor add-on." />
+         <img src="https://my.home-assistant.io/badges/supervisor_addon.svg" alt="Open your Home Assistant instance and show the dashboard of a Supervisor app." />
       </a>
    </p>
 
    If you are having problems, here are the manual steps:
-   - Open you Home Assistance interface, and navigate to `Settings` -> `Add-ons` -> `Add-on store` -> `Repositories` (in the upper-right corner)
+   - Open you Home Assistance interface, and navigate to `Settings` -> `Apps` -> `Apps store` -> `Repositories` (in the upper-right corner)
    - Paste the following URL in the input field: `https://github.com/pergolafabio/Hikvision-Addons`
    - Confirm the dialog by clicking **ADD**.
-   - **Hikvision Doorbell (Beta)** should be available in the _Add-on store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _Add-ons_ -> _Add-on store_).
-- Select the **Hikvision Doorbell (Beta)** add-on, then click **INSTALL**.
-- Have a look at the **Documentation** tab of the add-on to setup the required configuration and to understand how this addon can be integrated in Home Assistant
+   - **Hikvision Doorbell (Beta)** should be available in the _app store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _appss_ -> _apps store_).
+- Select the **Hikvision Doorbell (Beta)** app, then click **INSTALL**.
+- Have a look at the **Documentation** tab of the app to setup the required configuration and to understand how this app can be integrated in Home Assistant
 (The documentation can also be browsed online in the [Github repository](DOCS.md)).
 
 ## Supported devices
@@ -87,7 +87,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 Make sure to read the full documentation here! [Readme](DOCS.md)
 
 ## Additional resources
-- [Home Assistant community forum](https://community.home-assistant.io/t/add-on-hikvision-doorbell-integration/532796)
+- [Home Assistant community forum](https://community.home-assistant.io/t/hikvision-doorbell-videointercom-integration/532796)
 
 ## Contributing
 
@@ -106,4 +106,4 @@ Made with [contrib.rocks](https://contrib.rocks).
  Like my work? You can always [send me a donation](https://paypal.me/pergolafabio).
 
 ## Credits
-This add-on was initially inspired by [this script](https://github.com/laszlojakab/hikvision-intercom-python-demo).
+This app was initially inspired by [this script](https://github.com/laszlojakab/hikvision-intercom-python-demo).

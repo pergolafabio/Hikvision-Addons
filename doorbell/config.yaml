@@ -17,7 +17,7 @@ map:
   - media:rw
 full_access: true
 
-# Default options when used as an HA add-on
+# Default options when used as an HA App
 options:
   doorbells:
     - name: ""

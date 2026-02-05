@@ -1,4 +1,4 @@
-# Home Assistant Add-on: Hikvision Doorbell
+# Home Assistant App: Hikvision Doorbell
 
 ## Usefull ISAPI commands
 

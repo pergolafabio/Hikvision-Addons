@@ -1,4 +1,4 @@
-# Running the add-on as a standalone container
+# Running the app as a standalone container
 
 This program can run as a standalone Docker container, for all other type of installations. (Openhab, Home Assistant Container, ...)
 

@@ -13,7 +13,7 @@
 
 ### Changed
 
-- Using a slim image now, makes the Add-on / image 5 x times smaller 1GB => 200MB
+- Using a slim image now, makes the App / image 5 x times smaller 1GB => 200MB
 - Added:  Extra input commands to align with all MQTT entities (callerInfo/callStatus/takeSnapshot)
 - Added:  An extra button (Take Snapshot), this takes a snapshot from the outdoor station and saves the image in the /media drive! (For now :-) ) When you are pressing the button from an indoor station, it will login to the outdoor station first, this works ONLY when the admin credentials are the same, could be usefull for people that only have access to indoor stations
 - Fix: gracefully handle invalid ISAPI input strings
@@ -33,7 +33,7 @@
 - COM ports on Indoor stations do now have the ability to also CLOSE instead of OPEN only
 - Add support for DS-KIT6Q 10509
 - Fix polling for scene / alarm mode when configured on multiple Indoor Stations
-- Added an optional polling for the call state sensor, for devices running newer firmware 3.7.x, where ringing event is not in the SDK anymore, there is a new addon-config "call_state_poll", you can configure it with an integer to poll every xx seconds
+- Added an optional polling for the call state sensor, for devices running newer firmware 3.7.x, where ringing event is not in the SDK anymore, there is a new app-config "call_state_poll", you can configure it with an integer to poll every xx seconds
 
 ## 3.0.24- 2024-10-07
 
@@ -63,13 +63,13 @@
 
 ### Added
 
-- Previously, the ISAPI text entity was disabled by default, since it was used for testing commands, now its enabled by default, since it can be usefull to trigger commands that are not part of the addon yet, i added a new document with some examle commands... If you are using the service, the output of the ISAPI command will be shown in the attribute text
+- Previously, the ISAPI text entity was disabled by default, since it was used for testing commands, now its enabled by default, since it can be usefull to trigger commands that are not part of the app yet, i added a new document with some examle commands... If you are using the service, the output of the ISAPI command will be shown in the attribute text
 
 ## 3.0.16 - 2024-10-01
 
 ### Added
 
-- Retry added every 15 sec, when the device is offline, when starting the addon
+- Retry added every 15 sec, when the device is offline, when starting the app
 - Added support for deviceK1T670M
 - When muting twice by mistake, we used a default of "7" to unmuted, and not the previous "0" setting
 
@@ -112,8 +112,8 @@
 ### Added
 
 - New Mute/Unmute output sound buttons for indoor and outdoor stations
-- Default 0 output relays, if none found instead of stopping addon and present warning
-- Default 0 com relays, if none found instead of stopping addon and present warning
+- Default 0 output relays, if none found instead of stopping app and present warning
+- Default 0 com relays, if none found instead of stopping app and present warning
 
 ## 3.0.8 - 2023-09-25
 
@@ -201,13 +201,13 @@
 
 ### Added
 
-- Possibilty to change port 8000 in the add-on config for the hikvision devices 
+- Possibilty to change port 8000 in the App config for the hikvision devices 
 
 ## 3.0.0-beta.25 - 2023-07-25
 
 ### Added
 
-- Possibilty to define an external broker in the add-on config
+- Possibilty to define an external broker in the App config
 
 ## 3.0.0-beta.24 - 2022-06-29
 
@@ -286,12 +286,12 @@
   - `Device triggers` for receiving alarm events (motion detection, door not closed, tamper alarm, etc..)
   - Diagnostic `text` entity for testing out ISAPI commands (advanced)
 - New configuration option: `output_relays` (to manually specify the number of relays)
-- If the add-on has trouble connecting to the doorbells, the sensors show up as `unavailable`
+- If the App has trouble connecting to the doorbells, the sensors show up as `unavailable`
 
 ### Changed
 
 - Update documentation, add section about **MQTT** broker installation
-- The add-on no longer creates simple `binary_sensor`, but  various entities associated to one or more `device`, each visible in the HA UI
+- The App no longer creates simple `binary_sensor`, but  various entities associated to one or more `device`, each visible in the HA UI
 - Update development documentation with overview on software architecture, add `docker-compose.yml` example.
 - Update `amd64` SDK to version `6.1.9.4_build20220412`
 
@@ -334,28 +334,28 @@ This is the first of the releases made available under the __Beta channel__. Exp
 You feedback is very welcome! If you have any doubt, would like to report a bug or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!
 Now let's move on to __what's new__:
 
-The addon has been completely __overhauled__, with lots of __new features__ and an __improved codebase__ that will aid future integrations and improvements.
+The app has been completely __overhauled__, with lots of __new features__ and an __improved codebase__ that will aid future integrations and improvements.
 
 ### Added
 
 - Handle __multiple doorbells__
     - Customize the __name__ of each doorbell
     - __Command__ each device separately (open door, reboot, etc...)
-- Run the addon as a standalone __Docker container__, for Home Assistant installations without _supervisor_. (this feature is considered _experimental_ and still to be appropriately tested. Feedback is welcome!)
+- Run the app as a standalone __Docker container__, for Home Assistant installations without _supervisor_. (this feature is considered _experimental_ and still to be appropriately tested. Feedback is welcome!)
     - Load __configuration__ from a JSON/YAML file or from environment variables
 - Configurable __system logs__
 - Events coming from the doorbells are written to the __console__, for easier debugging and troubleshooting
 - Automated __testing__ and __release__ using Github Actions
-- New __beta channel__ to test pre-release versions of the addon
+- New __beta channel__ to test pre-release versions of the app
 - Add basic __blueprint__ to showcase how to integrate the sensors inside HA
 
 ### Changed
 
-- Change the name of the addon to __Hikvision Doorbell__
+- Change the name of the app to __Hikvision Doorbell__
 - Improved __documentation__ for both end users and developers
 - Changed the format of __input commands__ to: `<command> <doorbell_name> <optional_argument>`
   - The __name__ of the doorbell must be specified as part of the command
-- Changed the sensors created inside HA by this add-on:
+- Changed the sensors created inside HA by this App:
   - The doorbell name is part of the sensor name
   - Sensors are initialized to `off` __on startup__
   - Sensors are __`binary_sensors`__

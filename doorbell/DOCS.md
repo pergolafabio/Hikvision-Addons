@@ -1,11 +1,11 @@
-# Home Assistant Add-on: Hikvision Doorbell
+# Home Assistant App: Hikvision Doorbell
 
 ## Configuration
-**Note**: _Remember to restart the add-on when the configuration is changed._
+**Note**: _Remember to restart the App when the configuration is changed._
 
-**Note**: _When the add-on connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. You will also see a lot of false events just give it a while, it can sometimes takes a few hours... A reboot might be required._
+**Note**: _When the App connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. You will also see a lot of false events just give it a while, it can sometimes takes a few hours... A reboot might be required._
 
-The following configuration options are available to be setup using the **Configuration** tab of this add-on in the Home Assistant interface:
+The following configuration options are available to be setup using the **Configuration** tab of this App in the Home Assistant interface:
 
 ### Doorbells
 Configure the connection to the doorbells. If a value is not defined, the default setting is used.
@@ -47,7 +47,7 @@ The following system settings are available:
 
 | Name              | Default               | Description                           |
 | --------          | ----                  | ----                                  |
-| log_level         | WARNING               | The verbosity of the add-on logs. Available options: _ERROR_ _WARNING_ _INFO_ _DEBUG_
+| log_level         | WARNING               | The verbosity of the App logs. Available options: _ERROR_ _WARNING_ _INFO_ _DEBUG_
 | sdk_log_level     | NONE               | The verbosity of the Hikvision SDK logs. Available options: _NONE_ _ERROR_ _INFO_ _DEBUG_
 
 #### Example config
@@ -62,13 +62,13 @@ sdk_log_level: NONE
 
 A running MQTT broker.
 
-You can use the officially supported __Mosquitto broker__, available in the official add-ons section of your Home Assistant instance. 
+You can use the officially supported __Mosquitto broker__, available in the official apps section of your Home Assistant instance. 
 You can quickly set it up by clicking the following button:
-[![Open your Home Assistant instance and show the dashboard of a Supervisor add-on.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=core_mosquitto), or by manually finding it inside your `Add-on store`.
+[![Open your Home Assistant instance and show the dashboard of a Supervisor App.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=core_mosquitto), or by manually finding it inside your `App store`.
 
-After you have started the __Mosquitto broker__ add-on, you should be able to automatically connect Home Assistant to the broker by going to `Settings` -> `Devices & Services` -> `MQTT`, and clicking `Configure`.
+After you have started the __Mosquitto broker__ App, you should be able to automatically connect Home Assistant to the broker by going to `Settings` -> `Devices & Services` -> `MQTT`, and clicking `Configure`.
 
-(Optional) If you have an external MQTT broker, you can define it the add-on config too:
+(Optional) If you have an external MQTT broker, you can define it the App config too:
 
 #### Example config
 ```yaml
@@ -132,7 +132,7 @@ For each of your doorbells, the following entities are available:
   </p>
 
 ## Isapi Control
-   - `Isapi request` (This input text is usefull for sending ISAPI commands to indoor/outdoor devices. Indoor devices dont have port 80 open to send ISAPI commands, but it does work using this addon, since its based on the SDK. Be carefull using this service, it can crash the add-on/docker if not properly used. An example service is posted below. GET/PUT is mandatory, as well as the ISAPI command, the JSON/XML is optional, depending on the command used. Make sure there is only 1 space between the input. A sample list of usefull ISAPI commands can be found here... [ISAPI](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell/ISAPI.md)
+   - `Isapi request` (This input text is usefull for sending ISAPI commands to indoor/outdoor devices. Indoor devices dont have port 80 open to send ISAPI commands, but it does work using this app, since its based on the SDK. Be carefull using this service, it can crash the app/docker if not properly used. An example service is posted below. GET/PUT is mandatory, as well as the ISAPI command, the JSON/XML is optional, depending on the command used. Make sure there is only 1 space between the input. A sample list of usefull ISAPI commands can be found here... [ISAPI](https://github.com/pergolafabio/Hikvision-Addons/blob/main/doorbell/ISAPI.md)
    
    For a full documentation, see here: [SDK Development Guide](https://github.com/pergolafabio/Hikvision-Addons/blob/main/hikvision-doorbell/docs/Device%20Network%20SDK.pdf)
 
@@ -159,15 +159,15 @@ For each of your doorbells, the following entities are available:
 
 There are two ways in which you can interact with your doorbells: 
 - via the automatically created MQTT entities (switches, buttons)
-- manually invoking the add-on `stdin` service
+- manually invoking the app `stdin` service
 
 ### MQTT entities
 
-This add-on automatically creates [switches](https://www.home-assistant.io/integrations/switch/) and [buttons](https://www.home-assistant.io/integrations/button/) you can toggle and react to from the Home Assistant UI or from your own automations.
+This app automatically creates [switches](https://www.home-assistant.io/integrations/switch/) and [buttons](https://www.home-assistant.io/integrations/button/) you can toggle and react to from the Home Assistant UI or from your own automations.
 
 ### STDIN service (advanced)
 
-There is an advanced method to interact with the devices by sending a text message to the add-on on its `standard input` (STDIN).
+There is an advanced method to interact with the devices by sending a text message to the app on its `standard input` (STDIN).
 You can use the built-in `hassio.addon_stdin` service provided by Home Assistant.
 
 The input string must be in the format
@@ -249,7 +249,7 @@ If you find a bug or need support [open an issue here](https://github.com/pergol
 If possible, please provide a copy of your logs in the issue form to help us better diagnose the problem!
 
 ### Troubleshooting
-Have a look at the **Log** tab of the add-on in the Home Assistant UI.
+Have a look at the **Log** tab of the app in the Home Assistant UI.
 
 You can increase the verbosity by changing the `system.log_level` configuration option. For instance:
 ```yaml
@@ -258,5 +258,5 @@ system:
   sdk_log_level: DEBUG
 ```
 
-*N.B.*: When the add-on connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. A reboot might be required.
+*N.B.*: When app connects to a doorbell for the first time, it might happen that your door station gets stuck, because it is downloading the complete backlog of events. A reboot might be required.
 

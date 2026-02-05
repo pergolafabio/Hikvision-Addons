@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report an issue with one of the add-ons.
+description: Report an issue with one of the apps.
 labels: ["bug"]
 body:
   - type: markdown
@@ -16,10 +16,10 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: add-on
+    id: app
     attributes:
-      label: Add-on
-      description: What is the add-on that is causing the issue?
+      label: App
+      description: What is the app that is causing the issue?
       options:
         - Hikvision Doorbell
     validations:
@@ -27,9 +27,9 @@ body:
   - type: input
     id: version
     attributes:
-      label: What version of the add-on are you running?
+      label: What version of the app are you running?
       description: >
-        If running as an HA add-on, can be found in: [Settings -> Add-ons -> "Add-on name" -> `Current version`]
+        If running as an HA app, can be found in: [Settings -> Apps -> "App name" -> `Current version`]
       placeholder: 3.0.0
     validations:
       required: true
@@ -37,9 +37,9 @@ body:
     id: installation
     attributes:
       label: Installation type
-      description: How are you running the add-on?
+      description: How are you running the app?
       options:
-        - Home Assistant add-on
+        - Home Assistant app
         - Docker container (standalone)
     validations:
       required: true

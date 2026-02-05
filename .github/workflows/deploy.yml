@@ -52,7 +52,6 @@ jobs:
           labels: |
             org.opencontainers.image.title=Hikvision Doorbell
             # Custom label required by Home Assistant supervisor
-             #https://developers.home-assistant.io/docs/add-ons/configuration?_highlight=add&_highlight=on&_highlight=label#add-on-dockerfile
             io.hass.version=${{ needs.extract-version.outputs.version }}
             io.hass.type=addon
             io.hass.arch=amd64
@@ -112,7 +111,6 @@ jobs:
           labels: |
             org.opencontainers.image.title=Hikvision Doorbell
             # Custom label required by Home Assistant supervisor
-             #https://developers.home-assistant.io/docs/add-ons/configuration?_highlight=add&_highlight=on&_highlight=label#add-on-dockerfile
             io.hass.version=${{ needs.extract-version.outputs.version }}
             io.hass.type=addon
             io.hass.arch=aarch64

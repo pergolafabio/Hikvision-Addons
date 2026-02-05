@@ -6,7 +6,7 @@
 Our hikvision devices do support SIP, but SIP knowledge is necessary, its not always easy to setup a PBX like Asterisk, but there is another away!
 Most cameras/doorbells do have a speaker/microphone, so two way audio (talk-back) can be activated, they all use a different protocol, in case of Hikvision its ISAPI
 
-Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, the advanced camera card offers a card with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
+Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc app, the advanced camera card offers a card with microphone support!! So that means we can use an camera entity in HA and we can actually speak to the person at the doorbell.
 
 ## Advantages:
 
@@ -19,14 +19,14 @@ Somewhere begin 2023 this ISAPI protocol was inserted in the go2rtc addon, the a
 ## Prerequisites:
 - Home Assistant! :-)
 - Advanced Camera Card: https://github.com/dermotduffy/advanced-camera-card
-- Go2rtc Addon: https://github.com/AlexxIT/hassio-addons
+- Go2rtc App: https://github.com/AlexxIT/hassio-addons
 - Hass Web Proxy : https://github.com/dermotduffy/hass-web-proxy-integration
 
 ## Get started:
 
-Install the go2rtc Addon, this addon is needed, the once in core doesnt work, since you cant customize the streams (isapi support)
+Install the go2rtc app, this app is needed, the once in core doesnt work, since you cant customize the streams (isapi support)
 
-## Step 1: go2rtc Add-On configuration
+## Step 1: go2rtc App configuration
 
 A simple go2rtc.yml configuration to add the doorbell with ISAPI support:
 IMPORTANT: HTTPS is needed! to have MIC support when you accees HA, i use the Hass Web Proxy to make sure go2rtc is using https in the advanced card
@@ -55,7 +55,7 @@ api:
 Step 1 was the hardest, now the easy part, I quickly created a card configuration, hided some unneeded buttons that i dont use, ...
 
 IMPORTANT: When there is an incoming call from your doorbell, the outside speaker is in use, when you activate the two way audio with the card, it doesnt pass the audio and the ringing just continues...
-With my Hikvision Add-On you can first "answer" the call and then "hangup", and then start talking with twowayaudio, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my INDOOR station... You can also just send the "reject" instead, but that makes a "beep beep beep" tone at your outdoor
+With my Hikvision App you can first "answer" the call and then "hangup", and then start talking with twowayaudio, you can see i added an "element" section below, where i added an extra "phone" button. The "answer" + "hangUp" i send to my INDOOR station... You can also just send the "reject" instead, but that makes a "beep beep beep" tone at your outdoor
 For people without an indoor station, some people say confirmed that sending "hangup" is enough to stop the ringing, you should test this...
 
 So the "phone" button activates some services:
@@ -71,7 +71,7 @@ The "phone-hangup" button:
 
 So in below example screenshot, the first 3 icons are just for starting two way audi / mute / unmute, BUT without a real call!! When you actually have an incoming doorbell ring, you need to use the phone/hangup buttons.
 
-IMPORTANT: If you are missing the first icon, the microphone button, that means your go2rtc addon is not working correctly, remember, https and a valid ssl is needed when accessing HA!
+IMPORTANT: If you are missing the first icon, the microphone button, that means your go2rtc app is not working correctly, remember, https and a valid ssl is needed when accessing HA!
 
 ![Ivms](advanced.card.png)
 

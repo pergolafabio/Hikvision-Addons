@@ -25,12 +25,12 @@ def ha_token_from_env():
 
 def mqtt_config_from_supervisor():
     """Factory function to read MQTT configuration from the HA supervisor, used when running as a HA addon.
-    If the configuration cannot be read (MQTT add-on not configured), do nothing.
+    If the configuration cannot be read (MQTT app not configured), do nothing.
     """
     # Try to get the token from the environment
     addon_token = os.getenv('SUPERVISOR_TOKEN')
     if not addon_token:
-        # We are not running as an add-on, skip this step
+        # We are not running as an app, skip this step
         return None
 
     auth_headers = {

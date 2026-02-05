@@ -1,4 +1,4 @@
-# https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
-name: Hikvision Add-ons
+# https://developers.home-assistant.io/docs/apps/repository#repository-configuration
+name: Hikvision Apps
 url: "https://github.com/pergolafabio/Hikvision-Addons"
 maintainer: Pergola Fabio <pergola.fabio@gmail.com>

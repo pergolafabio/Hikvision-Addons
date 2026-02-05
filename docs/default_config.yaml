@@ -1,4 +1,4 @@
-# Default configuration file used if the application is run outside of an HA addon (for instance as a standalone container).
+# Default configuration file used if the application is run outside of an HA app (for instance as a standalone container).
 
 # If you want to customize the settings, copy this file and set you own values
 # Each option can be overridden by settings environment variables using __ as delimiter for nesting the object.

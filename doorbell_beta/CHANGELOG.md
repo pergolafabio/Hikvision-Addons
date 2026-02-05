@@ -40,7 +40,7 @@
 
 ### Test
 
-- added outdoor_ip as optional to the addon confog to configure on indoor stations ONLY, as a test to make a snapshot from outdoor stations
+- added outdoor_ip as optional to the app confog to configure on indoor stations ONLY, as a test to make a snapshot from outdoor stations
 
 ## 3.0.0-beta.94 - 2026-01-14
 
@@ -118,7 +118,7 @@
 
 ### Fix
 
-- Retry added every 15 sec, when the device is offline, when starting the addon
+- Retry added every 15 sec, when the device is offline, when starting the app
 
 ## 3.0.0-beta.66 - 2024-09-10
 
@@ -237,7 +237,7 @@
 
 ## IMPORTANT
 
-- BETA period is over, i have now created a stable release, so you can now copy the config, uninstall the beta addon, install the main release and paste the config...... This main release is the same as the current beta build
+- BETA period is over, i have now created a stable release, so you can now copy the config, uninstall the beta app, install the main release and paste the config...... This main release is the same as the current beta build
 
 ### Added
 
@@ -289,13 +289,13 @@
 
 ### Added
 
-- Possibilty to change port 8000 in the add-on config for the hikvision devices 
+- Possibilty to change port 8000 in the app config for the hikvision devices 
 
 ## 3.0.0-beta.25 - 2023-07-25
 
 ### Added
 
-- Possibilty to define an external broker in the add-on config
+- Possibilty to define an external broker in the app config
 
 ## 3.0.0-beta.24 - 2022-06-29
 
@@ -374,12 +374,12 @@
   - `Device triggers` for receiving alarm events (motion detection, door not closed, tamper alarm, etc..)
   - Diagnostic `text` entity for testing out ISAPI commands (advanced)
 - New configuration option: `output_relays` (to manually specify the number of relays)
-- If the add-on has trouble connecting to the doorbells, the sensors show up as `unavailable`
+- If the app has trouble connecting to the doorbells, the sensors show up as `unavailable`
 
 ### Changed
 
 - Update documentation, add section about **MQTT** broker installation
-- The add-on no longer creates simple `binary_sensor`, but  various entities associated to one or more `device`, each visible in the HA UI
+- The app no longer creates simple `binary_sensor`, but  various entities associated to one or more `device`, each visible in the HA UI
 - Update development documentation with overview on software architecture, add `docker-compose.yml` example.
 - Update `amd64` SDK to version `6.1.9.4_build20220412`
 
@@ -422,28 +422,28 @@ This is the first of the releases made available under the __Beta channel__. Exp
 You feedback is very welcome! If you have any doubt, would like to report a bug or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!
 Now let's move on to __what's new__:
 
-The addon has been completely __overhauled__, with lots of __new features__ and an __improved codebase__ that will aid future integrations and improvements.
+The app has been completely __overhauled__, with lots of __new features__ and an __improved codebase__ that will aid future integrations and improvements.
 
 ### Added
 
 - Handle __multiple doorbells__
     - Customize the __name__ of each doorbell
     - __Command__ each device separately (open door, reboot, etc...)
-- Run the addon as a standalone __Docker container__, for Home Assistant installations without _supervisor_. (this feature is considered _experimental_ and still to be appropriately tested. Feedback is welcome!)
+- Run the app as a standalone __Docker container__, for Home Assistant installations without _supervisor_. (this feature is considered _experimental_ and still to be appropriately tested. Feedback is welcome!)
     - Load __configuration__ from a JSON/YAML file or from environment variables
 - Configurable __system logs__
 - Events coming from the doorbells are written to the __console__, for easier debugging and troubleshooting
 - Automated __testing__ and __release__ using Github Actions
-- New __beta channel__ to test pre-release versions of the addon
+- New __beta channel__ to test pre-release versions of the app
 - Add basic __blueprint__ to showcase how to integrate the sensors inside HA
 
 ### Changed
 
-- Change the name of the addon to __Hikvision Doorbell__
+- Change the name of the app to __Hikvision Doorbell__
 - Improved __documentation__ for both end users and developers
 - Changed the format of __input commands__ to: `<command> <doorbell_name> <optional_argument>`
   - The __name__ of the doorbell must be specified as part of the command
-- Changed the sensors created inside HA by this add-on:
+- Changed the sensors created inside HA by this app:
   - The doorbell name is part of the sensor name
   - Sensors are initialized to `off` __on startup__
   - Sensors are __`binary_sensors`__

@@ -1,3 +1,3 @@
-# Home Assistant Add-on: Hikvision Doorbell (__Beta__)
+# Home Assistant App: Hikvision Doorbell (__Beta__)
 
-__NOTE__: This Add-on is for testing only, please switch to the "stable" release if you are still using it
+__NOTE__: This App is for testing only, please switch to the "stable" release if you are still using it
