@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.126 - 2026-02-10
+
+### Fix
+
+- Improve offline device handling
+
 ## 3.0.0-beta.125 - 2026-02-10
 
 ### Fix
