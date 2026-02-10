@@ -146,11 +146,21 @@ async def main():
     doorbell_registry = Registry()
 
     # Configure each doorbell
+    '''
     for index, doorbell_config in enumerate(config.doorbells):
         doorbell = Doorbell(index, doorbell_config, sdk)
         doorbell.authenticate()
         # Add the doorbell to the registry, indexed by ID
         doorbell_registry[index] = doorbell
+    '''
+    for index, doorbell_config in enumerate(config.doorbells):
+        try:
+            doorbell = Doorbell(index, doorbell_config, sdk)
+            doorbell.authenticate()
+            doorbell_registry[index] = doorbell
+        except Exception as e:
+            logger.error(f"Doorbell {index} offline/error: {e}")
+            continue  # Skip to next doorbell instead of crashing
 
     event_manager = EventManager(sdk, doorbell_registry)
     console = ConsoleHandler()
@@ -167,8 +177,16 @@ async def main():
     event_manager.start()
 
     # Arm each doorbell
+    '''
     for _, doorbell in doorbell_registry.items():
         doorbell.setup_alarm()
+    '''
+    for index, doorbell in list(doorbell_registry.items()):
+        try:
+            doorbell.setup_alarm()
+        except Exception as e:
+            logger.error(f"Failed to arm doorbell {index}: {e}")
+            del doorbell_registry[index] # Remove failed device
 
     # Create reader to receive commands from STDIN
     input_reader = InputReader(doorbell_registry)
@@ -203,13 +221,14 @@ async def main_loop():
             user_message, sdk_code, sdk_message = e.args
             logger.error("{}: {} Error code: {}", user_message, sdk_message, sdk_code)
             if sdk_code == 7:
-                logger.info("Failed to connect to the device, retrying again in 15 seconds...")
-                await asyncio.sleep(15)
+                logger.info("Failed to connect to the device (Error 7), retrying in 15 seconds...")
             else:
-                sys.exit(1)
+                # This catches all other SDK errors without crashing the whole script
+                logger.warning(f"SDK Error {sdk_code} occurred. Retrying in 15 seconds...")
+            await asyncio.sleep(15)
         except (OSError, ConnectionRefusedError) as e:
-            logger.error("Error while connecting to MQTT broker: {}", e.strerror)
-            sys.exit(1)
+            logger.error("Network/MQTT error: {}. Retrying in 30 seconds...", e)
+            await asyncio.sleep(30)
 
 if __name__ == "__main__":
     asyncio.run(main_loop())
