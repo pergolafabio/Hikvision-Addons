@@ -13,6 +13,7 @@
 - Add control_source_decoded  card_user_id and unlock_type to attributes when door was opened
 - Add dev number to logging on incoming ring event, to hopefull identify what button on outdoor station was pressed
 - Fix for dev number, when not able to parse
+- Improve offline device handling
 
 ## 3.0.27 - 2026-01-23
 
