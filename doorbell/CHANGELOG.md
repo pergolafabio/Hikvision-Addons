@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.28 - 2026-xx-xx
+## 3.0.28 - 2026-02-10
 
 ### Changed/Added
 
@@ -8,6 +8,11 @@
 - New image entity, take snapshot button updates the image entity
 - Ring event also creates a snapshot automaticly
 - Pressing the call status button manually also updates the call sensor entity
+- No more timestamp on the snapshot image, since we are now using the image mqtt entity
+- Added a backlight control mode for outdoor stations
+- Add control_source_decoded  card_user_id and unlock_type to attributes when door was opened
+- Add dev number to logging on incoming ring event, to hopefull identify what button on outdoor station was pressed
+- Fix for dev number, when not able to parse
 
 ## 3.0.27 - 2026-01-23
 
