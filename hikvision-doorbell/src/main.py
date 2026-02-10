@@ -17,6 +17,22 @@ from loguru import logger
 from input import InputReader
 
 
+async def retry_connection(index, doorbell_config, sdk, doorbell_registry):
+    """Background task that retries connection for a specific doorbell indefinitely"""
+    while True:
+        await asyncio.sleep(30) # Wait 30 seconds before retrying
+        if index not in doorbell_registry:
+            try:
+                logger.info(f"Retrying connection for {doorbell_config.name} (Index {index})...")
+                doorbell = Doorbell(index, doorbell_config, sdk)
+                doorbell.authenticate()
+                doorbell.setup_alarm()
+                doorbell_registry[index] = doorbell
+                logger.info(f"Doorbell {doorbell_config.name} is now ONLINE and armed.")
+                break # Exit the loop once connected
+            except Exception as e:
+                logger.warning(f"Retry for {doorbell_config.name} failed: {e}")
+
 async def main():
     """Main entrypoint of the application"""
     try:
@@ -158,9 +174,11 @@ async def main():
             doorbell = Doorbell(index, doorbell_config, sdk)
             doorbell.authenticate()
             doorbell_registry[index] = doorbell
+            logger.info(f"Doorbell {index} ({doorbell_config.name}) authenticated.")
         except Exception as e:
-            logger.error(f"Doorbell {index} offline/error: {e}")
-            continue  # Skip to next doorbell instead of crashing
+            logger.error(f"Doorbell {index} offline: {e}. Starting background recovery.")
+            # START BACKGROUND TASK: Keep trying this specific doorbell
+            asyncio.create_task(retry_connection(index, doorbell_config, sdk, doorbell_registry))
 
     event_manager = EventManager(sdk, doorbell_registry)
     console = ConsoleHandler()
@@ -187,6 +205,8 @@ async def main():
         except Exception as e:
             logger.error(f"Failed to arm doorbell {index}: {e}")
             del doorbell_registry[index] # Remove failed device
+            # If it fails arming, also start a retry task for it
+            asyncio.create_task(retry_connection(index, config.doorbells[index], sdk, doorbell_registry))
 
     # Create reader to receive commands from STDIN
     input_reader = InputReader(doorbell_registry)
@@ -216,19 +236,13 @@ async def main_loop():
     while True:
         try:
             await main()
-            break
-        except SDKError as e:
-            user_message, sdk_code, sdk_message = e.args
-            logger.error("{}: {} Error code: {}", user_message, sdk_message, sdk_code)
-            if sdk_code == 7:
-                logger.info("Failed to connect to the device (Error 7), retrying in 15 seconds...")
-            else:
-                # This catches all other SDK errors without crashing the whole script
-                logger.warning(f"SDK Error {sdk_code} occurred. Retrying in 15 seconds...")
-            await asyncio.sleep(15)
+            break 
         except (OSError, ConnectionRefusedError) as e:
-            logger.error("Network/MQTT error: {}. Retrying in 30 seconds...", e)
+            logger.error(f"MQTT/Network error: {e}. Retrying in 30 seconds...")
             await asyncio.sleep(30)
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}. Restarting in 15 seconds...")
+            await asyncio.sleep(15)
 
 if __name__ == "__main__":
     asyncio.run(main_loop())
