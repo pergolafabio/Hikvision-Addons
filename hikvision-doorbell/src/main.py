@@ -1,4 +1,5 @@
 import asyncio
+from logging import config
 import signal
 import os
 import json
@@ -17,7 +18,7 @@ from loguru import logger
 from input import InputReader
 
 
-async def retry_connection(index, doorbell_config, sdk, doorbell_registry):
+async def retry_connection(index, doorbell_config, sdk, doorbell_registry, mqtt_handler=None):
     """Background task that retries connection for a specific doorbell indefinitely"""
     while True:
         await asyncio.sleep(30) # Wait 30 seconds before retrying
@@ -27,7 +28,23 @@ async def retry_connection(index, doorbell_config, sdk, doorbell_registry):
                 doorbell = Doorbell(index, doorbell_config, sdk)
                 doorbell.authenticate()
                 doorbell.setup_alarm()
+
                 doorbell_registry[index] = doorbell
+
+                
+                if mqtt_handler:
+                    logger.info(f"Refreshing MQTT discovery for {doorbell_config.name}")
+                    # This triggers the discovery/online message in HA
+                    if hasattr(mqtt_handler, '_call_sensor_tasks'):
+                        for task in mqtt_handler._call_sensor_tasks.values():
+                            task.cancel()
+                        mqtt_handler._call_sensor_tasks.clear()
+                    
+                    mqtt_handler.__init__(mqtt_handler._mqtt_settings, doorbell_registry)
+
+                    from mqtt_input import MQTTInput
+                    MQTTInput(mqtt_handler._mqtt_settings, doorbell_registry)
+
                 logger.info(f"Doorbell {doorbell_config.name} is now ONLINE and armed.")
                 break # Exit the loop once connected
             except Exception as e:
@@ -160,7 +177,7 @@ async def main():
     setupSDK(sdk, sdk_config)
 
     doorbell_registry = Registry()
-
+    failed_indices = []
     # Configure each doorbell
     '''
     for index, doorbell_config in enumerate(config.doorbells):
@@ -178,16 +195,17 @@ async def main():
         except Exception as e:
             logger.error(f"Doorbell {index} offline: {e}. Starting background recovery.")
             # START BACKGROUND TASK: Keep trying this specific doorbell
-            asyncio.create_task(retry_connection(index, doorbell_config, sdk, doorbell_registry))
+            failed_indices.append(index)
 
     event_manager = EventManager(sdk, doorbell_registry)
     console = ConsoleHandler()
     event_manager.register_handler(console)
 
     # If MQTT configuration is defined, register its event handler and its input manager
+    mqtt_inst = None
     if config.mqtt:
-        mqtt = MQTTHandler(config.mqtt, doorbell_registry)
-        event_manager.register_handler(mqtt)
+        mqtt_inst = MQTTHandler(config.mqtt, doorbell_registry)
+        event_manager.register_handler(mqtt_inst)
         # Create the MQTT input to manage commands coming from HA
         _ = MQTTInput(config.mqtt, doorbell_registry)
 
@@ -195,18 +213,23 @@ async def main():
     event_manager.start()
 
     # Arm each doorbell
+
     '''
     for _, doorbell in doorbell_registry.items():
         doorbell.setup_alarm()
     '''
+    for index in failed_indices:
+        asyncio.create_task(retry_connection(index, config.doorbells[index], sdk, doorbell_registry, mqtt_inst))
+
+        # Arm the ones that are online
     for index, doorbell in list(doorbell_registry.items()):
         try:
             doorbell.setup_alarm()
         except Exception as e:
             logger.error(f"Failed to arm doorbell {index}: {e}")
-            del doorbell_registry[index] # Remove failed device
-            # If it fails arming, also start a retry task for it
-            asyncio.create_task(retry_connection(index, config.doorbells[index], sdk, doorbell_registry))
+            del doorbell_registry[index]
+            # Also start retry if arming fails
+            asyncio.create_task(retry_connection(index, config.doorbells[index], sdk, doorbell_registry, mqtt_inst))
 
     # Create reader to receive commands from STDIN
     input_reader = InputReader(doorbell_registry)
