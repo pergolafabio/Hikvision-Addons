@@ -361,19 +361,23 @@ class MQTTInput():
                 closeAlarm_button.set_availability(True)
 
     def _get_doorbell_from_args(self, doorbell, message):
-        # If the library actually worked, return the object
+        # If the library already provided the object, use it
         if isinstance(doorbell, Doorbell):
             return doorbell
 
+        # Normalize the incoming topic (remove accents and underscores)
         topic = message.topic.lower()
-        normalized_topic = topic.replace(" ", "").replace("_", "").replace("-", "")
+        normalized_topic = sanitize_doorbell_name(topic).replace("_", "")
+
         for d in self._doorbells.values():
-            raw_name = d._config.name.lower().replace(" ", "").replace("_", "").replace("-", "")
-            sanitized = sanitize_doorbell_name(d._config.name).lower()
+            # Normalize the doorbell name from config (e.g., "Videotürklingel" -> "videoturklingel")
+            sanitized_name = sanitize_doorbell_name(d._config.name).replace("_", "")
             
-            if raw_name in normalized_topic:
+            # Check if the clean name exists within the clean topic
+            if sanitized_name in normalized_topic:
                 return d
             
+        logger.warning("No matching doorbell found for topic: {}", message.topic)
         return None
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):

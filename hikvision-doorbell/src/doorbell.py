@@ -1,6 +1,7 @@
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_ulong, c_int, c_uint, c_void_p, c_long, create_string_buffer, pointer, sizeof, cast
 from enum import IntEnum
 import re
+import unicodedata
 import json
 import os
 from datetime import datetime
@@ -33,8 +34,12 @@ class DeviceType(IntEnum):
     AccessControlTerminal = 861
 
 def sanitize_doorbell_name(doorbell_name: str) -> str:
-    """Given a doorbell name, lowercase it and substitute whitespaces and `-` with `_`"""
-    return re.sub(r"\s|-", "_", doorbell_name.lower())
+    """Lowercase, remove accents/umlauts, and swap whitespaces/- with _"""
+    # Normalize unicode (breaks 'ü' into 'u' + accent) and strip the accent
+    nksfd = unicodedata.normalize('NFKD', doorbell_name)
+    ascii_name = nksfd.encode('ascii', 'ignore').decode('ascii')
+    # Lowercase and replace spaces/hyphens with underscores
+    return re.sub(r"\s|-", "_", ascii_name.lower())
 
 class Doorbell():
     """A doorbell device.
