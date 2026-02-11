@@ -1,6 +1,13 @@
 # Changelog
 
-## 3.0.29 - 2026-02-10
+## 3.0.31 - 2026-02-11
+
+### Fix
+
+- Doorbell name failing when spaces are used
+- Improve manual mqtt config for validation errors
+
+## 3.0.30 - 2026-02-10
 
 ### Changed/Added
 
