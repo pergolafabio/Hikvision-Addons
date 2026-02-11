@@ -268,13 +268,20 @@ class Doorbell():
                 logger.debug("Direct snapshot for device type: {}", self._type.name)
 
             # Step 2: Capture Logic
-            priority_channels = [1]
-            param_combinations = [(0xFF, 2, 1024*1024)] 
+            priority_channels = [1, 101]
+            param_combinations = [
+                (0xFF, 2, 1024*1024), # Auto
+                (2, 2, 1024*1024),  # D1 size, Medium quality
+                (0, 2, 1024*1024)  # CIF size
+            ]
             
             filename = None
             for channel in priority_channels:
+                if filename: 
+                    break
                 for pic_size, quality, buffer_size in param_combinations:
                     try:
+                        logger.debug("Trying parameters {} on channel {}", (pic_size, quality, buffer_size), channel)
                         jpeg_para = NET_DVR_JPEGPARA()
                         jpeg_para.wPicSize = pic_size
                         jpeg_para.wPicQuality = quality
