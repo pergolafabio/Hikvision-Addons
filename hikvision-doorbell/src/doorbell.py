@@ -33,13 +33,17 @@ class DeviceType(IntEnum):
     HD = 31
     AccessControlTerminal = 861
 
+import re
+import unicodedata
+
 def sanitize_doorbell_name(doorbell_name: str) -> str:
-    """Lowercase, remove accents/umlauts, and swap whitespaces/- with _"""
-    # Normalize unicode (breaks 'ü' into 'u' + accent) and strip the accent
-    nksfd = unicodedata.normalize('NFKD', doorbell_name)
-    ascii_name = nksfd.encode('ascii', 'ignore').decode('ascii')
-    # Lowercase and replace spaces/hyphens with underscores
-    return re.sub(r"\s|-", "_", ascii_name.lower())
+    if not doorbell_name:
+        return ""
+    # Lowercase and normalize unicode
+    name = doorbell_name.lower()
+    name = unicodedata.normalize('NFD', name)
+    # Strip everything except basic alphanumeric characters
+    return "".join([c for c in name if c.isalnum()])
 
 class Doorbell():
     """A doorbell device.

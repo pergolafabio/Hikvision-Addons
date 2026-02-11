@@ -2,6 +2,7 @@ import json
 import asyncio
 import os
 import base64
+import re
 from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
@@ -361,23 +362,31 @@ class MQTTInput():
                 closeAlarm_button.set_availability(True)
 
     def _get_doorbell_from_args(self, doorbell, message):
-        # If the library already provided the object, use it
         if isinstance(doorbell, Doorbell):
             return doorbell
 
-        # Normalize the incoming topic (remove accents and underscores)
-        topic = message.topic.lower()
-        normalized_topic = sanitize_doorbell_name(topic).replace("_", "")
+        # 1. Clean the whole topic (removes symbols/spaces)
+        clean_topic = sanitize_doorbell_name(message.topic)
+        # 2. Make it vowel-blind
+        vowel_blind_topic = re.sub(r'[aeiou]', '', clean_topic)
 
         for d in self._doorbells.values():
-            # Normalize the doorbell name from config (e.g., "Videotürklingel" -> "videoturklingel")
-            sanitized_name = sanitize_doorbell_name(d._config.name).replace("_", "")
+            # 3. Clean the config name.
+            clean_name = sanitize_doorbell_name(d._config.name)
             
-            # Check if the clean name exists within the clean topic
-            if sanitized_name in normalized_topic:
+            # Try exact match first
+            if clean_name and clean_name in clean_topic:
                 return d
+                
+            # 4. Try vowel-blind match:
+            vowel_blind_name = re.sub(r'[aeiou]', '', clean_name)
             
-        logger.warning("No matching doorbell found for topic: {}", message.topic)
+            # Now 'vowel-blind' name WILL be found in 'hmdbutton...'
+            if vowel_blind_name and vowel_blind_name in vowel_blind_topic:
+                return d
+                
+        # If we get here, log the failure and return None (which causes the crash)
+        logger.error(f"NO MATCH! Vowel-blind Name: {vowel_blind_name} | Vowel-blind Topic: {vowel_blind_topic}")
         return None
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
