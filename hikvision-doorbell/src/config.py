@@ -139,15 +139,35 @@ class AppConfig(GoodConf):
     @field_validator('mqtt', mode='before')
     @classmethod
     def load_mqtt_config(cls, v):
-        # If v is None, try to load from supervisor
-        if v is None:
-            supervisor_token = os.getenv('SUPERVISOR_TOKEN')
-            if os.getenv('PYTEST_CURRENT_TEST') or not supervisor_token:
-                return None
+        # Determine if we have a valid manual config (must be a dict with at least a host)
+        has_manual_host = isinstance(v, dict) and v.get('host')
+        
+        # 1. User provided a manual config with a host
+        if has_manual_host:
+            logger.info("Using manual MQTT configuration from config file/UI")
+            return v
+
+        # 2. Check for the "Chrome Trap": a dict with data but NO host
+        if isinstance(v, dict) and not v.get('host'):
+            logger.warning("Partial MQTT config detected (missing host). This is likely browser autofill. Attempting Supervisor fallback.")
+
+        # 3. Attempt Supervisor Fallback
+        supervisor_token = os.getenv('SUPERVISOR_TOKEN')
+        
+        # Skip if testing or not in an addon environment
+        if os.getenv('PYTEST_CURRENT_TEST') or not supervisor_token:
+            # If we got here via autofill but have no supervisor, return None to avoid Pydantic errors
+            return None
+
+        try:
             config = mqtt_config_from_supervisor()
             if config:
+                logger.info("Using MQTT configuration provided by Home Assistant Supervisor")
                 return config
-            return None  # Return None if no config found
+        except Exception as e:
+            logger.error("Failed to fetch MQTT config from Supervisor: {}", e)
         
-        # If user supplied config, use it
+        return None
+        
+        # 3. If v is a valid dict with a host, use it
         return v
