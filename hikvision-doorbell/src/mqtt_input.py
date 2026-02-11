@@ -366,13 +366,12 @@ class MQTTInput():
             return doorbell
 
         topic = message.topic.lower()
-        
+        normalized_topic = topic.replace(" ", "").replace("_", "").replace("-", "")
         for d in self._doorbells.values():
-            name = d._config.name.lower()
+            raw_name = d._config.name.lower().replace(" ", "").replace("_", "").replace("-", "")
             sanitized = sanitize_doorbell_name(d._config.name).lower()
             
-            # Check if the name or the sanitized name exists anywhere in the topic
-            if name in topic or sanitized in topic or name.replace("-", "_") in topic:
+            if raw_name in normalized_topic:
                 return d
             
         return None
