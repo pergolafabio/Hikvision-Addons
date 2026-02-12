@@ -4,6 +4,8 @@ import re
 import unicodedata
 import json
 import os
+import requests
+from requests.auth import HTTPDigestAuth
 from datetime import datetime
 from typing import Callable, Optional
 from loguru import logger
@@ -235,6 +237,48 @@ class Doorbell():
  
     def take_snapshot(self):
 
+        # --- ISAPI HTTP BLOCK START ---
+
+        filename = None
+        # 1. Determine the correct IP to target
+        target_ip = self._config.ip
+        if self._type == DeviceType.INDOOR:
+            logger.debug("Indoor station: resolving outdoor IP for direct ISAPI...")
+            target_ip = self.get_outdoor_ip()
+            logger.debug("Resolved outdoor IP for direct ISAPI: {}", target_ip)
+        
+        if target_ip:
+            # 2. Try both Main (1) and Sub (101) channels
+            for channel in [1, 101]:
+                try:
+                    url = f"http://{target_ip}/ISAPI/Streaming/channels/{channel}/picture"
+                    logger.debug("Attempting direct ISAPI: {}", url)
+                    
+                    response = requests.get(
+                        url, 
+                        auth=HTTPDigestAuth(self._config.username, self._config.password),
+                        timeout=5
+                    )
+
+                    if response.status_code == 200 and len(response.content) > 100:
+                        if response.content.startswith(b'\xff\xd8'):
+                            filename = self._save_snapshot_result(response.content)
+                            logger.info("Snapshot captured via HTTP ISAPI on channel {}", channel)
+                            break
+                    else:
+                        # This catches 404, 401, etc., which are NOT exceptions
+                        logger.error("ISAPI channel {} returned status: {} (Length: {})", 
+                                     channel, response.status_code, len(response.content))
+
+                except Exception as e:
+                    logger.debug("HTTP ISAPI failed for channel {}: {}", channel, e)
+
+        # If HTTP succeeded, we can skip the rest of the logic
+        if filename:
+            self._notify_snapshot_update(filename)
+            return filename
+        # --- ISAPI HTTP BLOCK END ---
+
         target_user_id = self.user_id
         temp_user_id = -1
 
@@ -270,15 +314,16 @@ class Doorbell():
             # Step 2: Capture Logic
             priority_channels = [1, 101]
             param_combinations = [
-                (0xFF, 2, 1024*1024), # Auto
-                (2, 2, 1024*1024),  # D1 size, Medium quality
-                (0, 2, 1024*1024)  # CIF size
+                (0xFF, 2, 1024*1024) # (2, 2, 1024*1024),  # D1 size, Medium quality   (0, 2, 1024*1024)  # CIF size
             ]
+
             
             filename = None
             for channel in priority_channels:
                 if filename: 
                     break
+
+                # NET_DVR_JPEGPARA Capture if ISAPI fails
                 for pic_size, quality, buffer_size in param_combinations:
                     try:
                         logger.debug("Trying parameters {} on channel {}", (pic_size, quality, buffer_size), channel)

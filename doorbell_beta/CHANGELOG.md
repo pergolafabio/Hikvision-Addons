@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.133 - 2026-02-12
+
+### Change
+
+- For snapshot, try first new ISAPI method, then fallback to SDK (villaVTO doesnt support SDK)
+
 ## 3.0.0-beta.129 - 2026-02-11
 
 ### Fix
