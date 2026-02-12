@@ -102,12 +102,15 @@ class Doorbell():
 
     def setup_alarm(self):
         '''Receive events from the doorbell. authenticate() must be called first.'''
+
         alarm_param = NET_DVR_SETUPALARM_PARAM_V50()
         alarm_param.dwSize = sizeof(NET_DVR_SETUPALARM_PARAM_V50)
         alarm_param.byLevel = 1
         alarm_param.byAlarmInfoType = 1
-        alarm_param.byFaceAlarmmDetection = 1
+        alarm_param.byFaceAlarmDetection = 1
         alarm_param.byDeployType = 1
+        # This flips bit 1 to 0, telling the doorbell NOT to send the backlog.
+        alarm_param.bySupport = alarm_param.bySupport & ~0x02
 
         logger.debug("Arming the device via SDK")
         alarm_handle = self._sdk.NET_DVR_SetupAlarmChan_V50(
@@ -251,7 +254,11 @@ class Doorbell():
             # 2. Try both Main (1) and Sub (101) channels
             for channel in [1, 101]:
                 try:
-                    url = f"http://{target_ip}/ISAPI/Streaming/channels/{channel}/picture"
+                    url = f"http://{target_ip}/ISAPI/Streaming/channels/{channel}/picture?snapShotImageType=JPEG&videoResolutionWidth=1280&videoResolutionHeight=720&imageQuality=best"
+                    ## ISAPI/Streaming/channels/1/picture?snapShotImageType=JPEG&videoResolutionWidth=1280&videoResolutionHeight=7206&imageQuality=best
+                    # snapShotImageType picture format, only support JPEG now
+                    # videoResolutionWidth videoResolutionHeight picture resolution, if not use this parameter, by default it’s 704*576. Supported resolution 1280*720 704*576 704*480 352*288 352*240 176*144 176*120
+                    # imageQuality support best better normal general
                     logger.debug("Attempting direct ISAPI: {}", url)
                     
                     response = requests.get(
@@ -314,7 +321,7 @@ class Doorbell():
             # Step 2: Capture Logic
             priority_channels = [1, 101]
             param_combinations = [
-                (0xFF, 2, 1024*1024) # (2, 2, 1024*1024),  # D1 size, Medium quality   (0, 2, 1024*1024)  # CIF size
+                (0xFF, 2, 1280*720) # (2, 2, 1024*1024),  # D1 size, Medium quality   (0, 2, 1024*1024)  # CIF size
             ]
 
             
