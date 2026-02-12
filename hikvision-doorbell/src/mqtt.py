@@ -347,7 +347,6 @@ class MQTTHandler(EventHandler):
             Helper function to update the sensor and device trigger of a given door
             """
             logger.info("Door {} unlocked by {} , updating sensor and device trigger", door_id+1, control_source)
-            
             entity_id = f'door_{door_id}'
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             attributes = {
@@ -358,6 +357,7 @@ class MQTTHandler(EventHandler):
             }
             door_sensor.set_attributes(attributes)
             door_sensor.on()
+            logger.debug("Doorbell updating sensor {}", door_sensor)
             trigger = DeviceTriggerMetadata(name=f"Door unlocked", type="door open", subtype=f"door {door_id}", payload=attributes)
             self.handle_device_trigger(doorbell, trigger)
 
@@ -456,7 +456,8 @@ class MQTTHandler(EventHandler):
                 except (UnicodeDecodeError, AttributeError, ValueError) as e:
                     dev_number = "unknown_device"
                     logger.error(f"Error decoding device number: {e}")
-                logger.info("Doorbell ringing, button press from button: {}, updating sensor {}", dev_number, call_sensor)
+                logger.info("Doorbell ringing, button press from button: {}, updating sensor", dev_number)
+                logger.debug("Doorbell updating sensor {}", call_sensor)
                 attributes = {
                     'device_number': dev_number,
                 }
@@ -499,7 +500,8 @@ class MQTTHandler(EventHandler):
                 logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
                 call_sensor.set_state('idle')
             case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
-                logger.info("Call dismissed, updating sensor {}", call_sensor)
+                logger.info("Call dismissed, updating sensor")
+                logger.debug("Doorbell updating sensor {}", call_sensor)
                 call_sensor.set_state('dismissed')
                 # Put sensor back to idle
                 call_sensor.set_state('idle')
