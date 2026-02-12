@@ -672,12 +672,12 @@ class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
 
 class NET_DVR_ALARM_ISAPI_INFO(Structure):
     _fields_ = [
-        ("pAlarmData", char),
+        ("pAlarmData", c_char_p),
         ("dwAlarmDataLen", DWORD),
         ("byDataType", BYTE),
         ("byPicturesNumber", BYTE),
         ("byRes", BYTE * 2),
-        ("pPicPackData", NET_DVR_ALARM_ISAPI_PICDATA),
+        ("pPicPackData", c_void_p),
         ("byRes2", BYTE * 32),
     ]
 

@@ -128,7 +128,8 @@ class ConsoleHandler(EventHandler):
             alarm_info: NET_DVR_ALARM_ISAPI_INFO,
             buffer_length,
             user_pointer: c_void_p):
-        logger.info("Isapi alarm from {}", doorbell._config.name)
+        #logger.info("Isapi alarm from {}", doorbell._config.name)
+        pass
 
     @override
     async def acs_alarm(

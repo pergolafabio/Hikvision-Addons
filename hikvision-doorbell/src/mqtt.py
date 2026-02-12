@@ -329,8 +329,23 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_ALARM_ISAPI_INFO,
             buffer_length,
             user_pointer: c_void_p):
-        alarmData = alarm_info.pAlarmData
-        logger.debug("Isapi alarm from {} with Alarmdata: {} ", doorbell._config.name, alarmData)
+        
+        if alarm_info.dwAlarmDataLen > 0:
+            alarmData = alarm_info.pAlarmData.decode('utf-8', errors='ignore')
+            data_type = "JSON" if alarm_info.byDataType == 1 else "XML"
+            logger.info(f"Isapi alarm ({data_type}) from {doorbell._config.name}: with Alarm Data: {alarmData}") 
+            try:
+                parsed_json = json.loads(alarmData)
+                event_name = parsed_json.get("eventType", "isapi_event")
+            except Exception:
+                event_name = "isapi_event"
+
+            trigger = DeviceTriggerMetadata(name=f"ISAPI {event_name}", type="isapi_alarm", subtype=event_name, payload={"data": alarmData})
+            self.handle_device_trigger(doorbell, trigger)
+            
+        else:
+            # Handle empty data scenarios
+            logger.warning(f"Isapi alarm received from {doorbell._config.name} but dwAlarmDataLen is 0")
 
     @override
     async def video_intercom_event(
