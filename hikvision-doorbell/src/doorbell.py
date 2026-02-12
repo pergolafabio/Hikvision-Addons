@@ -321,7 +321,7 @@ class Doorbell():
             # Step 2: Capture Logic
             priority_channels = [1, 101]
             param_combinations = [
-                (0xFF, 2, 1280*720) # (2, 2, 1024*1024),  # D1 size, Medium quality   (0, 2, 1024*1024)  # CIF size
+                (0xFF, 2, 2048*1024) # (2, 2, 1024*1024),  # D1 size, Medium quality   (0, 2, 1024*1024)  # CIF size
             ]
 
             
