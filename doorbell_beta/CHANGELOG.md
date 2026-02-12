@@ -1,11 +1,12 @@
 # Changelog
 
-## 3.0.0-beta.135 - 2026-02-12
+## 3.0.0-beta.136 - 2026-02-12
 
 ### Change
 
 - For snapshot, try first new ISAPI method, then fallback to SDK (villaVTO doesnt support SDK)
 - Better ISAPI handling for indoor stations
+- No more backlog on first start/use of the addon
 
 ## 3.0.0-beta.129 - 2026-02-11
 
