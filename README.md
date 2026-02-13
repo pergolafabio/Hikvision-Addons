@@ -23,7 +23,7 @@ It provides the following apps:
 
 ## [Hikvision Doorbell](doorbell/README.md)
 
-Connect to you Hikvision IP doorbells to receive events (motion detection, incoming call, etc..) and relay back commands (reject call, open doors, etc...).
+Connect your Hikvision IP doorbells to receive events (motion detection, incoming call, etc..) and relay back commands (reject call, open doors, take snapshots, etc...).
 
 To quickly get started, click the following button:
 [![Open your Home Assistant instance and show the dashboard of a Supervisor apps.](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons)

@@ -14,6 +14,8 @@
 
 Connect your Hikvision IP door stations to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).
 
+Make sure to read the full documentation here! [Readme](DOCS.md)
+
 __NOTE__: This is the stable version of the app.
 You feedback is very welcome! If you have any doubt, would like to report an issue or to simply chime in, please have a look at the [Github Issues page](https://github.com/pergolafabio/Hikvision-Addons/issues) and drop us a note!
 
@@ -25,7 +27,9 @@ You feedback is very welcome! If you have any doubt, would like to report an iss
 
    _This can be exploited in an HA automation. When for example a Zigbee door sensor signals a door opened, the ringing on the indoor stations and on the Hik-Connect devices is stopped. Se the documentation for more details._
 - **Reboot** the door station
-- Remote scenes support such as **atHome**/**goOut**/**goToBed**/**custom**
+- Remote scenes / alarm / zone support such as **atHome**/**goOut**/**goToBed**/**custom** on indoor stations
+- Take a snapshot on incoming call
+- Control the backlight of your outdoor station
 
 ### Example
 
@@ -59,12 +63,12 @@ __NOTE__: To use this _stable_ version, enable __Advanced mode__ in you Home Ass
    - Paste the following URL in the input field: `https://github.com/pergolafabio/Hikvision-Addons`
    - Confirm the dialog by clicking **ADD**.
    - **Hikvision Doorbell (Beta)** should be available in the _app store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _appss_ -> _apps store_).
-- Select the **Hikvision Doorbell (Beta)** app, then click **INSTALL**.
+- Select the **Hikvision Doorbell ** app, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the app to setup the required configuration and to understand how this app can be integrated in Home Assistant
 (The documentation can also be browsed online in the [Github repository](DOCS.md)).
 
 ## Supported devices
-This devices has been reported to be working from other HA users.
+These devices have been reported to be working from other HA users.
 If your device is not on the list, we are happy to include it. Just [open an issue here](https://github.com/pergolafabio/Hikvision-Addons/issues) on GitHub and let us know the kind of device you have.
 
 - DS-KV8413
