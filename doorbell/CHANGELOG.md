@@ -1,6 +1,14 @@
 # Changelog
 
-## 3.0.32 - 2026-02-11
+## 3.0.32 - 2026-02-17
+
+### Change
+
+- For snapshot, try first new ISAPI method, then fallback to SDK (villaVTO doesnt support SDK)
+- Better ISAPI alarm handling for indoor stations
+- No more backlog on first start/use of the add-on! If you guys dont see the events anymore you saw before, let me know!
+
+## 3.0.31 - 2026-02-11
 
 ### Fix
 
