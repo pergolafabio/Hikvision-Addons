@@ -8,9 +8,9 @@ configuration:
   system:
     name: "System options"
     description: >-
-      Configure general options for the add-on itself, such as its logs. See the 'Documentation' tab for more details.
+      Configure general options for the app itself, such as its logs. See the 'Documentation' tab for more details.
 
   mqtt:
     name: "MQTT broker"
     description: >-
-      Optional settings to configure the connection to an external broker. By default the add-on auto-discovers the Mosquitto add-on, if available.
+      Optional settings to configure the connection to an external broker. By default the app auto-discovers the Mosquitto app, if available.

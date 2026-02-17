@@ -31,6 +31,7 @@ def test_init(mock_doorbell: Doorbell, mocker: MockerFixture):
     # Mock the entities so no MQTT connection is made
     mocker.patch("mqtt_input.Button")
     mocker.patch("mqtt_input.Text")
+    mocker.patch("mqtt_input.Image")
 
     # Fake MQTT settings
     mqtt_config = AppConfig.MQTT(host="localhost")

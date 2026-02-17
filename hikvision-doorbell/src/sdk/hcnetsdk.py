@@ -218,6 +218,17 @@ class DeviceCapabilityType(Enum):
 class DeviceAbilityType(IntEnum):
     IP_VIEW_DEV_ABILITY = 0x014
 
+class UnlockType(Enum):
+    PASSWORD = 1
+    HIJACKING = 2
+    CARD = 3
+    HOUSEHOLDER = 4
+    CENTER_PLATFORM = 5
+    BLUETOOTH = 6
+    QR_CODE = 7
+    FACE = 8
+    FINGERPRINT = 9
+
 
 ###########################
 # Struct
@@ -482,6 +493,15 @@ class NET_DVR_UNLOCK_RECORD_INFO(Structure):
         """Return the controls source number as a string representation, removing the ending `0`s"""
         serial = "".join([str(number) for number in self.byControlSrc[:]])
         return re.sub(r"0*$", "0", serial)
+    
+    def controlSource_decoded(self):
+        """Return the control source as a decoded string (e.g., Card No. or Username)"""
+        # Convert bytes to a string and strip null bytes (\x00)
+        try:
+            return bytes(self.byControlSrc).split(b'\x00')[0].decode('utf-8').strip()
+        except UnicodeDecodeError:
+            # Fallback if there are non-UTF8 characters
+            return "".join([chr(b) for b in self.byControlSrc if b != 0])
 
 
 class NET_DVR_NOTICEDATA_RECEIPT_INFO(Structure):
@@ -652,12 +672,12 @@ class NET_DVR_ALARM_ISAPI_PICDATA(Structure):
 
 class NET_DVR_ALARM_ISAPI_INFO(Structure):
     _fields_ = [
-        ("pAlarmData", char),
+        ("pAlarmData", c_char_p),
         ("dwAlarmDataLen", DWORD),
         ("byDataType", BYTE),
         ("byPicturesNumber", BYTE),
         ("byRes", BYTE * 2),
-        ("pPicPackData", NET_DVR_ALARM_ISAPI_PICDATA),
+        ("pPicPackData", c_void_p),
         ("byRes2", BYTE * 32),
     ]
 

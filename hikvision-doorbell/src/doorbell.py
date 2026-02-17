@@ -1,8 +1,11 @@
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_ulong, c_int, c_uint, c_void_p, c_long, create_string_buffer, pointer, sizeof, cast
 from enum import IntEnum
 import re
+import unicodedata
 import json
 import os
+import requests
+from requests.auth import HTTPDigestAuth
 from datetime import datetime
 from typing import Callable, Optional
 from loguru import logger
@@ -32,9 +35,17 @@ class DeviceType(IntEnum):
     HD = 31
     AccessControlTerminal = 861
 
+import re
+import unicodedata
+
 def sanitize_doorbell_name(doorbell_name: str) -> str:
-    """Given a doorbell name, lowercase it and substitute whitespaces and `-` with `_`"""
-    return re.sub(r"\s|-", "_", doorbell_name.lower())
+    if not doorbell_name:
+        return ""
+    # Lowercase and normalize unicode
+    name = doorbell_name.lower()
+    name = unicodedata.normalize('NFD', name)
+    # Strip everything except basic alphanumeric characters
+    return "".join([c for c in name if c.isalnum()])
 
 class Doorbell():
     """A doorbell device.
@@ -87,16 +98,19 @@ class Doorbell():
         logger.debug("Login returned user ID: {}", self.user_id)
         logger.debug("Doorbell serial number: {}, device type: {}",
                      self._device_info.serialNumber(), self._type.name)
-        logger.info("Connected to doorbell: {}", self._config.name)
+        logger.info("Connected to doorbell: {} type: {}", self._config.name, self._type.name)
 
     def setup_alarm(self):
         '''Receive events from the doorbell. authenticate() must be called first.'''
+
         alarm_param = NET_DVR_SETUPALARM_PARAM_V50()
         alarm_param.dwSize = sizeof(NET_DVR_SETUPALARM_PARAM_V50)
         alarm_param.byLevel = 1
         alarm_param.byAlarmInfoType = 1
-        alarm_param.byFaceAlarmmDetection = 1
+        alarm_param.byFaceAlarmDetection = 1
         alarm_param.byDeployType = 1
+        # This flips bit 1 to 0, telling the doorbell NOT to send the backlog.
+        alarm_param.bySupport = alarm_param.bySupport & ~0x02
 
         logger.debug("Arming the device via SDK")
         alarm_handle = self._sdk.NET_DVR_SetupAlarmChan_V50(
@@ -226,6 +240,52 @@ class Doorbell():
  
     def take_snapshot(self):
 
+        # --- ISAPI HTTP BLOCK START ---
+
+        filename = None
+        # 1. Determine the correct IP to target
+        target_ip = self._config.ip
+        if self._type == DeviceType.INDOOR:
+            logger.debug("Indoor station: resolving outdoor IP for direct ISAPI...")
+            target_ip = self.get_outdoor_ip()
+            logger.debug("Resolved outdoor IP for direct ISAPI: {}", target_ip)
+        
+        if target_ip:
+            # 2. Try both Main (1) and Sub (101) channels
+            for channel in [1, 101]:
+                try:
+                    url = f"http://{target_ip}/ISAPI/Streaming/channels/{channel}/picture?snapShotImageType=JPEG&videoResolutionWidth=1280&videoResolutionHeight=720&imageQuality=best"
+                    ## ISAPI/Streaming/channels/1/picture?snapShotImageType=JPEG&videoResolutionWidth=1280&videoResolutionHeight=7206&imageQuality=best
+                    # snapShotImageType picture format, only support JPEG now
+                    # videoResolutionWidth videoResolutionHeight picture resolution, if not use this parameter, by default it’s 704*576. Supported resolution 1280*720 704*576 704*480 352*288 352*240 176*144 176*120
+                    # imageQuality support best better normal general
+                    logger.debug("Attempting direct ISAPI: {}", url)
+                    
+                    response = requests.get(
+                        url, 
+                        auth=HTTPDigestAuth(self._config.username, self._config.password),
+                        timeout=5
+                    )
+
+                    if response.status_code == 200 and len(response.content) > 100:
+                        if response.content.startswith(b'\xff\xd8'):
+                            filename = self._save_snapshot_result(response.content)
+                            logger.info("Snapshot captured via HTTP ISAPI on channel {}", channel)
+                            break
+                    else:
+                        # This catches 404, 401, etc., which are NOT exceptions
+                        logger.error("ISAPI channel {} returned status: {} (Length: {})", 
+                                     channel, response.status_code, len(response.content))
+
+                except Exception as e:
+                    logger.debug("HTTP ISAPI failed for channel {}: {}", channel, e)
+
+        # If HTTP succeeded, we can skip the rest of the logic
+        if filename:
+            self._notify_snapshot_update(filename)
+            return filename
+        # --- ISAPI HTTP BLOCK END ---
+
         target_user_id = self.user_id
         temp_user_id = -1
 
@@ -259,13 +319,22 @@ class Doorbell():
                 logger.debug("Direct snapshot for device type: {}", self._type.name)
 
             # Step 2: Capture Logic
-            priority_channels = [1]
-            param_combinations = [(0xFF, 2, 1024*1024)] 
+            priority_channels = [1, 101]
+            param_combinations = [
+                (0xFF, 2, 2*1024*1024), # Try Max resolution first with a 2MB buffer
+                (16, 2, 1024*1024)    # Fallback to 720p if Max fails
+            ]
+
             
             filename = None
             for channel in priority_channels:
+                if filename: 
+                    break
+
+                # NET_DVR_JPEGPARA Capture if ISAPI fails
                 for pic_size, quality, buffer_size in param_combinations:
                     try:
+                        logger.debug("Trying parameters {} on channel {}", (pic_size, quality, buffer_size), channel)
                         jpeg_para = NET_DVR_JPEGPARA()
                         jpeg_para.wPicSize = pic_size
                         jpeg_para.wPicQuality = quality
@@ -288,7 +357,11 @@ class Doorbell():
                                 break 
                     except Exception as e:
                         logger.debug("Capture attempt failed on channel {}: {}", channel, e)
-                if filename: break
+                    if filename: break
+
+            if filename:
+                # Notify MQTT input to update image (if MQTT is set up)
+                self._notify_snapshot_update(filename)
 
             return filename
             
@@ -301,16 +374,22 @@ class Doorbell():
                 logger.debug("Logging out of temporary session {}", temp_user_id)
                 self._sdk.NET_DVR_Logout_V30(temp_user_id)
 
+    def _notify_snapshot_update(self, filename: str):
+        """Notify that a new snapshot was taken"""
+        # You'll need a way to access the MQTTInput instance
+        # One option is to store a reference to it in the Doorbell class
+        if hasattr(self, '_mqtt_input_ref'):
+            self._mqtt_input_ref.update_snapshot_image(self, filename)
 
     def _save_snapshot_result(self, image_data,):
         """Helper to save snapshot result"""
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             folder_name = re.sub(r'\s+', '_', self._config.name.lower())
             base_path = "/media" if os.path.isdir("/media") else os.path.expanduser("~")
             output_dir = os.path.join(base_path, folder_name)
             os.makedirs(output_dir, exist_ok=True)
-            filename = os.path.join(output_dir, f"snapshot_{timestamp}.jpg")
+            filename = os.path.join(output_dir, f"snapshot.jpg")
             with open(filename, "wb") as f:
                 f.write(image_data)
             logger.info(f"Snapshot saved: {filename}")

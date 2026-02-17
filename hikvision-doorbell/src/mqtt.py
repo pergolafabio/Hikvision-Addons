@@ -1,4 +1,5 @@
 import asyncio
+import os
 from ctypes import c_void_p
 from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
@@ -18,7 +19,8 @@ from sdk.hcnetsdk import (NET_DVR_ALARMER,
                           VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN,
                           VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG,
                           VideoInterComAlarmType,
-                          VideoInterComEventType)
+                          VideoInterComEventType,
+                          UnlockType)
 from sdk.acsalarminfo import (AcsAlarmInfoMajor, AcsAlarmInfoMajorAlarm, AcsAlarmInfoMajorException, AcsAlarmInfoMajorOperation, AcsAlarmInfoMajorEvent)
 from typing_extensions import override
 import xml.etree.ElementTree as ET
@@ -27,6 +29,7 @@ import datetime
 
 from sdk.utils import SDKError
 
+_current_mqtt_handler = None
 
 def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
     """Build and instance of DeviceInfo from the ISAPI /deviceinfo endpoint, if available, otherwise skip populating additional fields"""
@@ -112,6 +115,12 @@ class MQTTHandler(EventHandler):
     def __init__(self, config: AppConfig.MQTT, doorbells: Registry) -> None:
         super().__init__()
         logger.info("Setting up event handler: {}", self.name)
+
+        global _current_mqtt_handler
+        _current_mqtt_handler = self
+
+        # Initialize task storage at the start
+        self._call_sensor_tasks: dict[Doorbell, asyncio.Task] = {}
         
         # Save the MQTT settings as an attribute
         self._mqtt_settings = Settings.MQTT(
@@ -156,37 +165,36 @@ class MQTTHandler(EventHandler):
             if not doorbell._config.call_state_poll is None:
 
                 call_state_poll_sec = doorbell._config.call_state_poll
-                
+
                 async def poll_call_sensor(d=doorbell, c=call_sensor):
+
+                    url = "/ISAPI/VideoIntercom/callStatus?format=json"
+                    requestBody = ""
                     while True:
                         try:
-                            logger.info("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
-                            url = "/ISAPI/VideoIntercom/callStatus?format=json"
-                            requestBody = ""
-                            try:
-                                response = d._call_isapi("GET", url, requestBody)
-                                logger.debug("Received call status with response: {} " , response)
-                                call_state = json.loads(response)["CallStatus"]["status"]
-                                # Error out if we don't find state
-                                if call_state is None:
-                                    # Print a string representation of the response JSON
-                                    raise RuntimeError(f'Unexpected JSON response: {response}')
-                                c.set_state(call_state)
-                                logger.info("Call sensor changed to {} for doorbell: {}", call_state, d._config.name)
-                            except SDKError as err:
-                                logger.error("Error while getting call status with ISAPI: {}", err)
+                            logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
+                            response = d._call_isapi("GET", url, requestBody)
+                            data = json.loads(response)
+                            
+                            # Use .get() to avoid KeyErrors if the device returns an error object
+                            call_status_obj = data.get("CallStatus")
+                            if call_status_obj:
+                                call_state = call_status_obj.get("status")
+                                if call_state:
+                                    c.set_state(call_state)
+                                    logger.info("Call sensor polling for : {} changed to {}", d._config.name, call_state)
+                            else:
+                                logger.warning("Unexpected ISAPI response from {}: {}", d._config.name, response)
                                 
-                        except RuntimeError:
-                            # Ignore error to avoid crashing application
-                            pass
+                        except (SDKError, json.JSONDecodeError) as err:
+                            logger.error("Communication error with {}: {}", d._config.name, err)
+                        except Exception as e:
+                            logger.exception("Unexpected error in polling loop: {}", e)
+                            
                         await asyncio.sleep(call_state_poll_sec)
                         
                 loop = asyncio.get_event_loop()
-                new_task = loop.create_task(poll_call_sensor())
-                if not hasattr(self, '_call_sensor_tasks'):
-                    self._call_sensor_tasks = {}
-            
-                self._call_sensor_tasks[doorbell] = new_task
+                self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
                 
             ##################
             # Doors
@@ -204,7 +212,7 @@ class MQTTHandler(EventHandler):
                     device=device,
                     default_entity_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
                 settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
-                door_switch = Switch(settings, self.door_switch_callback, (doorbell, door_id))
+                door_switch = Switch(settings, lambda client, _, message, d=doorbell, i=door_id: self.door_switch_callback(client, (d, i), message))
                 door_switch.off()
                 door_switch.set_availability(True)
                 self._sensors[doorbell][f'door_{door_id}'] = door_switch
@@ -224,7 +232,8 @@ class MQTTHandler(EventHandler):
                         device=device,
                         default_entity_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
                     settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True, assume_state=False)
-                    com_switch = Switch(settings, self.com_switch_callback, (doorbell, com_id))
+                    # Change the lambda to capture doorbell and com_id as defaults
+                    com_switch = Switch(settings, lambda client, _, message, d=doorbell, i=com_id: self.com_switch_callback(client, (d, i), message))
                     com_switch.off()
                     com_switch.set_availability(True)
                     self._sensors[doorbell][f'com_{com_id}'] = com_switch
@@ -320,8 +329,23 @@ class MQTTHandler(EventHandler):
             alarm_info: NET_DVR_ALARM_ISAPI_INFO,
             buffer_length,
             user_pointer: c_void_p):
-        alarmData = alarm_info.pAlarmData
-        logger.debug("Isapi alarm from {} with Alarmdata: {} ", doorbell._config.name, alarmData)
+        
+        if alarm_info.dwAlarmDataLen > 0:
+            alarmData = alarm_info.pAlarmData.decode('utf-8', errors='ignore')
+            data_type = "JSON" if alarm_info.byDataType == 1 else "XML"
+            logger.info(f"Isapi alarm ({data_type}) from {doorbell._config.name}: with Alarm Data: {alarmData}") 
+            try:
+                parsed_json = json.loads(alarmData)
+                event_name = parsed_json.get("eventType", "isapi_event")
+            except Exception:
+                event_name = "isapi_event"
+
+            trigger = DeviceTriggerMetadata(name=f"ISAPI {event_name}", type="isapi_alarm", subtype=event_name, payload={"data": alarmData})
+            self.handle_device_trigger(doorbell, trigger)
+            
+        else:
+            # Handle empty data scenarios
+            logger.warning(f"Isapi alarm received from {doorbell._config.name} but dwAlarmDataLen is 0")
 
     @override
     async def video_intercom_event(
@@ -333,19 +357,22 @@ class MQTTHandler(EventHandler):
             buffer_length,
             user_pointer: c_void_p):
 
-        async def update_door_entities(door_id: str, control_source: str):
+        async def update_door_entities(door_id: str, control_source: str, control_source_decoded: str, unlock_name: str, card_user_id: int):
             """
             Helper function to update the sensor and device trigger of a given door
             """
             logger.info("Door {} unlocked by {} , updating sensor and device trigger", door_id+1, control_source)
-            
             entity_id = f'door_{door_id}'
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             attributes = {
                 'control_source': control_source,
+                'number': control_source_decoded,
+                'unlock_type': unlock_name,
+                'card_user_id': card_user_id,
             }
             door_sensor.set_attributes(attributes)
             door_sensor.on()
+            logger.debug("Doorbell updating sensor {}", door_sensor)
             trigger = DeviceTriggerMetadata(name=f"Door unlocked", type="door open", subtype=f"door {door_id}", payload=attributes)
             self.handle_device_trigger(doorbell, trigger)
 
@@ -364,6 +391,18 @@ class MQTTHandler(EventHandler):
             case VideoInterComEventType.UNLOCK_LOG:
                 door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
                 control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
+                control_source_decoded = alarm_info.uEventInfo.struUnlockRecord.controlSource_decoded()
+                unlock_type = alarm_info.uEventInfo.struUnlockRecord.byUnlockType
+                card_user_id = alarm_info.uEventInfo.struUnlockRecord.dwCardUserID
+
+                try:
+                    unlock_name = UnlockType(unlock_type).name
+                    print(f"Unlock Method: {unlock_name}")
+                except ValueError:
+                    print(f"Unknown unlock type: {unlock_type}")
+                    unlock_name = "Unknown"
+
+                
                 # card_number = alarm_info.uEventInfo.struAuthInfo.cardNo()
                 # Name of the entity inside the dict array containing all the sensors
                 entity_id = f'door_{door_id}'
@@ -377,9 +416,9 @@ class MQTTHandler(EventHandler):
                     # logger.debug("Changing switches back to OFF position")
                     num_doors = doorbell.get_num_outputs()
                     for door_id in range(num_doors):
-                        await update_door_entities(door_id, control_source)
+                        await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id)
                     return
-                await update_door_entities(door_id, control_source)
+                await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id)
 
             case VideoInterComEventType.ILLEGAL_CARD_SWIPING_EVENT:
                 control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()
@@ -426,13 +465,58 @@ class MQTTHandler(EventHandler):
         
         match alarm_type:
             case VideoInterComAlarmType.DOORBELL_RINGING:
-                logger.info("Doorbell ringing, updating sensor {}", call_sensor)
+                try:
+                    raw_bytes = bytes(alarm_info.byDevNumber)
+                    dev_number = raw_bytes.split(b'\x00')[0].decode('utf-8')
+                except (UnicodeDecodeError, AttributeError, ValueError) as e:
+                    dev_number = "unknown_device"
+                    logger.error(f"Error decoding device number: {e}")
+                logger.info("Doorbell ringing, button press from button: {}, updating sensor", dev_number)
+                logger.debug("Doorbell updating sensor {}", call_sensor)
+                attributes = {
+                    'device_number': dev_number,
+                }
+                call_sensor.set_attributes(attributes)
                 call_sensor.set_state('ringing')
-                logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
+
+                # Take snapshot and publish via MQTT
+                async def take_and_publish_snapshot():
+                    """Take snapshot and publish to MQTT"""
+                    try:
+                        # Import here to avoid circular imports
+                        from mqtt_input import get_mqtt_input
+                        
+                        # Take snapshot
+                        snapshot_path = doorbell.take_snapshot()
+                        
+                        if snapshot_path and os.path.exists(snapshot_path):
+                            # Get MQTTInput instance
+                            mqtt_input = get_mqtt_input()
+                            if mqtt_input:
+                                # Store the latest snapshot path
+                                mqtt_input._last_snapshot_paths[doorbell] = snapshot_path
+                                
+                                # Publish the image to MQTT
+                                mqtt_input._publish_snapshot_image(doorbell, snapshot_path)
+                                logger.info(f"Auto-snapshot published to MQTT: {snapshot_path}")
+                            else:
+                                logger.warning("MQTTInput not available, snapshot saved but not published: {}", snapshot_path)
+                        else:
+                            logger.warning("Auto-snapshot failed or file not created")
+                            
+                    except Exception as e:
+                        logger.error(f"Failed to take auto-snapshot: {e}")
+                
+                # Start the snapshot task without waiting for it
+                asyncio.create_task(take_and_publish_snapshot())
+
+                # After 60 seconds, put the sensor back to idle
                 await asyncio.sleep(60)
+                logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
                 call_sensor.set_state('idle')
             case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
-                logger.info("Call dismissed, updating sensor {}", call_sensor)
+                logger.info("Call dismissed, updating sensor")
+                logger.debug("Doorbell updating sensor {}", call_sensor)
                 call_sensor.set_state('dismissed')
                 # Put sensor back to idle
                 call_sensor.set_state('idle')
@@ -532,3 +616,8 @@ class MQTTHandler(EventHandler):
         # Serialize the payload, if provided as part of the trigger
         json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
         device_trigger.trigger(json_payload)
+
+def get_mqtt_handler():
+    """Get the current MQTTHandler instance"""
+    global _current_mqtt_handler
+    return _current_mqtt_handler
