@@ -466,15 +466,18 @@ class MQTTHandler(EventHandler):
         match alarm_type:
             case VideoInterComAlarmType.DOORBELL_RINGING:
                 try:
+                    button_pressed = alarm_info.wLockID + 1
                     raw_bytes = bytes(alarm_info.byDevNumber)
                     dev_number = raw_bytes.split(b'\x00')[0].decode('utf-8')
                 except (UnicodeDecodeError, AttributeError, ValueError) as e:
                     dev_number = "unknown_device"
-                    logger.error(f"Error decoding device number: {e}")
-                logger.info("Doorbell ringing, button press from button: {}, updating sensor", dev_number)
+                    button_pressed = "unknown_button"
+                    logger.error(f"Error decoding device numbers: {e}")
+                logger.info("Doorbell ringing, button press from door: {} using button: {}, updating sensor", dev_number, button_pressed)
                 logger.debug("Doorbell updating sensor {}", call_sensor)
                 attributes = {
-                    'device_number': dev_number,
+                    'device_number': dev_number,   
+                    'button_pressed': button_pressed
                 }
                 call_sensor.set_attributes(attributes)
                 call_sensor.set_state('ringing')

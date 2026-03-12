@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.137 - 2026-03-12
+
+### Change
+
+- Try adding lockID when doorbell ringing event
+
 ## 3.0.0-beta.136 - 2026-02-12
 
 ### Change
