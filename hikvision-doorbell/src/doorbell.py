@@ -64,6 +64,8 @@ class Doorbell():
     '''Populated after authenticate method is invoked'''
     _previouse_audio_out_volume: str
     '''Used to unmute the doorbell by changing the audio out volume from 0 to the previouse value '''
+    _alarm_handle: int
+    '''Handle returned by setup_alarm, used for health monitoring and teardown'''
 
     def __init__(self, id: int, config: AppConfig.Doorbell, sdk: CDLL):
         """
@@ -75,6 +77,7 @@ class Doorbell():
         self._config = config
         self._id = id
         self._previouse_audio_out_volume = "5"
+        self._alarm_handle = -1
 
     def authenticate(self):
         '''Authenticate with the remote doorbell'''
@@ -113,10 +116,25 @@ class Doorbell():
         alarm_param.bySupport = alarm_param.bySupport & ~0x02
 
         logger.debug("Arming the device via SDK")
-        alarm_handle = self._sdk.NET_DVR_SetupAlarmChan_V50(
+        self._alarm_handle = self._sdk.NET_DVR_SetupAlarmChan_V50(
             self.user_id, alarm_param, None, 0)
-        if alarm_handle < 0:
+        if self._alarm_handle < 0:
             raise SDKError(self._sdk, f"Error while listening to events in {self._config.name}")
+
+    def close_alarm(self):
+        '''Tear down the alarm channel. Safe to call even if not armed.'''
+        if self._alarm_handle >= 0:
+            self._sdk.NET_DVR_CloseAlarmChan_V30(self._alarm_handle)
+            self._alarm_handle = -1
+
+    def is_session_active(self) -> bool:
+        '''Lightweight probe: attempt a minimal SDK call to verify the login session is still valid.
+        Returns True if the session responds, False otherwise.'''
+        try:
+            self._call_isapi("GET", "/ISAPI/System/deviceInfo")
+            return True
+        except SDKError:
+            return False
 
     def logout(self):
         logout_result = self._sdk.NET_DVR_Logout_V30(self.user_id)

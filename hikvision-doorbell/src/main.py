@@ -21,7 +21,7 @@ from input import InputReader
 async def retry_connection(index, doorbell_config, sdk, doorbell_registry, mqtt_handler=None):
     """Background task that retries connection for a specific doorbell indefinitely"""
     while True:
-        await asyncio.sleep(30) # Wait 30 seconds before retrying
+        await asyncio.sleep(30)
         if index not in doorbell_registry:
             try:
                 logger.info(f"Retrying connection for {doorbell_config.name} (Index {index})...")
@@ -31,24 +31,89 @@ async def retry_connection(index, doorbell_config, sdk, doorbell_registry, mqtt_
 
                 doorbell_registry[index] = doorbell
 
-                
                 if mqtt_handler:
                     logger.info(f"Refreshing MQTT discovery for {doorbell_config.name}")
-                    # This triggers the discovery/online message in HA
                     if hasattr(mqtt_handler, '_call_sensor_tasks'):
                         for task in mqtt_handler._call_sensor_tasks.values():
                             task.cancel()
                         mqtt_handler._call_sensor_tasks.clear()
-                    
+
                     mqtt_handler.__init__(mqtt_handler._mqtt_settings, doorbell_registry)
 
                     from mqtt_input import MQTTInput
                     MQTTInput(mqtt_handler._mqtt_settings, doorbell_registry)
 
                 logger.info(f"Doorbell {doorbell_config.name} is now ONLINE and armed.")
-                break # Exit the loop once connected
+                break
             except Exception as e:
                 logger.warning(f"Retry for {doorbell_config.name} failed: {e}")
+
+
+async def watchdog(doorbell_configs, sdk, doorbell_registry, mqtt_handler=None, interval=120):
+    """Periodically verify that every registered doorbell session is still alive.
+    If a session has gone stale, tear it down and re-authenticate + re-arm.
+
+    Uses a lightweight ISAPI probe (/ISAPI/System/deviceInfo) which is already
+    cached by the device firmware, so the overhead is negligible.
+
+    Args:
+        doorbell_configs: list of AppConfig.Doorbell from the original configuration
+        sdk: loaded HCNetSDK instance
+        doorbell_registry: shared Registry of active Doorbell objects
+        mqtt_handler: optional MQTTHandler for MQTT re-init on recovery
+        interval: seconds between health checks (default 120)
+    """
+    await asyncio.sleep(interval)
+    consecutive_failures: dict[int, int] = {}
+
+    while True:
+        for index, doorbell in list(doorbell_registry.items()):
+            try:
+                if doorbell.is_session_active():
+                    consecutive_failures[index] = 0
+                    continue
+
+                consecutive_failures[index] = consecutive_failures.get(index, 0) + 1
+                logger.warning(
+                    "Doorbell {} ({}) session is stale (attempt {}), recovering...",
+                    index, doorbell._config.name, consecutive_failures[index])
+
+                doorbell.close_alarm()
+                try:
+                    doorbell.logout()
+                except Exception:
+                    pass
+
+                del doorbell_registry[index]
+
+                new_doorbell = Doorbell(index, doorbell_configs[index], sdk)
+                new_doorbell.authenticate()
+                new_doorbell.setup_alarm()
+                doorbell_registry[index] = new_doorbell
+
+                if mqtt_handler:
+                    logger.info("Re-initializing MQTT entities for {}", doorbell_configs[index].name)
+                    if hasattr(mqtt_handler, '_call_sensor_tasks'):
+                        for task in mqtt_handler._call_sensor_tasks.values():
+                            task.cancel()
+                        mqtt_handler._call_sensor_tasks.clear()
+                    mqtt_handler.__init__(mqtt_handler._mqtt_settings, doorbell_registry)
+                    from mqtt_input import MQTTInput
+                    MQTTInput(mqtt_handler._mqtt_settings, doorbell_registry)
+
+                consecutive_failures[index] = 0
+                logger.info("Doorbell {} ({}) recovered successfully", index, doorbell_configs[index].name)
+
+            except Exception as e:
+                fail_count = consecutive_failures.get(index, 1)
+                backoff = min(interval * (2 ** (fail_count - 1)), 600)
+                logger.error(
+                    "Recovery failed for doorbell {} ({}): {}. Next attempt in {}s",
+                    index, doorbell_configs[index].name, e, backoff)
+                await asyncio.sleep(backoff)
+                continue
+
+        await asyncio.sleep(interval)
 
 async def main():
     """Main entrypoint of the application"""
@@ -230,6 +295,11 @@ async def main():
             del doorbell_registry[index]
             # Also start retry if arming fails
             asyncio.create_task(retry_connection(index, config.doorbells[index], sdk, doorbell_registry, mqtt_inst))
+
+    # Start the session watchdog to detect and recover from stale SDK connections
+    asyncio.create_task(
+        watchdog(config.doorbells, sdk, doorbell_registry, mqtt_inst),
+        name="SDK session watchdog")
 
     # Create reader to receive commands from STDIN
     input_reader = InputReader(doorbell_registry)
