@@ -19,12 +19,7 @@ full_access: true
 
 # Default options when used as an HA app
 options:
-  doorbells:
-    - name: ""
-      ip: ""
-      username: admin
-      password: ""
-      scenes: false
+  doorbells: []
   system:
     log_level: INFO
     sdk_log_level: NONE
