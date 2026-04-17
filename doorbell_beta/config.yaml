@@ -30,12 +30,12 @@ schema:
   doorbells:
     - name: str
       ip: str
-      port: "int?"
+      port: int?
       username: str
       password: str
-      output_relays: "int?"
-      scenes: "bool?"
-      call_state_poll: "int?"
+      output_relays: int?
+      scenes: bool?
+      call_state_poll: int?
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
