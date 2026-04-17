@@ -188,8 +188,10 @@ class EventManager:
             return callback_alarm_info_p
 
     async def _invoke_handlers(self, command, device: NET_DVR_ALARMER, alarm_info, buffer_length, user_pointer):
-        # Match the device information from the callback with a Doorbell instance in the registry
         doorbell = self._doorbells.getBySerialNumber(device.serialNumber())
+        if doorbell is None:
+            logger.warning("Received event from unregistered device (serial: {}), skipping", device.serialNumber())
+            return
         logger.debug("Invoking {} handlers", len(self._handlers))
         for handler in self._handlers:
 

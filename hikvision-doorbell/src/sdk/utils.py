@@ -127,11 +127,9 @@ def call_ISAPI(sdk: CDLL, user_id: int, http_method: str, url: str, requestBody:
     # Input information
     inputStruct = NET_DVR_XML_CONFIG_INPUT()
 
-    urlSize = (c_char * 256)()
-
     requestUrlBuffer = bytes(inUrl, "ascii")
     inputStruct.lpRequestUrl = cast(c_char_p(requestUrlBuffer), c_void_p)
-    inputStruct.dwRequestUrlLen = len(urlSize)
+    inputStruct.dwRequestUrlLen = len(requestUrlBuffer)
 
     inputBuffer = bytes(requestBody, "ascii")
 
