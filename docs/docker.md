@@ -53,7 +53,7 @@ Mount as secret:
 services:
   doorbell2mqtt:
     container_name: doorbell2mqtt
-    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.33-amd64
+    image: ghcr.io/pergolafabio/hikvision-doorbell:latest
     secrets:
       - source: doorbells_config
         target: /data/options.json
