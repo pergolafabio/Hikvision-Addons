@@ -47,6 +47,24 @@ LD_LIBRARY_PATH=lib-amd64/
 PYTHONFAULTHANDLER=true
 ```
 
+Mount as secret:
+
+```yaml
+services:
+  doorbell2mqtt:
+    container_name: doorbell2mqtt
+    image: ghcr.io/pergolafabio/hikvision-doorbell:3.0.33-amd64
+    secrets:
+      - source: doorbells_config
+        target: /data/options.json
+        mode: 0400
+
+secrets:
+  doorbells_config:
+    file: ./doorbells_config.json   # path on the host
+```
+
+
 ## Dockerhub
 
 The image is available to download from Dockerhub, the configuration values are read from the environment variables, see an example screenshot from Synology Docker or Portainer
