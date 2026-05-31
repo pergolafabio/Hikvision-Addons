@@ -204,8 +204,11 @@ class MQTTHandler(EventHandler):
                 num_doors = doorbell.get_num_outputs()
             else:
                 num_doors = doorbell.get_num_outputs_indoor()
-            logger.debug("Configuring {} door switches", num_doors)
-            for door_id in range(num_doors):
+            num_doors_to_configure = max(num_doors, 1)
+            if num_doors == 0:
+                logger.debug("No door relays discovered, creating 1 fallback switch")
+            logger.debug("Configuring {} door switches", num_doors_to_configure)
+            for door_id in range(num_doors_to_configure):
                 door_switch_info = SwitchInfo(
                     name=f"Door {door_id+1} relay",
                     unique_id=f"{device.identifiers}-door_relay_{door_id}",
