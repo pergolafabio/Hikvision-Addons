@@ -216,6 +216,16 @@ class MQTTHandler(EventHandler):
                 door_switch.off()
                 door_switch.set_availability(True)
                 self._sensors[doorbell][f'door_{door_id}'] = door_switch
+                door_last_unlocked_info = SensorInfo(
+                    name=f"Door {door_id+1} last unlocked",
+                    unique_id=f"{device.identifiers}-door_last_unlocked_{door_id}",
+                    device=device,
+                    device_class="timestamp",
+                    default_entity_id=f"{sanitized_doorbell_name}_door_last_unlocked_{door_id}")
+                settings = Settings(mqtt=self._mqtt_settings, entity=door_last_unlocked_info, manual_availability=True)
+                door_last_unlocked = Sensor(settings)
+                door_last_unlocked.set_availability(True)
+                self._sensors[doorbell][f'door_last_unlocked_{door_id}'] = door_last_unlocked
 
             ##################
             # Output ports
@@ -237,6 +247,16 @@ class MQTTHandler(EventHandler):
                     com_switch.off()
                     com_switch.set_availability(True)
                     self._sensors[doorbell][f'com_{com_id}'] = com_switch
+                    com_last_unlocked_info = SensorInfo(
+                        name=f"Com {com_id+1} last unlocked",
+                        unique_id=f"{device.identifiers}-com_last_unlocked_{com_id}",
+                        device=device,
+                        device_class="timestamp",
+                        default_entity_id=f"{sanitized_doorbell_name}_com_last_unlocked_{com_id}")
+                    settings = Settings(mqtt=self._mqtt_settings, entity=com_last_unlocked_info, manual_availability=True)
+                    com_last_unlocked = Sensor(settings)
+                    com_last_unlocked.set_availability(True)
+                    self._sensors[doorbell][f'com_last_unlocked_{com_id}'] = com_last_unlocked
 
     def com_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, com_id = user_data
@@ -245,6 +265,9 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_com(com_id)
+                sensor = cast(Sensor, self._sensors[doorbell].get(f'com_last_unlocked_{com_id}'))
+                if sensor:
+                    sensor.set_state(datetime.datetime.now(datetime.timezone.utc).isoformat())
             case "OFF":
                 doorbell.lock_com(com_id)
 
@@ -255,6 +278,9 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_door(door_id)
+                sensor = cast(Sensor, self._sensors[doorbell].get(f'door_last_unlocked_{door_id}'))
+                if sensor:
+                    sensor.set_state(datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     @override
     async def motion_detection(
