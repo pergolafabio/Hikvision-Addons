@@ -12,6 +12,16 @@ from event import ConsoleHandler, EventManager
 from mqtt import MQTTHandler
 from mqtt_input import MQTTInput
 from config import mqtt_config_from_supervisor
+from sdk.hcnetsdk import (
+    ALARM_RECONNECTSUCCESS,
+    EXCEPTION_ALARM,
+    EXCEPTION_ALARMRECONNECT,
+    EXCEPTION_EXCHANGE,
+    EXCEPTION_PREVIEW,
+    EXCEPTION_RECONNECT,
+    PREVIEW_RECONNECTSUCCESS,
+    fExceptionCallBack,
+)
 from sdk.utils import SDKConfig, SDKError, loadSDK, setupSDK, shutdownSDK
 from loguru import logger
 
@@ -49,6 +59,60 @@ async def retry_connection(index, doorbell_config, sdk, doorbell_registry, mqtt_
                 break # Exit the loop once connected
             except Exception as e:
                 logger.warning(f"Retry for {doorbell_config.name} failed: {e}")
+
+
+def make_exception_callback(doorbell_registry: Registry, mqtt_handler):
+    """Build the SDK exception callback that mirrors connection state into MQTT.
+
+    The Hikvision SDK auto-reconnects internally; we just listen and update the
+    "Online state" binary sensor accordingly. Exception codes signal a drop
+    (alarm/preview channel down, login lost, reconnect attempts in progress);
+    *_RECONNECTSUCCESS codes signal the channel is back. See sdk.hcnetsdk for
+    code definitions sourced from HCNetSDK.h.
+
+    The SDK invokes this from a non-asyncio worker thread, so the callback must
+    not touch the event loop. ha_mqtt_discoverable's BinarySensor.on()/off()
+    publish synchronously over MQTT, which is thread-safe.
+    """
+    DISCONNECT_CODES = (
+        EXCEPTION_EXCHANGE, EXCEPTION_ALARM, EXCEPTION_PREVIEW,
+        EXCEPTION_RECONNECT, EXCEPTION_ALARMRECONNECT,
+    )
+    RECONNECT_SUCCESS_CODES = (PREVIEW_RECONNECTSUCCESS, ALARM_RECONNECTSUCCESS)
+
+    def _callback(dwType, lUserID, lHandle, pUser):
+        # Map the SDK user_id back to our doorbell index. The SDK only knows
+        # about user_ids it returned from NET_DVR_Login_V40; we keep our own
+        # zero-based index for MQTT entity addressing.
+        index = None
+        for idx, doorbell in doorbell_registry.items():
+            if getattr(doorbell, 'user_id', None) == lUserID:
+                index = idx
+                break
+        if index is None:
+            logger.debug("SDK exception 0x{:X} for unknown user_id {} (no doorbell mapped)",
+                         dwType, lUserID)
+            return
+
+        if dwType in DISCONNECT_CODES:
+            logger.warning("Doorbell {} disconnected (SDK exception 0x{:X}); marking offline",
+                           index, dwType)
+            if mqtt_handler is not None:
+                mqtt_handler.set_doorbell_offline(index)
+        elif dwType in RECONNECT_SUCCESS_CODES:
+            logger.info("Doorbell {} reconnected (SDK code 0x{:X}); marking online",
+                        index, dwType)
+            if mqtt_handler is not None:
+                mqtt_handler.set_doorbell_online(index)
+        else:
+            # Other exception codes exist (disk format, email test, etc.) but
+            # are not connectivity-related. Log at debug so unexpected codes
+            # are visible without spamming the log.
+            logger.debug("SDK exception 0x{:X} for doorbell {} (no state change)",
+                         dwType, index)
+
+    return fExceptionCallBack(_callback)
+
 
 async def main():
     """Main entrypoint of the application"""
@@ -225,11 +289,25 @@ async def main():
     for index, doorbell in list(doorbell_registry.items()):
         try:
             doorbell.setup_alarm()
+            if mqtt_inst:
+                mqtt_inst.set_doorbell_online(index)
         except Exception as e:
             logger.error(f"Failed to arm doorbell {index}: {e}")
             del doorbell_registry[index]
+            if mqtt_inst:
+                mqtt_inst.set_doorbell_offline(index)
             # Also start retry if arming fails
             asyncio.create_task(retry_connection(index, config.doorbells[index], sdk, doorbell_registry, mqtt_inst))
+
+    # Register the SDK exception callback. The SDK fires it from a worker
+    # thread on connection drops, reconnect attempts, and reconnect success;
+    # we mirror those events into the "Online state" MQTT sensor. The SDK
+    # handles the actual reconnect work — we just observe.
+    exception_cb = make_exception_callback(doorbell_registry, mqtt_inst)
+    sdk.NET_DVR_SetExceptionCallBack_V30(0, None, exception_cb, None)
+    # Hold a strong reference so the ctypes-wrapped Python callback isn't
+    # garbage-collected while the SDK still holds the function pointer.
+    main._exception_cb_ref = exception_cb
 
     # Create reader to receive commands from STDIN
     input_reader = InputReader(doorbell_registry)

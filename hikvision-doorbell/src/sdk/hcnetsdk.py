@@ -795,3 +795,20 @@ class MessageCallbackAlarmInfoUnion(Union):
 fMessageCallBack = CFUNCTYPE(BOOL, LONG, POINTER(
     NET_DVR_ALARMER), POINTER(MessageCallbackAlarmInfoUnion), DWORD, c_void_p)
 
+# Hikvision SDK exception/reconnect codes delivered to NET_DVR_SetExceptionCallBack_V30.
+# Values taken from the official HCNetSDK.h header (mirrored at
+# https://github.com/Chise1/pyhk/blob/master/hcn_define.h). Do NOT derive these
+# from runtime observation — different firmware revisions emit different codes
+# and the header is the authoritative source.
+EXCEPTION_EXCHANGE = 0x8000           # Login session exception (user exchange)
+EXCEPTION_ALARM = 0x8002              # Alarm channel exception
+EXCEPTION_PREVIEW = 0x8003            # Preview channel exception
+EXCEPTION_RECONNECT = 0x8005          # Preview channel attempting reconnect
+EXCEPTION_ALARMRECONNECT = 0x8006     # Alarm channel attempting reconnect
+PREVIEW_RECONNECTSUCCESS = 0x8015     # Preview channel reconnected successfully
+ALARM_RECONNECTSUCCESS = 0x8016       # Alarm channel reconnected successfully
+
+# Function pointer signature for NET_DVR_SetExceptionCallBack_V30:
+#   void (*fExceptionCallBack)(DWORD dwType, LONG lUserID, LONG lHandle, void *pUser)
+fExceptionCallBack = CFUNCTYPE(None, DWORD, LONG, LONG, c_void_p)
+

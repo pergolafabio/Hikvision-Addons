@@ -162,6 +162,9 @@ class MQTTHandler(EventHandler):
 
             ##################
             # Online state
+            # Reflects whether the doorbell is reachable. Driven by main.py via
+            # the SDK exception callback (set_doorbell_online/offline). Starts
+            # off; flipped on once setup_alarm() succeeds during startup.
             online_sensor_info = BinarySensorInfo(
                 name="Online state",
                 unique_id=f"{device.identifiers}-online_state",
@@ -633,18 +636,27 @@ class MQTTHandler(EventHandler):
         device_trigger.trigger(json_payload)
 
     def _get_sensors_by_id(self, doorbell_id: int) -> Optional[dict]:
+        """Look up the sensors dict by doorbell._id.
+
+        Used because the Doorbell *object* may be replaced on reconnect (a new
+        instance is created by retry_connection), but the integer _id stays
+        stable. Iterating by _id keeps the MQTT sensor reference intact across
+        Doorbell-object swaps.
+        """
         for doorbell, sensors in self._sensors.items():
             if doorbell._id == doorbell_id:
                 return sensors
         return None
 
     def set_doorbell_online(self, doorbell_id: int):
+        """Flip the connectivity binary sensor to ON for the given doorbell."""
         sensors = self._get_sensors_by_id(doorbell_id)
         if sensors:
             cast(BinarySensor, sensors['online_state']).on()
             logger.info("Doorbell {} marked online in MQTT", doorbell_id)
 
     def set_doorbell_offline(self, doorbell_id: int):
+        """Flip the connectivity binary sensor to OFF for the given doorbell."""
         sensors = self._get_sensors_by_id(doorbell_id)
         if sensors:
             cast(BinarySensor, sensors['online_state']).off()
