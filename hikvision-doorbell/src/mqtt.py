@@ -160,6 +160,21 @@ class MQTTHandler(EventHandler):
             call_sensor.set_availability(True)
             self._sensors[doorbell]['call'] = call_sensor
 
+            ##################
+            # Online state
+            online_sensor_info = BinarySensorInfo(
+                name="Online state",
+                unique_id=f"{device.identifiers}-online_state",
+                device=device,
+                device_class="connectivity",
+                default_entity_id=f"{sanitized_doorbell_name}_online_state")
+
+            settings = Settings(mqtt=self._mqtt_settings, entity=online_sensor_info, manual_availability=True)
+            online_sensor = BinarySensor(settings)
+            online_sensor.off()
+            online_sensor.set_availability(True)
+            self._sensors[doorbell]['online_state'] = online_sensor
+
             # If polling is defined, create a loop to update the call state periodically
 
             if not doorbell._config.call_state_poll is None:
@@ -616,6 +631,24 @@ class MQTTHandler(EventHandler):
         # Serialize the payload, if provided as part of the trigger
         json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
         device_trigger.trigger(json_payload)
+
+    def _get_sensors_by_id(self, doorbell_id: int) -> Optional[dict]:
+        for doorbell, sensors in self._sensors.items():
+            if doorbell._id == doorbell_id:
+                return sensors
+        return None
+
+    def set_doorbell_online(self, doorbell_id: int):
+        sensors = self._get_sensors_by_id(doorbell_id)
+        if sensors:
+            cast(BinarySensor, sensors['online_state']).on()
+            logger.info("Doorbell {} marked online in MQTT", doorbell_id)
+
+    def set_doorbell_offline(self, doorbell_id: int):
+        sensors = self._get_sensors_by_id(doorbell_id)
+        if sensors:
+            cast(BinarySensor, sensors['online_state']).off()
+            logger.warning("Doorbell {} marked offline in MQTT", doorbell_id)
 
 def get_mqtt_handler():
     """Get the current MQTTHandler instance"""
