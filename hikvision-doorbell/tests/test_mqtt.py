@@ -179,3 +179,37 @@ class TestDeviceTrigger:
 
         asyncio.run(handler.video_intercom_alarm(mocked_doorbell, 0, None, video_intercom_alarm, 0, None))
     '''
+
+
+class TestDoorRelayFallback:
+
+    def _build_handler(self, mocker: MockerFixture, num_outputs: int) -> tuple[MQTTHandler, Doorbell]:
+        mocked_doorbell = mocker.patch('doorbell.Doorbell')
+        mocked_doorbell._id = 0
+        mocked_doorbell._type = DeviceType.OUTDOOR
+        mocked_doorbell._config.name = "Test doorbell"
+        mocked_doorbell._device_info.serialNumber = lambda: "123"
+        mocked_doorbell.get_num_outputs.return_value = num_outputs
+
+        registry = Registry()
+        registry[0] = mocked_doorbell
+
+        extract_device_info = mocker.patch('mqtt.extract_device_info', autospec=True)
+        extract_device_info.return_value = DeviceInfo(name="Outdoor unit", identifiers="id")
+
+        mocker.patch("mqtt.BinarySensor")
+        mocker.patch("mqtt.Sensor")
+        mocker.patch("mqtt.Switch")
+        mocker.patch("mqtt.DeviceTrigger")
+
+        handler = MQTTHandler(AppConfig.MQTT(host="localhost"), registry)
+        return handler, mocked_doorbell
+
+    def test_fallback_switch_created_when_no_relays(self, mocker: MockerFixture):
+        handler, mocked_doorbell = self._build_handler(mocker, num_outputs=0)
+        assert 'door_0' in handler._sensors[mocked_doorbell]
+
+    def test_no_extra_switch_when_one_relay_discovered(self, mocker: MockerFixture):
+        handler, mocked_doorbell = self._build_handler(mocker, num_outputs=1)
+        assert 'door_0' in handler._sensors[mocked_doorbell]
+        assert 'door_1' not in handler._sensors[mocked_doorbell]
