@@ -186,20 +186,32 @@ class TestLastUnlockedSensor:
     def test_timestamp_sensor_created_per_door(self, mocked_doorbell: Doorbell, handler: MQTTHandler):
         assert 'door_last_unlocked_0' in handler._sensors[mocked_doorbell]
 
-    def test_timestamp_updated_on_door_unlock(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+    def test_timestamp_updated_on_sdk_unlock_event(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        alarm_info = mocker.MagicMock()
+        alarm_info.byEventType = VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
+        alarm_info.uEventInfo.struUnlockRecord.wLockID = 0
+        alarm_info.uEventInfo.struUnlockRecord.controlSource.return_value = "src"
+        alarm_info.uEventInfo.struUnlockRecord.controlSource_decoded.return_value = "src"
+        alarm_info.uEventInfo.struUnlockRecord.byUnlockType = 0
+        alarm_info.uEventInfo.struUnlockRecord.dwCardUserID = 0
+
+        sensor = handler._sensors[mocked_doorbell]['door_last_unlocked_0']
+        sensor._update_state.reset_mock()
+
+        mocker.patch('mqtt.asyncio.sleep', new=mocker.AsyncMock())
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, alarm_info, 0, None))
+
+        sensor._update_state.assert_called_once()
+        kwargs = sensor._update_state.call_args.kwargs
+        args = sensor._update_state.call_args.args
+        assert kwargs.get("retain") is True
+        assert "T" in args[0]  # ISO 8601 timestamp
+
+    def test_timestamp_not_updated_on_switch_callback(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        """Switch callback only fires unlock command; timestamp set on confirmed SDK unlock event."""
         message = mocker.MagicMock()
         message.payload.decode.return_value = "ON"
         sensor = handler._sensors[mocked_doorbell]['door_last_unlocked_0']
-        sensor.set_state.reset_mock()
+        sensor._update_state.reset_mock()
         handler.door_switch_callback(None, (mocked_doorbell, 0), message)
-        sensor.set_state.assert_called_once()
-        args = sensor.set_state.call_args[0][0]
-        assert "T" in args  # ISO 8601 timestamp
-
-    def test_timestamp_not_updated_on_door_off(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
-        message = mocker.MagicMock()
-        message.payload.decode.return_value = "OFF"
-        sensor = handler._sensors[mocked_doorbell]['door_last_unlocked_0']
-        sensor.set_state.reset_mock()
-        handler.door_switch_callback(None, (mocked_doorbell, 0), message)
-        sensor.set_state.assert_not_called()
+        sensor._update_state.assert_not_called()

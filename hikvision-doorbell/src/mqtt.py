@@ -265,9 +265,6 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_door(door_id)
-                sensor = cast(Sensor, self._sensors[doorbell].get(f'door_last_unlocked_{door_id}'))
-                if sensor:
-                    sensor.set_state(datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     @override
     async def motion_detection(
@@ -385,6 +382,14 @@ class MQTTHandler(EventHandler):
             }
             door_sensor.set_attributes(attributes)
             door_sensor.on()
+            last_unlocked = cast(Sensor, self._sensors[doorbell].get(f'door_last_unlocked_{door_id}'))
+            if last_unlocked:
+                # retain=True so the timestamp survives addon/HA/broker restart;
+                # ha_mqtt_discoverable's Sensor.set_state doesn't expose retain, bypass it.
+                last_unlocked._update_state(
+                    datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    retain=True,
+                )
             logger.debug("Doorbell updating sensor {}", door_sensor)
             trigger = DeviceTriggerMetadata(name=f"Door unlocked", type="door open", subtype=f"door {door_id}", payload=attributes)
             self.handle_device_trigger(doorbell, trigger)
