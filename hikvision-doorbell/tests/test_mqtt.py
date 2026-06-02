@@ -207,11 +207,15 @@ class TestLastUnlockedSensor:
         assert kwargs.get("retain") is True
         assert "T" in args[0]  # ISO 8601 timestamp
 
-    def test_timestamp_not_updated_on_switch_callback(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
-        """Switch callback only fires unlock command; timestamp set on confirmed SDK unlock event."""
+    def test_timestamp_updated_on_switch_callback(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        """Switch callback sets timestamp immediately for devices that don't emit UNLOCK_LOG (e.g. indoor stations)."""
         message = mocker.MagicMock()
         message.payload.decode.return_value = "ON"
         sensor = handler._sensors[mocked_doorbell]['door_last_unlocked_0']
         sensor._update_state.reset_mock()
         handler.door_switch_callback(None, (mocked_doorbell, 0), message)
-        sensor._update_state.assert_not_called()
+        sensor._update_state.assert_called_once()
+        kwargs = sensor._update_state.call_args.kwargs
+        args = sensor._update_state.call_args.args
+        assert kwargs.get("retain") is True
+        assert "T" in args[0]  # ISO 8601 timestamp

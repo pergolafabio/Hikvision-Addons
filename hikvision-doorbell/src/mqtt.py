@@ -265,6 +265,12 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_door(door_id)
+                last_unlocked = cast(Sensor, self._sensors[doorbell].get(f'door_last_unlocked_{door_id}'))
+                if last_unlocked:
+                    last_unlocked._update_state(
+                        datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                        retain=True,
+                    )
 
     @override
     async def motion_detection(
