@@ -19,7 +19,12 @@ full_access: true
 
 # Default options when used as an HA app
 options:
-  doorbells: []
+  doorbells:
+    - name: ""
+      ip: ""
+      username: admin
+      password: ""
+      scenes: false
   system:
     log_level: INFO
     sdk_log_level: NONE
@@ -30,12 +35,12 @@ schema:
   doorbells:
     - name: str
       ip: str
-      port: int?
+      port: "int?"
       username: str
       password: str
-      output_relays: int?
-      scenes: bool?
-      call_state_poll: int?
+      output_relays: "int?"
+      scenes: "bool?"
+      call_state_poll: "int?"
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
