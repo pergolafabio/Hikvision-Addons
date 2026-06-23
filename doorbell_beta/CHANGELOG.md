@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-beta.138 - 2026-06-23
+
+### Added
+
+- Add last-unlocked attribute per door relay switch
+- Add fallback door relay to 1 when device reports zero outputs
+- Add online sensor when it drops from the SDK
+
 ## 3.0.0-beta.137 - 2026-03-12
 
 ### Change

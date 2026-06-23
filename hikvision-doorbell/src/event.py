@@ -221,6 +221,28 @@ class EventManager:
         logger.debug("Callback invoked from SDK")
         device: NET_DVR_ALARMER = alarm_device_pointer.contents
 
+        # Match the device information with the Doorbell instance
+        doorbell = self._doorbells.getBySerialNumber(device.serialNumber())
+        
+        # ------------------------------------------------------------------
+        # NATIVE SDK AUTO-ONLINE HEAL
+        # If we are receiving alarm data packets, the device is explicitly online.
+        # ------------------------------------------------------------------
+        if doorbell:
+            for handler in self._handlers:
+                if handler.__class__.__name__ == 'MQTTHandler' or handler.name == 'MQTT':
+                    try:
+                        if hasattr(handler, '_sensors') and doorbell in handler._sensors:
+                            doorbell_sensors = handler._sensors[doorbell]
+                            online_sensor = doorbell_sensors.get('online') or doorbell_sensors.get('online_state')
+                            # If the sensor is missing or currently marked offline, flip it back!
+                            if online_sensor and getattr(online_sensor, '_state', None) != "online":
+                                online_sensor.set_state("online")
+                                logger.info(f"SDK alarm channel traffic resumed: {doorbell._config.name} marked ONLINE.")
+                    except Exception as sensor_err:
+                        logger.error(f"Failed to auto-heal online state via SDK callback: {sensor_err}")
+        # ------------------------------------------------------------------
+
         # Cast the alarm_info pointer to the correct Python class
         alarm_info = self._cast_alarm_info(command, alarm_info_pointer)
 
@@ -230,6 +252,61 @@ class EventManager:
                 command, device, alarm_info, buffer_length, user_pointer),
             self._async_loop)
         future.result()
+
+
+    async def _process_exception(self, exception_type: int, user_id: int):
+        """Toggles the HA sensor state purely based on native SDK connection exceptions"""
+        target_index = None
+        target_doorbell = None
+        
+        for index, doorbell in list(self._doorbells.items()):
+            doorbell_id = getattr(doorbell, 'user_id', getattr(doorbell, '_user_id', None))
+            if doorbell_id == user_id:
+                target_index = index
+                target_doorbell = doorbell
+                break
+
+        if target_index is not None and target_doorbell is not None:
+            # Determine target state based on the exception code
+            if exception_type == 0x8006:
+                new_state = "offline"
+                log_msg = f"Doorbell index {target_index} dropped connection (SDK exception 0x8006)"
+            elif exception_type == 0x8016:
+                new_state = "online"
+                log_msg = f"Doorbell index {target_index} reconnected successfully (SDK exception 0x8016)"
+            else:
+                return
+
+            logger.warning(log_msg)
+            
+            # Push the updated state directly to the HA entity handler
+            for handler in self._handlers:
+                if handler.__class__.__name__ == 'MQTTHandler' or handler.name == 'MQTT':
+                    try:
+                        if hasattr(handler, '_sensors') and target_doorbell in handler._sensors:
+                            doorbell_sensors = handler._sensors[target_doorbell]
+                            online_sensor = doorbell_sensors.get('online') or doorbell_sensors.get('online_state')
+                            if online_sensor:
+                                online_sensor.set_state(new_state)
+                                logger.info(f"Successfully changed entity state for {target_doorbell._config.name} to {new_state}.")
+                    except Exception as sensor_err:
+                        logger.error(f"Failed to update entity state to {new_state}: {sensor_err}")
+
+    def _get_exception_callback_func(self):
+        """C-compatible wrapper that catches hardware drops and reconnects"""
+        @CFUNCTYPE(None, DWORD, LONG, LONG, c_void_p)
+        def exc_callback(dwType: int, lUserID: int, lHandle: int, pUser: c_void_p):
+
+            # Print every raw code from the SDK to stdout/log file for easy analysis
+            logger.debug(f"SDK Global Exception Event Triggered -> Code: {hex(dwType)} (Dec: {dwType}) for UserID: {lUserID}")
+            
+            # Allow both drop (0x8006) and recovery (0x8016) codes through
+            if dwType in (0x8006, 0x8016):
+                asyncio.run_coroutine_threadsafe(
+                    self._process_exception(dwType, lUserID), 
+                    self._async_loop
+                )
+        return exc_callback
 
     def register_handler(self, handler: EventHandler):
         logger.debug("Adding event handler {}", handler)
@@ -261,6 +338,14 @@ class EventManager:
             None)
         if not result:
             raise SDKError(self._sdk, "Error while setting up event manager")
+        
+        # ==================== ADD THESE LINES HERE ====================
+        logger.debug("Registering global exception callback function using SDK")
+        self.exception_callback_func = self._get_exception_callback_func()
+        exc_result = self._sdk.NET_DVR_SetExceptionCallBack_V30(0, None, self.exception_callback_func, None)
+        if not exc_result:
+            raise SDKError(self._sdk, "Error while setting up event manager exception callback")
+        # ==============================================================
 
         # Warn if there are no handlers defined (apart from ConsoleHandler, that is only useful for troubleshooting)
         if not any([not isinstance(handler, ConsoleHandler) for handler in self._handlers]):

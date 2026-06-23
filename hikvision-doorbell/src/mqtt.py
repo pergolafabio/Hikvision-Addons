@@ -195,7 +195,23 @@ class MQTTHandler(EventHandler):
                         
                 loop = asyncio.get_event_loop()
                 self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
-                
+
+            ############
+            # Online state
+            online_sensor_info = SensorInfo(
+                name="Online state",
+                unique_id=f"{device.identifiers}-online_state",
+                device=device,
+                default_entity_id=f"{sanitized_doorbell_name}_online_state",
+                icon="mdi:cloud-check"
+            )
+
+            online_settings = Settings(mqtt=self._mqtt_settings, entity=online_sensor_info, manual_availability=True)
+            online_sensor = Sensor(online_settings)
+            online_sensor.set_state("online")
+            online_sensor.set_availability(True)
+            self._sensors[doorbell]['online'] = online_sensor
+
             ##################
             # Doors
             # Create switches for output relays used to open doors
@@ -255,6 +271,14 @@ class MQTTHandler(EventHandler):
         match command:
             case "ON":
                 doorbell.unlock_door(door_id)
+
+                door_switch = self._sensors.get(doorbell, {}).get(f'door_{door_id}')
+                last_unlocked = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                attributes = {
+                    'last_unlocked': last_unlocked,
+                }
+                door_switch.set_attributes(attributes)
+                
 
     @override
     async def motion_detection(
@@ -364,11 +388,13 @@ class MQTTHandler(EventHandler):
             logger.info("Door {} unlocked by {} , updating sensor and device trigger", door_id+1, control_source)
             entity_id = f'door_{door_id}'
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
+            last_unlocked = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             attributes = {
                 'control_source': control_source,
                 'number': control_source_decoded,
                 'unlock_type': unlock_name,
                 'card_user_id': card_user_id,
+                'last_unlocked': last_unlocked,
             }
             door_sensor.set_attributes(attributes)
             door_sensor.on()
