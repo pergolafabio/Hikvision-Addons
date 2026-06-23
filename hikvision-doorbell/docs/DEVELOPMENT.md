@@ -20,6 +20,18 @@ source venv310/bin/activate
 pip install -r requirements.txt
 deactivate
 ```
+- On newer Distro:
+```bash
+# Move to your project directory
+cd ~/Hikvision-Addons
+# Install uv (if you haven't already)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.bashrc
+# Delete the broken Python 3.14 environment VS Code made
+rm -rf .venv
+# Create a clean Python 3.10 environment
+uv venv .venv --python 3.10
+```
 
 - Export the required environment variables to configure the software (see `development.env.example` for reference)
 ```bash
