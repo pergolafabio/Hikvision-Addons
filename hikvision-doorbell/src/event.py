@@ -238,7 +238,7 @@ class EventManager:
                             # If the sensor is missing or currently marked offline, flip it back!
                             if online_sensor and getattr(online_sensor, '_state', None) != "online":
                                 online_sensor.set_state("online")
-                                logger.info(f"SDK alarm channel traffic resumed: {doorbell._config.name} marked ONLINE.")
+                                logger.debug(f"SDK alarm channel traffic resumed: {doorbell._config.name} marked ONLINE.")
                     except Exception as sensor_err:
                         logger.error(f"Failed to auto-heal online state via SDK callback: {sensor_err}")
         # ------------------------------------------------------------------
@@ -277,7 +277,7 @@ class EventManager:
             else:
                 return
 
-            logger.warning(log_msg)
+            logger.debug(log_msg)
             
             # Push the updated state directly to the HA entity handler
             for handler in self._handlers:

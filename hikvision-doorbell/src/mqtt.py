@@ -497,7 +497,7 @@ class MQTTHandler(EventHandler):
                 except (UnicodeDecodeError, AttributeError, ValueError) as e:
                     dev_number = "unknown_device"
                     logger.error(f"Error decoding device numbers: {e}")
-                logger.info("Doorbell ringing, button press from door: {} using button: {}, updating sensor", dev_number)
+                logger.info("Doorbell ringing, button press from button: {}, updating sensor", dev_number)
                 logger.debug("Doorbell updating sensor {}", call_sensor)
                 attributes = {
                     'device_number': dev_number,   
