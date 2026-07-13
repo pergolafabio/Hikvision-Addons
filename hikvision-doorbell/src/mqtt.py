@@ -196,6 +196,7 @@ class MQTTHandler(EventHandler):
                 loop = asyncio.get_event_loop()
                 self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
 
+            '''
             ############
             # Online state
             online_sensor_info = SensorInfo(
@@ -211,7 +212,8 @@ class MQTTHandler(EventHandler):
             online_sensor.set_state("online")
             online_sensor.set_availability(True)
             self._sensors[doorbell]['online'] = online_sensor
-
+            '''
+            
             ##################
             # Doors
             # Create switches for output relays used to open doors

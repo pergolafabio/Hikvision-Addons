@@ -221,6 +221,7 @@ class EventManager:
         logger.debug("Callback invoked from SDK")
         device: NET_DVR_ALARMER = alarm_device_pointer.contents
 
+        '''
         # Match the device information with the Doorbell instance
         doorbell = self._doorbells.getBySerialNumber(device.serialNumber())
         
@@ -242,6 +243,7 @@ class EventManager:
                     except Exception as sensor_err:
                         logger.error(f"Failed to auto-heal online state via SDK callback: {sensor_err}")
         # ------------------------------------------------------------------
+        '''
 
         # Cast the alarm_info pointer to the correct Python class
         alarm_info = self._cast_alarm_info(command, alarm_info_pointer)
@@ -253,7 +255,7 @@ class EventManager:
             self._async_loop)
         future.result()
 
-
+    '''
     async def _process_exception(self, exception_type: int, user_id: int):
         """Toggles the HA sensor state purely based on native SDK connection exceptions"""
         target_index = None
@@ -308,6 +310,7 @@ class EventManager:
                 )
         return exc_callback
 
+    '''
     def register_handler(self, handler: EventHandler):
         logger.debug("Adding event handler {}", handler)
         self._handlers.add(handler)
@@ -339,6 +342,7 @@ class EventManager:
         if not result:
             raise SDKError(self._sdk, "Error while setting up event manager")
         
+        '''
         # ==================== ADD THESE LINES HERE ====================
         logger.debug("Registering global exception callback function using SDK")
         self.exception_callback_func = self._get_exception_callback_func()
@@ -346,7 +350,8 @@ class EventManager:
         if not exc_result:
             raise SDKError(self._sdk, "Error while setting up event manager exception callback")
         # ==============================================================
-
+        '''
+        
         # Warn if there are no handlers defined (apart from ConsoleHandler, that is only useful for troubleshooting)
         if not any([not isinstance(handler, ConsoleHandler) for handler in self._handlers]):
             logger.warning("No handler defined!")

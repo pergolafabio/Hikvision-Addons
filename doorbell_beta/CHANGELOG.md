@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.140 - 2026-07-13
+
+### Added
+
+- Remove online sensor when it drops from the SDK (resource issues)
+
 ## 3.0.0-beta.138 - 2026-06-23
 
 ### Added
