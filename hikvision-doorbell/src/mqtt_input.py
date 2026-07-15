@@ -3,11 +3,12 @@ import asyncio
 import os
 import base64
 import re
+from socket import socket
 from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
-from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image, SelectInfo, Select
+from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image, SelectInfo, Select, SwitchInfo
 from loguru import logger
 from mqtt import extract_device_info
 from paho.mqtt.client import MQTTMessage
@@ -361,6 +362,30 @@ class MQTTInput():
                 closeAlarm_button = Button(settings, self._closeAlarm_callback)
                 closeAlarm_button.set_availability(True)
 
+            if doorbell._type is DeviceType.INDOOR:
+
+                # Chime On Button
+                button_info = ButtonInfo(
+                    name="Chime On",
+                    unique_id=f"{sanitized_doorbell_name}_chime_on",
+                    device=device,
+                    icon="mdi:bell-ring",
+                    default_entity_id=f"{sanitized_doorbell_name}_chime_on")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                chime_on_button = Button(settings, self._chime_on_callback)
+                chime_on_button.set_availability(True)
+
+                # Chime Off Button
+                button_info = ButtonInfo(
+                    name="Chime Off",
+                    unique_id=f"{sanitized_doorbell_name}_chime_off",
+                    device=device,
+                    icon="mdi:bell-off",
+                    default_entity_id=f"{sanitized_doorbell_name}_chime_off")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                chime_off_button = Button(settings, self._chime_off_callback)
+                chime_off_button.set_availability(True)
+
     def _get_doorbell_from_args(self, doorbell, message):
         if isinstance(doorbell, Doorbell):
             return doorbell
@@ -706,6 +731,28 @@ class MQTTInput():
             alarm_sensor.set_state("closeAlarm")
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
+
+    def _chime_on_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        logger.info("Received chime on command for doorbell: {}", doorbell._config.name)
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+             doorbell.chime_on() 
+        except socket.error as e:
+            logger.error("Network error while sending chime on command: {}", e)
+        except Exception as e:
+            logger.error("Unexpected error while executing chime on: {}", e)
+
+    def _chime_off_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        logger.info("Received chime off command for doorbell: {}", doorbell._config.name)
+        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        try:
+             doorbell.chime_off() 
+        except socket.error as e:
+            logger.error("Network error while sending chime off command: {}", e)
+        except Exception as e:
+            logger.error("Unexpected error while executing chime on: {}", e)
 
     def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)

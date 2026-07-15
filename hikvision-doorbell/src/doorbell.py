@@ -5,6 +5,7 @@ import unicodedata
 import json
 import os
 import requests
+import socket
 from requests.auth import HTTPDigestAuth
 from datetime import datetime
 from typing import Callable, Optional
@@ -75,6 +76,11 @@ class Doorbell():
         self._config = config
         self._id = id
         self._previouse_audio_out_volume = "5"
+
+        # Add these for SIP chime functionality
+        self.sip_call_id = f"doorbell_{id}_{datetime.now().strftime('%H%M%S')}"
+        self.sip_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sip_sock.bind(("", 0)) # Bind to OS-assigned port
 
     def authenticate(self):
         '''Authenticate with the remote doorbell'''
@@ -412,6 +418,49 @@ class Doorbell():
         if not result:
             raise SDKError(self._sdk, "Error while calling NET_DVR_VIDEO_CALL_PARAM")
         logger.info("Callsignal {} sended with SDK", cmd_type)
+
+    def _send_sip_packet(self, data: str):
+        # Assumes target SIP server is listening on 5060 at the configured IP
+        try:
+            self.sip_sock.sendto(data.encode(), (self._config.ip, 5060))
+        except Exception as e:
+            logger.error("Failed to send SIP packet to {}: {}", self._config.ip, e)
+
+    def chime_on(self):
+        """Sends the SIP INVITE to trigger the chime."""
+        sdp = (
+            "v=0\r\no=J12345678 0 0 IN IP4 0.0.0.0\r\ns=Talk session\r\n"
+            "c=IN IP4 0.0.0.0\r\nt=0 0\r\n"
+            "a=doorFloor:0\r\na=responseType:0\r\na=doorType:1\r\na=isSpecialType:0\r\n"
+            "m=audio 9654 RTP/AVP 0 8 101\r\na=rtpmap:0 PCMU/8000\r\n"
+            "a=rtpmap:8 PCMA/8000\r\na=rtpmap:101 telephone-event/8000\r\n"
+            "a=sendrecv\r\n"
+        )
+        invite = (
+            f"INVITE sip:10010110001@{self._config.ip}:5060 SIP/2.0\r\n"
+            f"Via: SIP/2.0/UDP {self._config.ip}:5060;rport;branch=z9hG4bK{self._id}\r\n"
+            f"From: <sip:10010100000@{self._config.ip}>;tag=123456\r\n"
+            f"To: <sip:10010110001@{self._config.ip}:5060>\r\n"
+            f"Call-ID: {self.sip_call_id}\r\n"
+            "CSeq: 20 INVITE\r\n"
+            "Content-Type: application/sdp\r\n"
+            f"Content-Length: {len(sdp)}\r\n\r\n"
+            f"{sdp}"
+        )
+        self._send_sip_packet(invite)
+
+    def chime_off(self):
+        """Sends the SIP CANCEL to stop the chime."""
+        cancel_packet = (
+            f"CANCEL sip:10010110001@{self._config.ip}:5060 SIP/2.0\r\n"
+            f"Via: SIP/2.0/UDP {self._config.ip}:5060;rport;branch=z9hG4bK{self._id}\r\n"
+            f"From: <sip:10010100000@{self._config.ip}>;tag=123456\r\n"
+            f"To: <sip:10010110001@{self._config.ip}:5060>\r\n"
+            f"Call-ID: {self.sip_call_id}\r\n"
+            "CSeq: 20 CANCEL\r\n"
+            "Content-Length: 0\r\n\r\n"
+        )
+        self._send_sip_packet(cancel_packet)
         
         
     def reboot_device(self):

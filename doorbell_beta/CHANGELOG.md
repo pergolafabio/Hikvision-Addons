@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.141 - 2026-07-15
+
+### Added
+
+- Added chime on/off buttons for indoor stations (test sip) , to make it ring as a chime
+
 ## 3.0.0-beta.140 - 2026-07-13
 
 ### Added
