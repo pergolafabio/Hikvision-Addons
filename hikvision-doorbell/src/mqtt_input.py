@@ -753,6 +753,8 @@ class MQTTInput():
             doorbell.send_call_to_device(building=0,unit=0,floor=0,room=0, dev_index=0 )
         except SDKError as e:
             logger.error("Failed to call doorbell {}: {}", doorbell._config.name,e)
+        except Exception:
+            logger.error("Unexpected error calling the doorbell {}",doorbell._config.name)
         
         '''
         try:
@@ -777,7 +779,9 @@ class MQTTInput():
         try:
             doorbell.stop_call_to_device()
         except SDKError as e:
-            logger.error("Failed to stop the ca call doorbell {}: {}", doorbell._config.name,e)
+            logger.error("Failed to stop the call doorbell {}: {}", doorbell._config.name,e)
+        except Exception:
+            logger.error("Unexpected error stopping call doorbell {}",doorbell._config.name)
 
         '''
         try:

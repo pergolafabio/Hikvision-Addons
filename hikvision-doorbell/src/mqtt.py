@@ -268,8 +268,10 @@ class MQTTHandler(EventHandler):
                 case "OFF":
                     doorbell.lock_com(com_id)
 
+        except SDKError as e:
+            logger.error("Failed to control COM {}, doorbell {}: {}",com_id,doorbell._config.name,e)
         except Exception:
-            logger.error("Failed to control COM {}, doorbell {}",com_id,doorbell._config.name)
+            logger.error("Unexpected error controlling COM {}, doorbell {}",com_id,doorbell._config.name)
 
     def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, door_id = user_data
@@ -285,8 +287,10 @@ class MQTTHandler(EventHandler):
                         attributes = {"last_unlocked": last_unlocked}
                         door_switch.set_attributes(attributes)
 
-                except Exception as e:
+                except SDKError as e:
                     logger.error("Failed to unlock door {}, doorbell {}: {}",door_id,doorbell._config.name, e)
+                except Exception:
+                    logger.error("Unexpected error controlling the doorbell {}",doorbell._config.name)
                 
     @override
     async def motion_detection(

@@ -524,12 +524,14 @@ class Doorbell():
 
     def send_call_to_device(self,floor=1,room=1,building=1,unit=1,dev_index=0):
 
-        # CLEANUP: Stop any existing remote config first
-        if hasattr(self, 'config_handle') and self.config_handle >= 0:
-            logger.debug("Cleaning up existing remote config: {}", self.config_handle)
-            self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
-            self.config_handle = -1
-            time.sleep(0.5)  # Give it time to clean up
+        try:
+            if hasattr(self, 'config_handle'):
+                logger.debug("cleaning up call sessions")
+                self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
+                self.config_handle = -1
+                time.sleep(0.3)
+        except:
+            pass
 
         if not hasattr(self, "video_call_callback"):
 
@@ -584,9 +586,6 @@ class Doorbell():
             self.config_handle = -1
 
             raise SDKError(self._sdk,f"SendRemoteConfig failed: {err}")
-
-
-        logger.info("Call sent successfully to device:")
 
         '''
         # keep alive for ringing
