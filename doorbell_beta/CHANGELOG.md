@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.142 - 2026-07-22
+
+### Changed
+
+- Added chime on/off buttons for indoor stations (removed SIP and used SDK approach) to make it ring as a chime
+- Fix for exception door/com unlock
+
 ## 3.0.0-beta.141 - 2026-07-15
 
 ### Added

@@ -1,17 +1,17 @@
-from ctypes import CDLL, CFUNCTYPE, POINTER, byref, c_byte, c_char, c_char_p, c_ulong, c_int, c_uint, c_void_p, c_long, create_string_buffer, pointer, sizeof, cast
+from ctypes import CDLL, CFUNCTYPE, POINTER, byref, memset, memmove, c_byte, c_char, c_char_p, c_ulong, c_int, c_uint, c_void_p, c_long, create_string_buffer, pointer, sizeof, cast
 from enum import IntEnum
 import re
 import unicodedata
 import json
 import os
 import requests
-import socket
 from requests.auth import HTTPDigestAuth
-from datetime import datetime
+from datetime import datetime, time
+import time
 from typing import Callable, Optional
 from loguru import logger
 from config import AppConfig
-from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50,  DeviceAbilityType
+from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_VIDEO_CALL_COND, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
 
@@ -77,11 +77,13 @@ class Doorbell():
         self._id = id
         self._previouse_audio_out_volume = "5"
 
+        '''
         # Add these for SIP chime functionality
         self.sip_call_id = f"doorbell_{id}_{datetime.now().strftime('%H%M%S')}"
         self.sip_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sip_sock.bind(("", 0)) # Bind to OS-assigned port
-
+        '''
+        
     def authenticate(self):
         '''Authenticate with the remote doorbell'''
         logger.debug("Logging into doorbell")
@@ -243,7 +245,56 @@ class Doorbell():
             except Exception as e:
                 logger.error("Error parsing IP from related device union: {}", e)
                 return None
- 
+    '''
+    def get_intercom_sip_id(self) -> Optional[str]:
+            """
+            Retrieves the Video Intercom Device ID configuration and 
+            generates the SIP number for Indoor Stations.
+            """
+            config_struct = NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG()
+            config_struct.dwSize = sizeof(config_struct)
+            lp_returned = c_ulong(0)
+
+            result = self._sdk.NET_DVR_GetDVRConfig(
+                self.user_id,
+                16001,
+                0,
+                byref(config_struct),
+                sizeof(config_struct),
+                byref(lp_returned)
+            )
+
+            if not result:
+                logger.error("Failed to get Video Intercom Device ID. Error: {}", self._sdk.NET_DVR_GetLastError())
+                return None
+
+            # Ensure we are only processing Indoor Stations (Type 3)
+            if config_struct.byUnitType != 3:
+                logger.warning("Device is not an Indoor Station (Type: {})", config_struct.byUnitType)
+                return None
+
+            unit = config_struct.uVideoIntercomUnit.struIndoorUnit
+            dev_idx = unit.wDevIndex
+
+            # Generate SIP number based on device_index rules
+            if dev_idx == 0:
+                sip_number = "10010110001"
+            else:
+                # Generates format like 10000000001, 10000000002, etc.
+                sip_number = f"1000000000{dev_idx}"
+
+            data = {
+                "type": "Indoor",
+                "floor": unit.wFloorNumber,
+                "room": unit.wRoomNumber,
+                "device_index": dev_idx,
+                "sip_number": sip_number
+            }
+
+            logger.debug("Indoor Station Data: {}", data)
+            return sip_number
+    '''
+
     def take_snapshot(self):
 
         # --- ISAPI HTTP BLOCK START ---
@@ -419,6 +470,147 @@ class Doorbell():
             raise SDKError(self._sdk, "Error while calling NET_DVR_VIDEO_CALL_PARAM")
         logger.info("Callsignal {} sended with SDK", cmd_type)
 
+    def video_call_signal_process(self,dwDataType,pRecvDataBuffer,dwBufSize,pUserData):
+
+        # STATUS
+        if dwDataType == 0:
+            if pRecvDataBuffer:
+                try:
+                    status = cast(pRecvDataBuffer,POINTER(DWORD)).contents.value
+                    logger.info("STATUS VALUE: {}", status)
+                except Exception as e:
+                    logger.error("Error reading status: {}", e)
+            else:
+                logger.warning("STATUS: pRecvDataBuffer is NULL")
+
+        # DATA
+        elif dwDataType == 2:
+            if pRecvDataBuffer:
+                try:
+                    # Try to cast to our structure
+                    param = cast(pRecvDataBuffer, POINTER(NET_DVR_VIDEO_CALL_PARAM)).contents
+
+                    if param.dwCmdType == 0:
+                        logger.debug("*** THIS IS THE RING SIGNAL ***")
+                    elif param.dwCmdType == 1:
+                        logger.debug("Call cancelled")
+                    elif param.dwCmdType == 2:
+                        logger.debug("Call answered")
+                    elif param.dwCmdType == 3:
+                        logger.debug("Call refused")
+                    elif param.dwCmdType == 4:
+                        logger.debug("Ring timeout")
+                    elif param.dwCmdType == 5:
+                        logger.debug("Call ended")
+                    elif param.dwCmdType == 6:
+                        logger.debug("Other party busy")
+                    else:
+                        logger.debug("Unknown CMD: {}", param.dwCmdType)
+                        
+                except Exception as e:
+                    logger.error("Error parsing DATA structure: {}", e)
+                    # Try to read raw bytes to see what we got
+                    try:
+                        if dwBufSize > 0 and dwBufSize <= 1024:
+                            raw = bytearray(dwBufSize)
+                            memmove(raw, pRecvDataBuffer, dwBufSize)
+                            logger.debug("Raw bytes (first 4 bytes as DWORD): {}", int.from_bytes(raw[:4], 'little') if len(raw) >= 4 else "too short")
+                    except Exception as e2:
+                        logger.error("Could not read raw bytes: {}", e2)
+            else:
+                logger.warning("DATA: pRecvDataBuffer is NULL")
+        else:
+            logger.debug("Unknown dwDataType: {} (not 0 or 2)", dwDataType)
+
+    def send_call_to_device(self,floor=1,room=1,building=1,unit=1,dev_index=0):
+
+        # CLEANUP: Stop any existing remote config first
+        if hasattr(self, 'config_handle') and self.config_handle >= 0:
+            logger.debug("Cleaning up existing remote config: {}", self.config_handle)
+            self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
+            self.config_handle = -1
+            time.sleep(0.5)  # Give it time to clean up
+
+        if not hasattr(self, "video_call_callback"):
+
+            self.VIDEO_CALL_CALLBACK = CFUNCTYPE(None,DWORD,c_void_p,DWORD,c_void_p)
+            self.video_call_callback = self.VIDEO_CALL_CALLBACK(self.video_call_signal_process)
+
+        self.call_cond = NET_DVR_VIDEO_CALL_COND()
+        memset(byref(self.call_cond),0,sizeof(self.call_cond))
+        self.call_cond.dwSize = sizeof(self.call_cond)
+
+        # Set byRequestType explicitly for extension
+        # 0 = client initiates call, 1 = device initiates call
+        # self.call_cond.byRequestType = 1
+
+        # StartRemoteConfig
+        self.config_handle = self._sdk.NET_DVR_StartRemoteConfig(self.user_id,16032,byref(self.call_cond),sizeof(self.call_cond),self.video_call_callback,None )
+
+        if self.config_handle < 0:
+
+            err = self._sdk.NET_DVR_GetLastError()
+            raise SDKError(self._sdk, f"StartRemoteConfig failed: {err}")
+
+        logger.debug("Video call remote config started with handle: {}".format(self.config_handle))
+
+        # ADD THIS DELAY - like waiting for user to click "Inquest"
+        logger.debug("Waiting 1 seconds before sending call...")
+        time.sleep(1) 
+
+        # parameter
+        self.call_param = NET_DVR_VIDEO_CALL_PARAM()
+        memset(byref(self.call_param),0,sizeof(self.call_param))
+        self.call_param.dwSize = sizeof(self.call_param)
+        self.call_param.dwCmdType = 0
+        self.call_param.wPeriod = 0
+        self.call_param.wBuildingNumber = building
+        self.call_param.wUnitNumber = unit
+        self.call_param.wFloorNumber = floor
+        self.call_param.wRoomNumber = room
+        self.call_param.wDevIndex = dev_index
+        self.call_param.byUnitType = 0
+
+        logger.info("Sending call building={} unit={} floor={} room={}",building,unit,floor,room )
+
+        result = self._sdk.NET_DVR_SendRemoteConfig(self.config_handle,0,byref(self.call_param),sizeof(self.call_param))
+
+        if not result:
+
+            err = self._sdk.NET_DVR_GetLastError()
+            logger.error("SendRemoteConfig failed error={}", err)
+
+            self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
+            self.config_handle = -1
+
+            raise SDKError(self._sdk,f"SendRemoteConfig failed: {err}")
+
+
+        logger.info("Call sent successfully to device:")
+
+        '''
+        # keep alive for ringing
+        time.sleep(30)
+
+        stop_result = self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
+        logger.debug("StopRemoteConfig result={}".format(int(stop_result)))
+        self.config_handle = -1
+        '''
+        return True
+    
+    def stop_call_to_device(self):
+
+        if self.config_handle < 0:
+            return False
+
+        self.call_param.dwCmdType = 1
+        result = self._sdk.NET_DVR_SendRemoteConfig(self.config_handle, 0,byref(self.call_param),sizeof(self.call_param))
+        logger.debug("Cancel command sent result={}", result)
+        self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
+        self.config_handle = -1
+        return result
+
+    '''
     def _send_sip_packet(self, data: str):
         # Assumes target SIP server is listening on 5060 at the configured IP
         try:
@@ -426,8 +618,8 @@ class Doorbell():
         except Exception as e:
             logger.error("Failed to send SIP packet to {}: {}", self._config.ip, e)
 
-    def chime_on(self):
-        """Sends the SIP INVITE to trigger the chime."""
+    def chime_on(self, sip_number: str, label: str):
+        """Sends the SIP INVITE to trigger the chime using the provided sip_number."""
         sdp = (
             "v=0\r\no=J12345678 0 0 IN IP4 0.0.0.0\r\ns=Talk session\r\n"
             "c=IN IP4 0.0.0.0\r\nt=0 0\r\n"
@@ -437,10 +629,10 @@ class Doorbell():
             "a=sendrecv\r\n"
         )
         invite = (
-            f"INVITE sip:10010110001@{self._config.ip}:5060 SIP/2.0\r\n"
+            f"INVITE sip:{sip_number}@{self._config.ip}:5060 SIP/2.0\r\n"
             f"Via: SIP/2.0/UDP {self._config.ip}:5060;rport;branch=z9hG4bK{self._id}\r\n"
-            f"From: <sip:10010100000@{self._config.ip}>;tag=123456\r\n"
-            f"To: <sip:10010110001@{self._config.ip}:5060>\r\n"
+            f"From: {label}<sip:10010100000@{self._config.ip}>;tag=123456\r\n"
+            f"To: <sip:{sip_number}@{self._config.ip}:5060>\r\n"
             f"Call-ID: {self.sip_call_id}\r\n"
             "CSeq: 20 INVITE\r\n"
             "Content-Type: application/sdp\r\n"
@@ -449,19 +641,19 @@ class Doorbell():
         )
         self._send_sip_packet(invite)
 
-    def chime_off(self):
-        """Sends the SIP CANCEL to stop the chime."""
+    def chime_off(self, sip_number: str):
+        """Sends the SIP CANCEL to stop the chime using the provided sip_number."""
         cancel_packet = (
-            f"CANCEL sip:10010110001@{self._config.ip}:5060 SIP/2.0\r\n"
+            f"CANCEL sip:{sip_number}@{self._config.ip}:5060 SIP/2.0\r\n"
             f"Via: SIP/2.0/UDP {self._config.ip}:5060;rport;branch=z9hG4bK{self._id}\r\n"
             f"From: <sip:10010100000@{self._config.ip}>;tag=123456\r\n"
-            f"To: <sip:10010110001@{self._config.ip}:5060>\r\n"
+            f"To: <sip:{sip_number}@{self._config.ip}:5060>\r\n"
             f"Call-ID: {self.sip_call_id}\r\n"
             "CSeq: 20 CANCEL\r\n"
             "Content-Length: 0\r\n\r\n"
         )
         self._send_sip_packet(cancel_packet)
-        
+    '''
         
     def reboot_device(self):
         # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10

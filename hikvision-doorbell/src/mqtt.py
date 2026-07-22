@@ -260,11 +260,16 @@ class MQTTHandler(EventHandler):
         doorbell, com_id = user_data
         command = message.payload.decode("utf-8")
         logger.debug("Received command: {}, com_id: {}, doorbell: {}", command, com_id, doorbell._config.name)
-        match command:
-            case "ON":
-                doorbell.unlock_com(com_id)
-            case "OFF":
-                doorbell.lock_com(com_id)
+
+        try:
+            match command:
+                case "ON":
+                    doorbell.unlock_com(com_id)
+                case "OFF":
+                    doorbell.lock_com(com_id)
+
+        except Exception:
+            logger.exception("Failed to control COM {}, doorbell {}",com_id,doorbell._config.name)
 
     def door_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, door_id = user_data
@@ -272,16 +277,17 @@ class MQTTHandler(EventHandler):
         logger.debug("Received command: {}, door_id: {}, doorbell: {}", command, door_id, doorbell._config.name)
         match command:
             case "ON":
-                doorbell.unlock_door(door_id)
+                try:
+                    doorbell.unlock_door(door_id)
+                    door_switch = self._sensors.get(doorbell, {}).get(f"door_{door_id}")
+                    if door_switch:
+                        last_unlocked = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        attributes = {"last_unlocked": last_unlocked}
+                        door_switch.set_attributes(attributes)
 
-                door_switch = self._sensors.get(doorbell, {}).get(f'door_{door_id}')
-                last_unlocked = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                attributes = {
-                    'last_unlocked': last_unlocked,
-                }
-                door_switch.set_attributes(attributes)
+                except Exception as e:
+                    logger.exception("Failed to unlock door {}, doorbell {}: {}",door_id,doorbell._config.name, e)
                 
-
     @override
     async def motion_detection(
             self,

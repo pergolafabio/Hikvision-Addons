@@ -584,6 +584,12 @@ class NET_DVR_CALL_STATUS(Structure):
         ("byRes", BYTE * 127),
     ]
 
+class NET_DVR_VIDEO_CALL_COND(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("byRes", BYTE * 128)
+    ]
+
 class NET_DVR_VIDEO_CALL_PARAM(Structure):
     _fields_ = [
         ("dwSize", DWORD),
@@ -649,6 +655,66 @@ class NET_DVR_PREVIEWINFO(Structure):
         ("dwDisplayBufNum", c_uint),    # Display buffer number
         ("byNPQMode", c_byte),          # NPQ mode
         ("byRes", c_byte * 215)         # Adjusted reserved padding for exact size
+    ]
+
+class NET_DVR_OUTDOOR_UNIT_DEVICEID(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ("wPeriod", c_ushort),
+        ("wBuildingNumber", c_ushort),
+        ("wUnitNumber", c_ushort),
+        ("wFloorNumber", c_short),
+        ("wDevIndex", c_ushort),
+        ("byRes", c_ubyte * 118),
+    ]
+
+class NET_DVR_INDOOR_UNIT_DEVICEID(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ("wFloorNumber", c_short),
+        ("wRoomNumber", c_ushort),
+        ("wDevIndex", c_ushort),
+        ("byRes", c_ubyte * 122),
+    ]
+
+class NET_DVR_MANAGE_UNIT_DEVICEID(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ("wPeriod", c_ushort),
+        ("wDevIndex", c_ushort),
+        ("byRes", c_ubyte * 124),
+    ]
+
+class NET_DVR_OUTDOOR_FENCE_DEVICEID(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ("wPeriod", c_ushort),
+        ("wDevIndex", c_ushort),
+        ("byRes", c_ubyte * 124),
+    ]
+
+class NET_DVR_VIDEO_INTERCOM_UNIT_DEVICEID_UNION(Union):
+    _pack_ = 1
+    _fields_ = [
+        ("byLen", c_ubyte * 128),
+
+        ("struOutdoorUnit", NET_DVR_OUTDOOR_UNIT_DEVICEID),
+        ("struIndoorUnit", NET_DVR_INDOOR_UNIT_DEVICEID),
+        ("struManageUnit", NET_DVR_MANAGE_UNIT_DEVICEID),
+        ("struFenceUnit", NET_DVR_OUTDOOR_FENCE_DEVICEID),
+        ("struVillaOutdoorUnit", NET_DVR_OUTDOOR_UNIT_DEVICEID),
+        ("struAgainConfirmUnit", NET_DVR_OUTDOOR_UNIT_DEVICEID),
+    ]
+
+class NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ("dwSize", c_uint),
+        ("byUnitType", c_ubyte),
+        ("byIsAutoReg", c_ubyte),
+        ("byRes1", c_ubyte * 2),
+        ("uVideoIntercomUnit", NET_DVR_VIDEO_INTERCOM_UNIT_DEVICEID_UNION),
+        ("byRes2", c_ubyte * 128),
     ]
 
 class NET_DVR_VIDEO_INTERCOM_EVENT(Structure):

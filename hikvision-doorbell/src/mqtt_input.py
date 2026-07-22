@@ -3,7 +3,6 @@ import asyncio
 import os
 import base64
 import re
-from socket import socket
 from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
@@ -386,6 +385,21 @@ class MQTTInput():
                 chime_off_button = Button(settings, self._chime_off_callback)
                 chime_off_button.set_availability(True)
 
+                '''
+                # Chime Custom Label Text Entity
+                text_info = TextInfo(
+                    name="Chime Label",
+                    unique_id=f"{sanitized_doorbell_name}_chime_label",
+                    device=device,
+                    icon="mdi:format-text",
+                    default_entity_id=f"{sanitized_doorbell_name}_chime_label"
+                )
+                settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell)
+                chime_label_text = Text(settings, self._chime_label_callback)
+                chime_label_text.set_availability(True)
+                self._sensors[doorbell]['chime_label'] = chime_label_text
+                '''
+
     def _get_doorbell_from_args(self, doorbell, message):
         if isinstance(doorbell, Doorbell):
             return doorbell
@@ -736,24 +750,53 @@ class MQTTInput():
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received chime on command for doorbell: {}", doorbell._config.name)
         # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        # doorbell.send_call_to_device(cmd_type=0, floor=1, room=1, building=1, unit=1, dev_index=0)
+        #doorbell.get_intercom_sip_id()
+        doorbell.send_call_to_device(building=0,unit=0,floor=0,room=0, dev_index=0 )
+        '''
         try:
-             doorbell.chime_on() 
+            sip_num = doorbell.get_intercom_sip_id()
+            text_entity = cast(Text, self._sensors[doorbell].get('chime_label'))
+            custom_text = getattr(doorbell, 'last_chime_text', "")
+            if sip_num:
+                logger.debug("Sending chime on command for doorbell: {} with sip_num: {} and chime text: {}", doorbell._config.name, sip_num, custom_text)
+                doorbell.chime_on(sip_num, custom_text)
+            else:
+                logger.error("Could not retrieve SIP number, chime skipped.")
+
         except socket.error as e:
             logger.error("Network error while sending chime on command: {}", e)
         except Exception as e:
             logger.error("Unexpected error while executing chime on: {}", e)
-
+        '''
     def _chime_off_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received chime off command for doorbell: {}", doorbell._config.name)
-        # Avoid crashing inside the callback, otherwise we lose the MQTT client
+        doorbell.stop_call_to_device()
+
+        '''
         try:
-             doorbell.chime_off() 
+            sip_num = doorbell.get_intercom_sip_id()
+            if sip_num:
+                doorbell.chime_off(sip_num)
+            else:
+                logger.error("Could not retrieve SIP number, chime off command aborted.")
         except socket.error as e:
             logger.error("Network error while sending chime off command: {}", e)
         except Exception as e:
-            logger.error("Unexpected error while executing chime on: {}", e)
+            logger.error("Unexpected error while executing chime off: {}", e)
+        '''
 
+    '''
+    def _chime_label_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+            # 1. Attempt to resolve the doorbell
+            doorbell = self._get_doorbell_from_args(doorbell, message)
+            text_string = message.payload.decode('utf-8')
+            text_entity = cast(Text, self._sensors[doorbell]['chime_label'])
+            text_entity.set_text(text_string)
+            doorbell.last_chime_text = text_string 
+            logger.debug("Custom chime label updated for {}: {}", doorbell._config.name, text_string)
+    '''
     def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received mute audio output command for doorbell: {}", doorbell._config.name)
