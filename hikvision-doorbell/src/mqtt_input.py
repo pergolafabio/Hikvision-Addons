@@ -749,10 +749,11 @@ class MQTTInput():
     def _chime_on_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received chime on command for doorbell: {}", doorbell._config.name)
-        # Avoid crashing inside the callback, otherwise we lose the MQTT client
-        # doorbell.send_call_to_device(cmd_type=0, floor=1, room=1, building=1, unit=1, dev_index=0)
-        #doorbell.get_intercom_sip_id()
-        doorbell.send_call_to_device(building=0,unit=0,floor=0,room=0, dev_index=0 )
+        try:
+            doorbell.send_call_to_device(building=0,unit=0,floor=0,room=0, dev_index=0 )
+        except SDKError as e:
+            logger.error("Failed to call doorbell {}: {}", doorbell._config.name,e)
+        
         '''
         try:
             sip_num = doorbell.get_intercom_sip_id()
@@ -772,7 +773,11 @@ class MQTTInput():
     def _chime_off_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received chime off command for doorbell: {}", doorbell._config.name)
-        doorbell.stop_call_to_device()
+        
+        try:
+            doorbell.stop_call_to_device()
+        except SDKError as e:
+            logger.error("Failed to stop the ca call doorbell {}: {}", doorbell._config.name,e)
 
         '''
         try:
