@@ -490,20 +490,20 @@ class Doorbell():
                     # Try to cast to our structure
                     param = cast(pRecvDataBuffer, POINTER(NET_DVR_VIDEO_CALL_PARAM)).contents
 
+                    messages = {
+                        1: "Call cancelled",
+                        2: "Call answered",
+                        3: "Call refused",
+                        4: "Ring timeout",
+                        5: "Call ended",
+                        6: "Other party busy",
+                    }
+
                     if param.dwCmdType == 0:
                         logger.debug("*** THIS IS THE RING SIGNAL ***")
-                    elif param.dwCmdType == 1:
-                        logger.debug("Call cancelled")
-                    elif param.dwCmdType == 2:
-                        logger.debug("Call answered")
-                    elif param.dwCmdType == 3:
-                        logger.debug("Call refused")
-                    elif param.dwCmdType == 4:
-                        logger.debug("Ring timeout")
-                    elif param.dwCmdType == 5:
-                        logger.debug("Call ended")
-                    elif param.dwCmdType == 6:
-                        logger.debug("Other party busy")
+                    elif param.dwCmdType in messages:
+                        logger.debug(messages[param.dwCmdType])
+                        self.stop_call_to_device()
                     else:
                         logger.debug("Unknown CMD: {}", param.dwCmdType)
                         
@@ -529,7 +529,7 @@ class Doorbell():
                 logger.debug("cleaning up call sessions")
                 self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
                 self.config_handle = -1
-                time.sleep(0.3)
+                time.sleep(1)
         except:
             pass
 
@@ -604,7 +604,7 @@ class Doorbell():
 
         self.call_param.dwCmdType = 1
         result = self._sdk.NET_DVR_SendRemoteConfig(self.config_handle, 0,byref(self.call_param),sizeof(self.call_param))
-        logger.debug("Cancel command sent result={}", result)
+        logger.debug("NET_DVR_StopRemoteConfig command sent result={}", result)
         self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
         self.config_handle = -1
         return result
