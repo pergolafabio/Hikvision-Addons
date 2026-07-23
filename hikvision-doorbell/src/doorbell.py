@@ -658,7 +658,7 @@ class Doorbell():
             logger.info("Voice intercom stopped.")
         
         # Stop video preview when the call ends
-        self.stop_video_preview()
+        #self.stop_video_preview()
 
     '''
     def _send_sip_packet(self, data: str):
