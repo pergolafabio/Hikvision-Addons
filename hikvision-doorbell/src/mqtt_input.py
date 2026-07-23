@@ -386,20 +386,31 @@ class MQTTInput():
                 call_off_button = Button(settings, self._call_off_callback)
                 call_off_button.set_availability(True)
 
-                '''
-                # Chime Custom Label Text Entity
+
+                # Call Custom Label Text Entity
                 text_info = TextInfo(
-                    name="Chime Label",
-                    unique_id=f"{sanitized_doorbell_name}_chime_label",
+                    name="Call Answer Audio Path (https://)",
+                    unique_id=f"{sanitized_doorbell_name}_call_label",
                     device=device,
                     icon="mdi:format-text",
-                    default_entity_id=f"{sanitized_doorbell_name}_chime_label"
+                    default_entity_id=f"{sanitized_doorbell_name}_call_label"
                 )
-                settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell)
-                chime_label_text = Text(settings, self._chime_label_callback)
-                chime_label_text.set_availability(True)
-                self._sensors[doorbell]['chime_label'] = chime_label_text
-                '''
+                settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell, retain=True)
+                call_label_text = Text(settings, self._call_label_callback)
+                call_label_text.set_availability(True)
+                self._sensors[doorbell]['call_label'] = call_label_text
+
+                # Try to load initial value from entity's internal state
+                try:
+                    # The entity might have the value stored from Home Assistant
+                    if hasattr(call_label_text, '_entity') and hasattr(call_label_text._entity, 'value'):
+                        initial_value = call_label_text._entity.value
+                        if initial_value:
+                            doorbell._custom_call_label = initial_value
+                            logger.debug("Loaded initial call label for {}: {}", doorbell._config.name, initial_value)
+                except Exception as e:
+                    logger.debug("Could not load initial call label: {}", e)
+
 
     def _get_doorbell_from_args(self, doorbell, message):
         if isinstance(doorbell, Doorbell):
@@ -799,16 +810,15 @@ class MQTTInput():
             logger.error("Unexpected error while executing chime off: {}", e)
         '''
 
-    '''
-    def _chime_label_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
-            # 1. Attempt to resolve the doorbell
-            doorbell = self._get_doorbell_from_args(doorbell, message)
-            text_string = message.payload.decode('utf-8')
-            text_entity = cast(Text, self._sensors[doorbell]['chime_label'])
-            text_entity.set_text(text_string)
-            doorbell.last_chime_text = text_string 
-            logger.debug("Custom chime label updated for {}: {}", doorbell._config.name, text_string)
-    '''
+    def _call_label_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        text_string = message.payload.decode('utf-8')
+        text_entity = cast(Text, self._sensors[doorbell]['call_label'])
+        text_entity.set_text(text_string)
+        doorbell._custom_call_label = text_string
+        logger.debug("Custom call label updated for {}: {}", doorbell._config.name, text_string)
+
+
     def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         logger.info("Received mute audio output command for doorbell: {}", doorbell._config.name)
@@ -866,3 +876,4 @@ def get_mqtt_input():
     """Get the current MQTTInput instance"""
     global _current_instance
     return _current_instance
+

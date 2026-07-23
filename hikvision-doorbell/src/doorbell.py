@@ -492,19 +492,28 @@ class Doorbell():
 
                     messages = {
                         1: "Call cancelled",
-                        #2: "Call answered",
                         3: "Call refused",
                         4: "Ring timeout",
-                        #5: "Call ended",
                         6: "Other party busy",
                     }
 
                     if param.dwCmdType == 0:
                         logger.debug("*** THIS IS THE RING SIGNAL ***")
                     elif param.dwCmdType == 2:
-                        logger.debug("Call answered signal received. Starting voice talk...")
-                        time.sleep(1)
-                        self.start_voice_talk()
+                        logger.debug("Call answered signal received. Checking for custom call label audio...")
+                        time.sleep(0.5)
+                        
+                        # Read from the doorbell object
+                        audio_path = getattr(self, '_custom_call_label', None)
+                        
+                        if audio_path and str(audio_path).strip():
+                            clean_path = str(audio_path).strip()
+                            logger.info("Using custom call label audio path: {}", clean_path)
+                            self.start_voice_talk(audio_file_path=clean_path)
+                        else:
+                            logger.info("No custom call label text found. Just starting audio playback.")
+                            self.start_voice_talk()
+
                     elif param.dwCmdType == 5:
                         logger.debug("Call ended signal received.")
                         time.sleep(1)
@@ -638,7 +647,7 @@ class Doorbell():
             self.real_play_handle = -1
             logger.info("Video preview stopped.")
 
-    def start_voice_talk(self):
+    def start_voice_talk(self,audio_file_path=None):
         if not hasattr(self, "voice_talk_handle") or self.voice_talk_handle < 0:
             self.voice_talk_handle = self._sdk.NET_DVR_StartVoiceCom_V30(
                 self.user_id, 1, 0, None, None
@@ -650,6 +659,95 @@ class Doorbell():
                 logger.info("NET_DVR_StartVoiceCom_V30 succeeded, handle: {}", self.voice_talk_handle)
                 # Start video right along with voice for a full video call , removed for now since it may not be needed and can cause issues with some devices
                 # self.start_video_preview()
+
+                # If an audio file is provided, start streaming it in a background thread
+                if audio_file_path:
+                    import threading
+                    threading.Thread(
+                        target=self._stream_audio_file, 
+                        args=(audio_file_path,), 
+                        daemon=True
+                    ).start()
+                    
+    def _stream_audio_file(self, file_path_or_url):
+            import time
+            import os
+            import tempfile
+            import requests
+            from pydub import AudioSegment
+
+            target_path = file_path_or_url
+            temp_file = None
+
+            try:
+                if file_path_or_url.startswith("http://") or file_path_or_url.startswith("https://"):
+                    logger.info("Downloading audio from URL: {}", file_path_or_url)
+                    response = requests.get(file_path_or_url, timeout=10)
+                    response.raise_for_status()
+                    
+                    ext = os.path.splitext(file_path_or_url)[1] or ".dat"
+                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                    temp_file.write(response.content)
+                    temp_file.close()
+                    target_path = temp_file.name
+
+                logger.info("Processing fluid real-time audio stream: {}", target_path)
+                
+                # Convert explicitly to 8kHz, Mono, G.711 u-law (PCMU)
+                audio = AudioSegment.from_file(target_path)
+                audio = audio.set_frame_rate(8000).set_channels(1)
+                raw_data = audio.export(format="mulaw").read()
+
+                chunk_size = 160  # Exactly 160 bytes = 20ms frames
+                chunk_duration = 0.02
+                data_len = len(raw_data)
+                bytes_sent = 0
+
+                time.sleep(0.1)  # Initial buffer warm-up
+                
+                # High-precision pacing using target deadline tracking
+                next_time = time.perf_counter()
+
+                while hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
+                    if bytes_sent >= data_len:
+                        logger.info("Finished streaming audio file to DS-KH9310.")
+                        break
+                    
+                    chunk = raw_data[bytes_sent:bytes_sent + chunk_size]
+                    actual_len = len(chunk)
+                    if actual_len == 0:
+                        break
+                    bytes_sent += actual_len
+
+                    buf = create_string_buffer(chunk, actual_len)
+                    res = self._sdk.NET_DVR_VoiceComSendData(
+                        self.voice_talk_handle, 
+                        byref(buf), 
+                        actual_len
+                    )
+                    
+                    if not res:
+                        err_code = self._sdk.NET_DVR_GetLastError()
+                        logger.error("NET_DVR_VoiceComSendData failed. SDK Error Code: {}", err_code)
+                        break
+                    
+                    # Rigid deadline pacing to prevent cumulative drift or lagging
+                    next_time += chunk_duration
+                    sleep_duration = next_time - time.perf_counter()
+                    if sleep_duration > 0:
+                        time.sleep(sleep_duration)
+                    else:
+                        # Reset baseline if system load caused a minor stutter
+                        next_time = time.perf_counter()
+
+            except Exception as e:
+                logger.error("Exception during DS-KH9310 audio streaming: {}", e)
+            finally:
+                if temp_file and os.path.exists(temp_file.name):
+                    try:
+                        os.unlink(temp_file.name)
+                    except:
+                        pass
 
     def stop_voice_talk(self):
         if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
