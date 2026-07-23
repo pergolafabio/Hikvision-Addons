@@ -1,10 +1,11 @@
 # Changelog
 
-## 3.0.0-beta.150 - 2026-07-23
+## 3.0.0-beta.151 - 2026-07-23
 
 ### Changed
 
 - Broadcast: now also /config and /media can be used as path
+- Added ffmeg to docker for broadcasting messages
 
 ## 3.0.0-beta.149 - 2026-07-23
 
