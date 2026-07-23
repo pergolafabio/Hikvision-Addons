@@ -492,15 +492,25 @@ class Doorbell():
 
                     messages = {
                         1: "Call cancelled",
-                        2: "Call answered",
+                        #2: "Call answered",
                         3: "Call refused",
                         4: "Ring timeout",
-                        5: "Call ended",
+                        #5: "Call ended",
                         6: "Other party busy",
                     }
 
                     if param.dwCmdType == 0:
                         logger.debug("*** THIS IS THE RING SIGNAL ***")
+                    elif param.dwCmdType == 2:
+                        logger.debug("Call answered signal received. Starting voice talk...")
+                        time.sleep(1)
+                        self.start_voice_talk()
+                    elif param.dwCmdType == 5:
+                        logger.debug("Call ended signal received.")
+                        time.sleep(1)
+                        self.stop_voice_talk()
+                        time.sleep(1)
+                        self.stop_call_to_device()
                     elif param.dwCmdType in messages:
                         logger.debug(messages[param.dwCmdType])
                         self.stop_call_to_device()
@@ -554,7 +564,7 @@ class Doorbell():
             err = self._sdk.NET_DVR_GetLastError()
             raise SDKError(self._sdk, f"StartRemoteConfig failed: {err}")
 
-        logger.debug("Video call remote config started with handle: {}".format(self.config_handle))
+        logger.debug("Call remote config started with handle: {}".format(self.config_handle))
 
         # ADD THIS DELAY - like waiting for user to click "Inquest"
         logger.debug("Waiting 1 seconds before sending call...")
@@ -587,14 +597,6 @@ class Doorbell():
 
             raise SDKError(self._sdk,f"SendRemoteConfig failed: {err}")
 
-        '''
-        # keep alive for ringing
-        time.sleep(30)
-
-        stop_result = self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
-        logger.debug("StopRemoteConfig result={}".format(int(stop_result)))
-        self.config_handle = -1
-        '''
         return True
     
     def stop_call_to_device(self):
@@ -608,6 +610,55 @@ class Doorbell():
         self._sdk.NET_DVR_StopRemoteConfig(self.config_handle)
         self.config_handle = -1
         return result
+
+    def start_video_preview(self):
+        if not hasattr(self, "real_play_handle") or self.real_play_handle < 0:
+            # NET_DVR_CLIENTINFO structure configuration
+            # In a headless Python add-on, hPlayWnd is typically None (0) because there is no local window handle
+            stru_client_info = NET_DVR_CLIENTINFO()
+            memset(byref(stru_client_info), 0, sizeof(stru_client_info))
+            stru_client_info.hPlayWnd = 0  # No window handle needed for headless streaming/transcoding
+            stru_client_info.lChannel = 1  # Intercom main channel
+            stru_client_info.lLinkMode = 0 # 0: Main stream, 1: Sub stream
+            stru_client_info.sMultiCastIP = None
+
+            self.real_play_handle = self._sdk.NET_DVR_RealPlay_V30(
+                self.user_id, byref(stru_client_info), None, None, True
+            )
+            
+            if self.real_play_handle == -1:
+                err = self._sdk.NET_DVR_GetLastError()
+                logger.error("NET_DVR_RealPlay_V30 failed: {}", err)
+            else:
+                logger.info("NET_DVR_RealPlay_V30 succeeded, handle: {}", self.real_play_handle)
+
+    def stop_video_preview(self):
+        if hasattr(self, "real_play_handle") and self.real_play_handle >= 0:
+            self._sdk.NET_DVR_StopRealPlay(self.real_play_handle)
+            self.real_play_handle = -1
+            logger.info("Video preview stopped.")
+
+    def start_voice_talk(self):
+        if not hasattr(self, "voice_talk_handle") or self.voice_talk_handle < 0:
+            self.voice_talk_handle = self._sdk.NET_DVR_StartVoiceCom_V30(
+                self.user_id, 1, 0, None, None
+            )
+            if self.voice_talk_handle == -1:
+                err = self._sdk.NET_DVR_GetLastError()
+                logger.error("NET_DVR_StartVoiceCom_V30 failed: {}", err)
+            else:
+                logger.info("NET_DVR_StartVoiceCom_V30 succeeded, handle: {}", self.voice_talk_handle)
+                # Start video right along with voice for a full video call
+                self.start_video_preview()
+
+    def stop_voice_talk(self):
+        if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
+            self._sdk.NET_DVR_StopVoiceCom(self.voice_talk_handle)
+            self.voice_talk_handle = -1
+            logger.info("Voice intercom stopped.")
+        
+        # Stop video preview when the call ends
+        self.stop_video_preview()
 
     '''
     def _send_sip_packet(self, data: str):

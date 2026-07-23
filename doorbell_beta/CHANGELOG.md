@@ -1,10 +1,11 @@
 # Changelog
 
-## 3.0.0-beta.143 - 2026-07-22
+## 3.0.0-beta.145 - 2026-07-22
 
 ### Changed
 
-- Added chime on/off buttons for indoor stations (removed SIP and used SDK approach) to make it ring as a chime
+- Added Call on/off buttons for indoor stations (removed SIP and used SDK approach) to make it ring as a chime
+- Add audio talk functions, so you can speak to indoor station (chrome only)
 - Fix for exception door/com unlock
 
 ## 3.0.0-beta.141 - 2026-07-15

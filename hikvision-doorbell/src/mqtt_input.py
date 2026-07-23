@@ -3,6 +3,7 @@ import asyncio
 import os
 import base64
 import re
+import time
 from typing import Any, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
@@ -363,27 +364,27 @@ class MQTTInput():
 
             if doorbell._type is DeviceType.INDOOR:
 
-                # Chime On Button
+                # Call On Button
                 button_info = ButtonInfo(
-                    name="Chime On",
-                    unique_id=f"{sanitized_doorbell_name}_chime_on",
+                    name="Call On",
+                    unique_id=f"{sanitized_doorbell_name}_call_on",
                     device=device,
                     icon="mdi:bell-ring",
-                    default_entity_id=f"{sanitized_doorbell_name}_chime_on")
+                    default_entity_id=f"{sanitized_doorbell_name}_call_on")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
-                chime_on_button = Button(settings, self._chime_on_callback)
-                chime_on_button.set_availability(True)
+                call_on_button = Button(settings, self._call_on_callback)
+                call_on_button.set_availability(True)
 
-                # Chime Off Button
+                # Call Off Button
                 button_info = ButtonInfo(
-                    name="Chime Off",
-                    unique_id=f"{sanitized_doorbell_name}_chime_off",
+                    name="Call Off",
+                    unique_id=f"{sanitized_doorbell_name}_call_off",
                     device=device,
                     icon="mdi:bell-off",
-                    default_entity_id=f"{sanitized_doorbell_name}_chime_off")
+                    default_entity_id=f"{sanitized_doorbell_name}_call_off")
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
-                chime_off_button = Button(settings, self._chime_off_callback)
-                chime_off_button.set_availability(True)
+                call_off_button = Button(settings, self._call_off_callback)
+                call_off_button.set_availability(True)
 
                 '''
                 # Chime Custom Label Text Entity
@@ -746,9 +747,9 @@ class MQTTInput():
         except SDKError as err:
             logger.error("Error setting scene: {}", err)
 
-    def _chime_on_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+    def _call_on_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
-        logger.info("Received chime on command for doorbell: {}", doorbell._config.name)
+        logger.info("Received call on command for doorbell: {}", doorbell._config.name)
         try:
             doorbell.send_call_to_device(building=0,unit=0,floor=0,room=0, dev_index=0 )
         except SDKError as e:
@@ -772,11 +773,13 @@ class MQTTInput():
         except Exception as e:
             logger.error("Unexpected error while executing chime on: {}", e)
         '''
-    def _chime_off_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+    def _call_off_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
-        logger.info("Received chime off command for doorbell: {}", doorbell._config.name)
+        logger.info("Received call off command for doorbell: {}", doorbell._config.name)
         
         try:
+            doorbell.stop_voice_talk()
+            time.sleep(1)  # Wait for a moment to ensure the call is stopped
             doorbell.stop_call_to_device()
         except SDKError as e:
             logger.error("Failed to stop the call doorbell {}: {}", doorbell._config.name,e)
