@@ -648,8 +648,8 @@ class Doorbell():
                 logger.error("NET_DVR_StartVoiceCom_V30 failed: {}", err)
             else:
                 logger.info("NET_DVR_StartVoiceCom_V30 succeeded, handle: {}", self.voice_talk_handle)
-                # Start video right along with voice for a full video call
-                self.start_video_preview()
+                # Start video right along with voice for a full video call , removed for now since it may not be needed and can cause issues with some devices
+                # self.start_video_preview()
 
     def stop_voice_talk(self):
         if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
