@@ -15,6 +15,7 @@ stdin: true
 homeassistant_api: true
 map:
   - media:rw
+  - config:rw
 full_access: true
 
 # Default options when used as an HA App

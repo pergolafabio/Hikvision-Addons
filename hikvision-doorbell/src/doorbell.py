@@ -693,77 +693,84 @@ class Doorbell():
 
         return True
     
-
     def _stream_audio_file(self, file_path_or_url):
-        import time, os, io, tempfile, requests
-        from pydub import AudioSegment
+            import time, os, io, tempfile, requests
+            from pydub import AudioSegment
 
-        target_path = file_path_or_url
-        temp_file = None
+            target_path = file_path_or_url
+            temp_file = None
 
-        try:
-            if file_path_or_url.startswith(("http://", "https://")):
-                logger.info("Downloading audio from URL: {}", file_path_or_url)
-                response = requests.get(file_path_or_url, timeout=15)
-                response.raise_for_status()
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".audio")
-                temp_file.write(response.content)
-                temp_file.close()
-                target_path = temp_file.name
+            try:
+                # 1. Handle HTTP/HTTPS URLs
+                if file_path_or_url.startswith(("http://", "https://")):
+                    logger.info("Downloading audio from URL: {}", file_path_or_url)
+                    response = requests.get(file_path_or_url, timeout=15)
+                    response.raise_for_status()
+                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".audio")
+                    temp_file.write(response.content)
+                    temp_file.close()
+                    target_path = temp_file.name
 
-            logger.info("Converting audio for Hikvision G711 μ-law: {}", target_path)
-
-            audio = AudioSegment.from_file(target_path)
-            audio = audio.set_frame_rate(8000).set_channels(1).set_sample_width(2)
-
-            wav_buffer = io.BytesIO()
-            audio.export(wav_buffer, format="wav", codec="pcm_mulaw", parameters=["-ar", "8000", "-ac", "1"])
-            raw_data = wav_buffer.getvalue()[44:]
-
-            logger.info("Audio converted: {} Hz, {} channel, {} bytes", 8000, 1, len(raw_data))
-
-            frame_size = 160
-            frame_time = 0.020
-            time.sleep(0.5)
-            next_send = time.perf_counter()
-
-            for offset in range(0, len(raw_data), frame_size):
-                if not hasattr(self, "voice_talk_handle") or self.voice_talk_handle < 0:
-                    logger.warning("Voice handle closed during streaming")
-                    break
-
-                frame = raw_data[offset:offset + frame_size]
-                if len(frame) != frame_size:
-                    break
-
-                buf = create_string_buffer(frame, frame_size)
-                result = self._sdk.NET_DVR_VoiceComSendData(self.voice_talk_handle, byref(buf), frame_size)
-
-                if not result:
-                    err = self._sdk.NET_DVR_GetLastError()
-                    logger.error("NET_DVR_VoiceComSendData failed: {}", err)
-                    break
-
-                next_send += frame_time
-                delay = next_send - time.perf_counter()
-                if delay > 0:
-                    time.sleep(delay)
+                # 2. Handle Home Assistant / Local Paths (e.g., /config/... or /media/...)
+                elif os.path.exists(file_path_or_url):
+                    logger.info("Using local audio file path: {}", file_path_or_url)
+                    target_path = file_path_or_url
                 else:
-                    next_send = time.perf_counter()
+                    raise FileNotFoundError(f"Audio file or URL not found/accessible: {file_path_or_url}")
 
-            logger.info("Audio streaming completed")
-            time.sleep(0.2)
-            if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
-                self.stop_voice_talk()
-        except Exception:
-            logger.exception("Exception during audio streaming")
+                logger.info("Converting audio for Hikvision G711 μ-law: {}", target_path)
 
-        finally:
-            if temp_file:
-                try:
-                    os.unlink(temp_file.name)
-                except Exception:
-                    pass
+                audio = AudioSegment.from_file(target_path)
+                audio = audio.set_frame_rate(8000).set_channels(1).set_sample_width(2)
+
+                wav_buffer = io.BytesIO()
+                audio.export(wav_buffer, format="wav", codec="pcm_mulaw", parameters=["-ar", "8000", "-ac", "1"])
+                raw_data = wav_buffer.getvalue()[44:]
+
+                logger.info("Audio converted: {} Hz, {} channel, {} bytes", 8000, 1, len(raw_data))
+
+                frame_size = 160
+                frame_time = 0.020
+                time.sleep(0.5)
+                next_send = time.perf_counter()
+
+                for offset in range(0, len(raw_data), frame_size):
+                    if not hasattr(self, "voice_talk_handle") or self.voice_talk_handle < 0:
+                        logger.warning("Voice handle closed during streaming")
+                        break
+
+                    frame = raw_data[offset:offset + frame_size]
+                    if len(frame) != frame_size:
+                        break
+
+                    buf = create_string_buffer(frame, frame_size)
+                    result = self._sdk.NET_DVR_VoiceComSendData(self.voice_talk_handle, byref(buf), frame_size)
+
+                    if not result:
+                        err = self._sdk.NET_DVR_GetLastError()
+                        logger.error("NET_DVR_VoiceComSendData failed: {}", err)
+                        break
+
+                    next_send += frame_time
+                    delay = next_send - time.perf_counter()
+                    if delay > 0:
+                        time.sleep(delay)
+                    else:
+                        next_send = time.perf_counter()
+
+                logger.info("Audio streaming completed")
+                time.sleep(0.2)
+                if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
+                    self.stop_voice_talk()
+            except Exception:
+                logger.exception("Exception during audio streaming")
+
+            finally:
+                if temp_file:
+                    try:
+                        os.unlink(temp_file.name)
+                    except Exception:
+                        pass
 
     def stop_voice_talk(self):
         if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
