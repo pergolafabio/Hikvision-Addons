@@ -386,30 +386,29 @@ class MQTTInput():
                 call_off_button = Button(settings, self._call_off_callback)
                 call_off_button.set_availability(True)
 
+                # Broadcast On Button
+                button_info = ButtonInfo(
+                    name="Broadcast On",
+                    unique_id=f"{sanitized_doorbell_name}_broadcast_on",
+                    device=device,
+                    icon="mdi:bell-ring",
+                    default_entity_id=f"{sanitized_doorbell_name}_broadcast_on")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                broadcast_on_button = Button(settings, self._broadcast_on_callback)
+                broadcast_on_button.set_availability(True)
 
-                # Call Custom Label Text Entity
+                # Broadcast Custom Label Text Entity
                 text_info = TextInfo(
-                    name="Call Answer Audio Path (https://)",
-                    unique_id=f"{sanitized_doorbell_name}_call_label",
+                    name="Broadcast Audio Path (https://)",
+                    unique_id=f"{sanitized_doorbell_name}_broadcast_audio_path",
                     device=device,
                     icon="mdi:format-text",
-                    default_entity_id=f"{sanitized_doorbell_name}_call_label"
+                    default_entity_id=f"{sanitized_doorbell_name}_broadcast_audio_path"
                 )
                 settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell, retain=True)
-                call_label_text = Text(settings, self._call_label_callback)
-                call_label_text.set_availability(True)
-                self._sensors[doorbell]['call_label'] = call_label_text
-
-                # Try to load initial value from entity's internal state
-                try:
-                    # The entity might have the value stored from Home Assistant
-                    if hasattr(call_label_text, '_entity') and hasattr(call_label_text._entity, 'value'):
-                        initial_value = call_label_text._entity.value
-                        if initial_value:
-                            doorbell._custom_call_label = initial_value
-                            logger.debug("Loaded initial call label for {}: {}", doorbell._config.name, initial_value)
-                except Exception as e:
-                    logger.debug("Could not load initial call label: {}", e)
+                broadcast_audio_path_text = Text(settings, self._broadcast_audio_path_callback)
+                broadcast_audio_path_text.set_availability(True)
+                self._sensors[doorbell]['broadcast_audio_path'] = broadcast_audio_path_text
 
 
     def _get_doorbell_from_args(self, doorbell, message):
@@ -810,13 +809,29 @@ class MQTTInput():
             logger.error("Unexpected error while executing chime off: {}", e)
         '''
 
-    def _call_label_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+    def _broadcast_on_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        logger.info("Received broadcast on command for doorbell: {}", doorbell._config.name)
+
+        try:
+            audio_path = getattr(doorbell, "_custom_broadcast_audio_path", None)
+
+            if not audio_path:
+                logger.warning("No broadcast audio path configured for {}", doorbell._config.name)
+                return
+
+            doorbell.start_voice_forwarding(audio_file_path=audio_path)
+
+        except SDKError as e:
+            logger.error("Failed to broadcast to doorbell {}: {}", doorbell._config.name, e)
+
+    def _broadcast_audio_path_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)
         text_string = message.payload.decode('utf-8')
-        text_entity = cast(Text, self._sensors[doorbell]['call_label'])
+        text_entity = cast(Text, self._sensors[doorbell]['broadcast_audio_path'])
         text_entity.set_text(text_string)
-        doorbell._custom_call_label = text_string
-        logger.debug("Custom call label updated for {}: {}", doorbell._config.name, text_string)
+        doorbell._custom_broadcast_audio_path = text_string
+        logger.debug("Broadcast audio path updated for {}: {}", doorbell._config.name, text_string)
 
 
     def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
