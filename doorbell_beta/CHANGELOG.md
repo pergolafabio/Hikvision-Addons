@@ -1,11 +1,12 @@
 # Changelog
 
-## 3.0.0-beta.151 - 2026-07-23
+## 3.0.0-beta.152 - 2026-07-23
 
 ### Changed
 
 - Broadcast: now also /config and /media can be used as path
 - Added ffmeg to docker for broadcasting messages
+- Make broadcast path entity persistent
 
 ## 3.0.0-beta.149 - 2026-07-23
 
