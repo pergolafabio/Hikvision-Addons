@@ -884,7 +884,7 @@ class MQTTInput():
         text_entity.set_text(text_string)
         doorbell._custom_broadcast_audio_path = text_string
         self._set_persistent_value(doorbell, "broadcast_audio_path", text_string)
-        logger.debug("Broadcast audio path updated for {}: {}", doorbell._config.name, text_string)
+        logger.info("Broadcast audio path updated for {}: {}", doorbell._config.name, text_string)
 
 
     def _mute_audio_output_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
