@@ -6,6 +6,7 @@ import re
 import time
 from typing import Any, cast
 from config import AppConfig
+from pathlib import Path
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image, SelectInfo, Select, SwitchInfo
@@ -18,6 +19,8 @@ import xml.etree.ElementTree as ET
 from sdk.utils import SDKError
 
 _current_instance = None
+DATA_DIR = Path(os.getenv("HASSIO_DATA", "./data"))
+PERSISTENT_DATA_FILE = DATA_DIR / "persistent_data.json"
 
 class MQTTInput():
     _sensors: dict[Doorbell, dict[str, Discoverable[Any]]] = {}
@@ -397,9 +400,9 @@ class MQTTInput():
                 broadcast_on_button = Button(settings, self._broadcast_on_callback)
                 broadcast_on_button.set_availability(True)
 
-                # Broadcast Custom Label Text Entity
+                # Broadcast Audio Path Text Entity
                 text_info = TextInfo(
-                    name="Broadcast Audio Path (https://)",
+                    name="Broadcast Audio Path",
                     unique_id=f"{sanitized_doorbell_name}_broadcast_audio_path",
                     device=device,
                     icon="mdi:format-text",
@@ -410,6 +413,43 @@ class MQTTInput():
                 broadcast_audio_path_text.set_availability(True)
                 self._sensors[doorbell]['broadcast_audio_path'] = broadcast_audio_path_text
 
+    def _load_persistent_data(self):
+        try:
+            if PERSISTENT_DATA_FILE.exists():
+                with open(PERSISTENT_DATA_FILE, "r") as f:
+                    return json.load(f)
+        except Exception as e:
+            logger.warning("Failed to load persistent data: {}", e)
+
+        return {}
+
+
+    def _save_persistent_data(self, data):
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+            with open(PERSISTENT_DATA_FILE, "w") as f:
+                json.dump(data, f, indent=2)
+
+        except Exception as e:
+            logger.error("Failed to save persistent data: {}", e)
+
+    def _set_persistent_value(self, doorbell: Doorbell, key: str, value):
+        data = self._load_persistent_data()
+
+        device = data.setdefault(doorbell._config.name, {})
+        device[key] = value
+
+        self._save_persistent_data(data)
+
+
+    def _get_persistent_value(self, doorbell: Doorbell, key: str, default=None):
+        data = self._load_persistent_data()
+
+        return (
+            data.get(doorbell._config.name, {})
+                .get(key, default)
+        )
 
     def _get_doorbell_from_args(self, doorbell, message):
         if isinstance(doorbell, Doorbell):
@@ -817,10 +857,11 @@ class MQTTInput():
             audio_path = getattr(doorbell, "_custom_broadcast_audio_path", None)
 
             if not audio_path:
-                logger.warning("No broadcast audio path configured for {}", doorbell._config.name)
-                return
+                audio_path = self._get_persistent_value(doorbell,"broadcast_audio_path")
 
-            doorbell.start_voice_forwarding(audio_file_path=audio_path)
+            if audio_path:
+                doorbell._custom_broadcast_audio_path = audio_path
+                doorbell.start_voice_forwarding(audio_file_path=audio_path)
 
         except SDKError as e:
             logger.error("Failed to broadcast to doorbell {}: {}", doorbell._config.name, e)
@@ -831,6 +872,7 @@ class MQTTInput():
         text_entity = cast(Text, self._sensors[doorbell]['broadcast_audio_path'])
         text_entity.set_text(text_string)
         doorbell._custom_broadcast_audio_path = text_string
+        self._set_persistent_value(doorbell, "broadcast_audio_path", text_string)
         logger.debug("Broadcast audio path updated for {}: {}", doorbell._config.name, text_string)
 
 

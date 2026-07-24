@@ -762,8 +762,9 @@ class Doorbell():
                 time.sleep(0.2)
                 if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
                     self.stop_voice_talk()
-            except Exception:
-                logger.exception("Exception during audio streaming")
+            except requests.RequestException as e:
+                self.stop_voice_talk()
+                logger.error(f"Exception during audio streaming: {e}")
 
             finally:
                 if temp_file:
