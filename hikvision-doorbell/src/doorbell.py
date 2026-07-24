@@ -716,7 +716,14 @@ class Doorbell():
                     logger.info("Using local audio file path: {}", file_path_or_url)
                     target_path = file_path_or_url
                 else:
-                    raise FileNotFoundError(f"Audio file or URL not found/accessible: {file_path_or_url}")
+                    logger.error(
+                        "Cannot play broadcast audio. The configured audio file is missing or unreachable: {}. "
+                        "Update the 'Broadcast Audio Path' entity with a valid file path.",
+                        file_path_or_url,
+                    )
+                    self.stop_voice_talk()
+                    return
+                
 
                 logger.info("Converting audio for Hikvision G711 μ-law: {}", target_path)
 

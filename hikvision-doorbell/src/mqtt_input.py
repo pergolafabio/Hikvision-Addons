@@ -19,7 +19,11 @@ import xml.etree.ElementTree as ET
 from sdk.utils import SDKError
 
 _current_instance = None
-DATA_DIR = Path(os.getenv("HASSIO_DATA", "./data"))
+
+if Path("/data").exists():
+    DATA_DIR = Path("/data")       # Home Assistant add-on persistent storage
+else:
+    DATA_DIR = Path("./data")      # Local VS Code testing
 PERSISTENT_DATA_FILE = DATA_DIR / "persistent_data.json"
 
 class MQTTInput():
@@ -440,6 +444,7 @@ class MQTTInput():
         device = data.setdefault(doorbell._config.name, {})
         device[key] = value
 
+        logger.debug("Saving persistent value {}={} to {}",key,value,PERSISTENT_DATA_FILE)
         self._save_persistent_data(data)
 
 
@@ -862,6 +867,12 @@ class MQTTInput():
             if audio_path:
                 doorbell._custom_broadcast_audio_path = audio_path
                 doorbell.start_voice_forwarding(audio_file_path=audio_path)
+            else:
+                logger.warning(
+                    "No broadcast audio path configured for doorbell: {}. "
+                    "Please set a broadcast_audio_path before using the broadcast command.",
+                    doorbell._config.name,
+                )
 
         except SDKError as e:
             logger.error("Failed to broadcast to doorbell {}: {}", doorbell._config.name, e)
