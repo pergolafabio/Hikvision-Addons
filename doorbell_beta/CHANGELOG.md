@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.154 - 2026-07-26
+
+### Changed
+
+- Added Broadcast off button
+
 ## 3.0.0-beta.153 - 2026-07-23
 
 ### Changed
