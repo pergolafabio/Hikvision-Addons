@@ -404,6 +404,17 @@ class MQTTInput():
                 broadcast_on_button = Button(settings, self._broadcast_on_callback)
                 broadcast_on_button.set_availability(True)
 
+                # Broadcast Off Button
+                button_info = ButtonInfo(
+                    name="Broadcast Off",
+                    unique_id=f"{sanitized_doorbell_name}_broadcast_off",
+                    device=device,
+                    icon="mdi:bell-off",
+                    default_entity_id=f"{sanitized_doorbell_name}_broadcast_off")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                broadcast_off_button = Button(settings, self._broadcast_off_callback)
+                broadcast_off_button.set_availability(True)
+
                 # Broadcast Audio Path Text Entity
                 text_info = TextInfo(
                     name="Broadcast Audio Path",
@@ -873,6 +884,20 @@ class MQTTInput():
                     "Please set a broadcast_audio_path before using the broadcast command.",
                     doorbell._config.name,
                 )
+
+        except SDKError as e:
+            logger.error("Failed to broadcast to doorbell {}: {}", doorbell._config.name, e)
+
+    def _broadcast_off_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        doorbell = self._get_doorbell_from_args(doorbell, message)
+        logger.info("Received broadcast off command for doorbell: {}", doorbell._config.name)
+
+        try:
+            doorbell.stop_voice_talk()
+        except SDKError as e:
+            logger.error("Failed to stop the broadcast for doorbell {}: {}", doorbell._config.name,e)
+        except Exception:
+            logger.error("Unexpected error stopping broadcast for doorbell {}",doorbell._config.name)
 
         except SDKError as e:
             logger.error("Failed to broadcast to doorbell {}: {}", doorbell._config.name, e)
