@@ -35,7 +35,7 @@ configuration:
       scenes:
         name: Scenes
         description: >-
-          (optional) Poll scenes/alarm state every 15 seconds, only for Indoor Panels that support scenes
+          (optional) Poll scenes/alarm state every 15 seconds by default, only for Indoor Panels that support scenes
       call_state_poll:
         name: Call State Poll Interval
         description: >-

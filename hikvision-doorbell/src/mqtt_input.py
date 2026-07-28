@@ -243,6 +243,8 @@ class MQTTInput():
                 scene_sensor.set_availability(True)
                 self._sensors[doorbell]['scene_sensor'] = scene_sensor
 
+                scene_state_poll_sec = doorbell._config.scene_state_poll
+
                 async def poll_scene_sensor(d: Doorbell, s: Sensor):
                     while True:
                         try:
@@ -251,13 +253,13 @@ class MQTTInput():
                             if len(root) > 0 and root[0].text is not None:
                                 element = root[0].text
                                 s.set_state(element)
-                                logger.info("Scene poll sensor: {}", element)
+                                logger.info("Polling scene sensor every {} sec, found scene: {}", scene_state_poll_sec, element)
                             else:
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
                         except Exception as e:
                             logger.error("Error polling scene sensor for {}: {}", d._config.name, e)
                         
-                        await asyncio.sleep(15)
+                        await asyncio.sleep(scene_state_poll_sec)
                 
                 loop = asyncio.get_event_loop()
                 # Store the task using the doorbell as the key
@@ -277,6 +279,8 @@ class MQTTInput():
                 alarm_sensor.set_availability(True)
                 self._sensors[doorbell]['alarm_sensor'] = alarm_sensor
 
+                alarm_state_poll_sec = doorbell._config.alarm_state_poll
+
                 async def poll_alarm_sensor(d: Doorbell, a: Sensor):
                     while True:
                         try:
@@ -285,13 +289,13 @@ class MQTTInput():
                             if len(root) > 0 and root[0].text is not None:
                                 element = root[0].text
                                 a.set_state(element)
-                                logger.info("Alarm poll sensor: {}", element)
+                                logger.info("Polling alarm sensor every {} sec, found alarm: {}", alarm_state_poll_sec, element)
                             else:
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
                         except Exception as e:
                             logger.error("Error polling alarm sensor for {}: {}", d._config.name, e)
                         
-                        await asyncio.sleep(15)
+                        await asyncio.sleep(alarm_state_poll_sec)
 
                 loop = asyncio.get_event_loop()
                 # Store the task using the doorbell as the key

@@ -42,6 +42,8 @@ schema:
       output_relays: "int?"
       scenes: "bool?"
       call_state_poll: "int?"
+      scene_state_poll: "int?"
+      alarm_state_poll: "int?"
   system:
     log_level: match(^ERROR|WARNING|INFO|DEBUG$)
     sdk_log_level: match(^NONE|ERROR|INFO|DEBUG$)?
