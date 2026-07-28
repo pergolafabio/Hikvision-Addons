@@ -1,11 +1,13 @@
 import asyncio
 import json
 import sys
+import time
 from typing import Callable
 from loguru import logger
 
 from doorbell import Doorbell, Registry
 from sdk.utils import SDKError
+from mqtt_input import get_mqtt_input
 
 
 async def connect_stdin():
@@ -67,6 +69,25 @@ class InputReader():
         except RuntimeError:
             # Ignore error to avoid crashing application
             pass
+
+    def _send_call(self, doorbell: Doorbell, command: str):
+        mqtt_input = get_mqtt_input()
+
+        if command.lower() == "on":
+            mqtt_input._call_on_callback(None, doorbell, None)
+
+        elif command.lower() == "off":
+            mqtt_input._call_off_callback(None, doorbell, None)
+
+    def _send_broadcast(self, doorbell: Doorbell, command: str):
+        mqtt_input = get_mqtt_input()
+
+        if command.lower() == "on":
+            mqtt_input._broadcast_on_callback(None, doorbell, None)
+
+        elif command.lower() == "off":
+            mqtt_input._broadcast_off_callback(None, doorbell, None)
+
 
     def _send_callstatus(self, doorbell: Doorbell, command: str):
         url = "/ISAPI/VideoIntercom/callStatus?format=json"
@@ -204,6 +225,18 @@ class InputReader():
             case "backlightAuto":
                 logger.info("Turning backlight AUTO")
                 self._send_backlight_mode(doorbell, "auto")
+            case "callOn":
+                logger.info("Turning Call ON")
+                self._send_call(doorbell, "on")
+            case "callOff":
+                logger.info("Turning Call OFF")
+                self._send_call(doorbell, "off")
+            case "broadcastOn":
+                logger.info("Turning Broadcast ON")
+                self._send_broadcast(doorbell, "on")
+            case "broadcastOff":
+                logger.info("Turning Broadcast OFF")
+                self._send_broadcast(doorbell, "off")
             case "debug":
                 # This is a special command that accept the name of a method,
                 # calls the method on the doorbell instance and outputs the result
