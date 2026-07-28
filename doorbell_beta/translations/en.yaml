@@ -40,7 +40,14 @@ configuration:
         name: Call State Poll Interval
         description: >-
           (optional) Make the call state poll every x sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer...
-#  Translation for the 'system' section
+      scene_state_poll:
+        name: Scene State Poll Interval
+        description: >-
+          (optional) Make the scene state poll every x sec, default to 15, scene toggle needs to be enabled to activate the polling
+      alarm_state_poll:
+        name: Alarm State Poll Interval
+        description: >-
+          (optional) Make the alarm state poll every x sec, default to 15, scene toggle needs to be enabled to activate the polling
   system:
     name: System
     description: >-
