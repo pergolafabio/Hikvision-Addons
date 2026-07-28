@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-beta.155 - 2026-07-28
+
+### Changed
+
+- Added custom alarm/scene polling interval when scenes are enabled
+- Added tty inputs for call/broadcast
+
 ## 3.0.0-beta.154 - 2026-07-26
 
 ### Changed
