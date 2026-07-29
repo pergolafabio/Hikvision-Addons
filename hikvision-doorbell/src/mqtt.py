@@ -166,6 +166,10 @@ class MQTTHandler(EventHandler):
 
                 call_state_poll_sec = doorbell._config.call_state_poll
 
+                if call_state_poll_sec == 0:
+                    logger.warning("call_state_poll_sec is 0. Automatically setting it to 15 seconds.")
+                    call_state_poll_sec = 15
+
                 async def poll_call_sensor(d=doorbell, c=call_sensor):
 
                     url = "/ISAPI/VideoIntercom/callStatus?format=json"
