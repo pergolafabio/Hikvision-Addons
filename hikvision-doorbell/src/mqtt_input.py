@@ -245,6 +245,10 @@ class MQTTInput():
 
                 scene_state_poll_sec = doorbell._config.scene_state_poll
 
+                if scene_state_poll_sec == 0:
+                    logger.warning("scene_state_poll_sec is 0. Automatically setting it to 15 seconds.")
+                    scene_state_poll_sec = 15
+
                 async def poll_scene_sensor(d: Doorbell, s: Sensor):
                     while True:
                         try:
@@ -280,6 +284,10 @@ class MQTTInput():
                 self._sensors[doorbell]['alarm_sensor'] = alarm_sensor
 
                 alarm_state_poll_sec = doorbell._config.alarm_state_poll
+
+                if alarm_state_poll_sec == 0:
+                    logger.warning("alarm_state_poll_sec is 0. Automatically setting it to 15 seconds.")
+                    alarm_state_poll_sec = 15
 
                 async def poll_alarm_sensor(d: Doorbell, a: Sensor):
                     while True:
