@@ -32,6 +32,10 @@ configuration:
         name: Output Relays
         description: >-
           (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
+      snapshot:
+        name: Snapshot
+        description: >-
+          (optional) Take a snapshot when a call is received
       scenes:
         name: Scenes
         description: >-

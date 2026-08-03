@@ -548,9 +548,13 @@ class MQTTHandler(EventHandler):
                             
                     except Exception as e:
                         logger.error(f"Failed to take auto-snapshot: {e}")
-                
-                # Start the snapshot task without waiting for it
-                asyncio.create_task(take_and_publish_snapshot())
+
+                if doorbell._config.snapshot is True:
+                    # Start the snapshot task without waiting for it
+                    logger.info(f"Auto snapshot enabled for doorbell: {doorbell._config.name}")
+                    asyncio.create_task(take_and_publish_snapshot())
+                else:
+                    logger.info(f"Auto snapshot disabled for doorbell: {doorbell._config.name}")
 
                 # After 60 seconds, put the sensor back to idle
                 await asyncio.sleep(60)

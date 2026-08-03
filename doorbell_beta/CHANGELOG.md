@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.158 - 2026-08-03
+
+### Changed
+
+- Make "take snapshot" an option with doorbell ring event
+
 ## 3.0.0-beta.156 - 2026-07-28
 
 ### Changed

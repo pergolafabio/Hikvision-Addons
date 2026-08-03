@@ -92,6 +92,7 @@ class AppConfig(GoodConf):
         username: str
         password: str
         output_relays: Optional[int] = None
+        snapshot: Optional[bool] = False
         scenes: Optional[bool] = False
         call_state_poll: Optional[int] = None
         scene_state_poll: Optional[int] = 15
