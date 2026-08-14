@@ -159,10 +159,10 @@ def call_ISAPI(sdk: CDLL, user_id: int, http_method: str, url: str, requestBody:
 
     if not result:
         # The response status is populated only in case of error
-        logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8"))
+        logger.debug("Response status: {}", responseStatusBuffer.value.decode("utf-8", errors="replace"))
         raise SDKError(sdk, f"Error while calling ISAPI {url}")
 
-    logger.debug("Response output: {}", outputBuffer.value.decode("utf-8"))
+    logger.debug("Response output: {}", outputBuffer.value.decode("utf-8", errors="replace"))
 
     return outputStruct
 
@@ -180,7 +180,7 @@ class SDKError(RuntimeError):
         """
         super().__init__(*args)
         error_code = sdk.NET_DVR_GetLastError()
-        error_message: str = sdk.NET_DVR_GetErrorMsg(c_long(error_code)).decode('utf-8')
+        error_message: str = sdk.NET_DVR_GetErrorMsg(c_long(error_code)).decode('utf-8', errors='replace')
         
         # Prepend the three parameters to the rest of the tuple in args
         self.args = (user_message, error_code, error_message, *self.args)

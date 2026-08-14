@@ -976,6 +976,8 @@ class MQTTInput():
             text_entity.set_attributes(attributes)
         except SDKError as err:
             logger.error("Error while invoking ISAPI endpoint: {}", err)
+        except Exception as err:
+            logger.error("Unexpected error while invoking ISAPI endpoint: {}", err)
 
 def get_mqtt_input():
     """Get the current MQTTInput instance"""

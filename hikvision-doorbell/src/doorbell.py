@@ -863,7 +863,7 @@ class Doorbell():
         output_char_p = cast(outputBuffer, c_char_p)
 
         # If there is no response in output (it may have errored out) return empty string
-        response_body = output_char_p.value.decode("utf-8") if output_char_p.value else ""
+        response_body = output_char_p.value.decode("utf-8", errors="replace") if output_char_p.value else ""
 
         return response_body
 
@@ -942,7 +942,7 @@ class Doorbell():
             )
             if not result:
                 raise SDKError(self._sdk, "Error while getting device ability")
-            response_xml = output_buffer.value.decode('utf-8')
+            response_xml = output_buffer.value.decode('utf-8', errors='replace')
             logger.debug("Response url for sdk_device_ability: {}", response_xml)
 
             # Parse the XML response
