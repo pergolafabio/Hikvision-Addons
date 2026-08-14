@@ -7,9 +7,6 @@
    <a href="https://img.shields.io/badge/aarch64-yes-green.svg">
       <img alt="Supports aarch64 Architecture" src="https://img.shields.io/badge/aarch64-yes-green.svg">
    </a>
-   <a href="https://img.shields.io/badge/i386-yes-green.svg">
-      <img alt="Supports i386 Architecture" src="https://img.shields.io/badge/i386-yes-green.svg">
-   </a>
 </p>
 
 Connect your Hikvision IP door stations to Home Assistant to receive events (like motion detection or incoming calls) and send back commands (like opening a door connected to the door station relay or rejecting a call).

@@ -13,9 +13,6 @@
    <a href="https://img.shields.io/badge/aarch64-yes-green.svg">
       <img alt="Supports aarch64 Architecture" src="https://img.shields.io/badge/aarch64-yes-green.svg">
    </a>
-   <a href="https://img.shields.io/badge/i386-yes-green.svg">
-      <img alt="Supports i386 Architecture" src="https://img.shields.io/badge/i386-yes-green.svg">
-   </a>
 </p>
 
 This repository can be added to an Home Assistant OS installation.
