@@ -44,7 +44,7 @@ def loadSDK() -> CDLL:
     logger.info(f"Using OS: {platform.uname()[0]} with architecture: {platform.uname()[4]}")
 
     if platform.uname()[0] == "Windows":
-        hcnetsdk_path = ".\lib-windows64\HCNetSDK.dll"
+        hcnetsdk_path = r".\lib-windows64\HCNetSDK.dll"
     elif platform.uname()[0] == "Linux":
         if platform.uname()[4] == "x86_64":
             hcnetsdk_path = os.path.join("lib-amd64", "libhcnetsdk.so")

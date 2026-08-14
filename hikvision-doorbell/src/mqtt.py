@@ -340,14 +340,14 @@ class MQTTHandler(EventHandler):
             logger.info("Access control event: {} found with event: {}", major_alarm.name.lower(), minor_alarm.name.lower())
             match minor_alarm.name:
                 case "MINOR_FACE_VERIFY_PASS":
-                    logger.debug("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name.lower(), door_id, employee_id)
+                    logger.debug("Minor control event {} found on door {}; employee identifier omitted", minor_alarm.name.lower(), door_id)
                     attributes = {
                         'employee_id': employee_id,
                     }
                     trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", payload=attributes)
                     self.handle_device_trigger(doorbell, trigger)
                 case "MINOR_FINGERPRINT_COMPARE_PASS":
-                    logger.debug("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name.lower(), door_id, employee_id)
+                    logger.debug("Minor control event {} found on door {}; employee identifier omitted", minor_alarm.name.lower(), door_id)
                     attributes = {
                         'employee_id': employee_id,
                     }
@@ -373,7 +373,12 @@ class MQTTHandler(EventHandler):
         if alarm_info.dwAlarmDataLen > 0:
             alarmData = alarm_info.pAlarmData.decode('utf-8', errors='ignore')
             data_type = "JSON" if alarm_info.byDataType == 1 else "XML"
-            logger.info(f"Isapi alarm ({data_type}) from {doorbell._config.name}: with Alarm Data: {alarmData}") 
+            logger.info(
+                "ISAPI alarm ({}) from {} received ({} bytes); raw payload omitted",
+                data_type,
+                doorbell._config.name,
+                len(alarmData.encode("utf-8")),
+            )
             try:
                 parsed_json = json.loads(alarmData)
                 event_name = parsed_json.get("eventType", "isapi_event")
@@ -401,7 +406,11 @@ class MQTTHandler(EventHandler):
             """
             Helper function to update the sensor and device trigger of a given door
             """
-            logger.info("Door {} unlocked by {} , updating sensor and device trigger", door_id+1, control_source)
+            logger.info(
+                "Door {} unlocked using {}; access identifier omitted",
+                door_id + 1,
+                unlock_name,
+            )
             entity_id = f'door_{door_id}'
             door_sensor = cast(Switch, self._sensors[doorbell].get(entity_id))
             last_unlocked = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -439,9 +448,9 @@ class MQTTHandler(EventHandler):
 
                 try:
                     unlock_name = UnlockType(unlock_type).name
-                    print(f"Unlock Method: {unlock_name}")
+                    logger.debug("Unlock method: {}", unlock_name)
                 except ValueError:
-                    print(f"Unknown unlock type: {unlock_type}")
+                    logger.debug("Unknown unlock type: {}", unlock_type)
                     unlock_name = "Unknown"
 
                 
@@ -657,7 +666,12 @@ class MQTTHandler(EventHandler):
         # Cast to know type DeviceTrigger
         device_trigger = cast(DeviceTrigger, device_trigger)
         # Trigger the event
-        logger.info("Invoking device trigger automation{}", trigger)
+        logger.info(
+            "Invoking device trigger automation name={} type={} subtype={}",
+            trigger["name"],
+            trigger["type"],
+            trigger["subtype"],
+        )
         
         # Serialize the payload, if provided as part of the trigger
         json_payload = json.dumps(trigger['payload']) if trigger.get('payload') else None
@@ -665,5 +679,4 @@ class MQTTHandler(EventHandler):
 
 def get_mqtt_handler():
     """Get the current MQTTHandler instance"""
-    global _current_mqtt_handler
     return _current_mqtt_handler

@@ -104,8 +104,7 @@ class Doorbell():
             logger.warning("Unknown device type: {}", self._device_info.wDevType)
 
         logger.debug("Login returned user ID: {}", self.user_id)
-        logger.debug("Doorbell serial number: {}, device type: {}",
-                     self._device_info.serialNumber(), self._type.name)
+        logger.debug("Doorbell device type: {}; serial number omitted", self._type.name)
         logger.info("Connected to doorbell: {} type: {}", self._config.name, self._type.name)
 
     def setup_alarm(self):

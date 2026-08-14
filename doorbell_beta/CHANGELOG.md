@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0-beta.159 - 2026-08-14
+
+### Security
+
+- Removed unnecessary full host and Home Assistant API access.
+- Removed the unused Home Assistant configuration mount and deprecated i386 metadata.
+- Updated vulnerable HTTP dependencies and removed development tools from the runtime image.
+- Prevented access-control identifiers and raw ISAPI payloads from being written to logs.
+
 ## 3.0.0-beta.158 - 2026-08-03
 
 ### Changed

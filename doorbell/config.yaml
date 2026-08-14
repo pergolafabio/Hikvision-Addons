@@ -1,22 +1,18 @@
 name: Hikvision Doorbell
 description: Connect your Hikvision doorbells to Home Assistant
-version: '3.0.33'
+version: '3.0.34'
 image: ghcr.io/pergolafabio/hikvision-doorbell
 slug: hikvision_doorbell
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell
 arch:
 - amd64
-- i386
 - aarch64
 stage: stable
 startup: application
 boot: auto
 stdin: true
-homeassistant_api: true
 map:
   - media:rw
-  - config:rw
-full_access: true
 
 # Default options when used as an HA App
 options:

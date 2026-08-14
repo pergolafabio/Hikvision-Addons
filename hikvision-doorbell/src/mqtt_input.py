@@ -981,6 +981,4 @@ class MQTTInput():
 
 def get_mqtt_input():
     """Get the current MQTTInput instance"""
-    global _current_instance
     return _current_instance
-

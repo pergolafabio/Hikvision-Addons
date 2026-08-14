@@ -1,10 +1,9 @@
-FROM python:3.10.8-slim AS builder
+FROM python:3.10.18-slim-bullseye AS builder
 
 ARG BUILD_ARCH
 WORKDIR /build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
     libffi-dev \
     gcc \
     libc6-dev \
@@ -16,7 +15,7 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 
 # Build final image
-FROM python:3.10.8-slim
+FROM python:3.10.18-slim-bullseye
 
 ARG BUILD_ARCH
 WORKDIR /app

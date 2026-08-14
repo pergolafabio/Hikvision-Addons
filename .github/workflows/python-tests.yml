@@ -30,8 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -r requirements-dev.txt
       working-directory: ./hikvision-doorbell
     - name: Lint with flake8
       run: |
@@ -184,4 +183,3 @@ jobs:
             echo "Loaded image.tar"
 
             echo -n "" | docker run -i -e SYSTEM__LOG_LEVEL -e SYSTEM__SDK_LOG_LEVEL hikvision-doorbell:latest
-
