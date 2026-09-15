@@ -11,7 +11,7 @@ from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image, SelectInfo, Select, SwitchInfo
 from loguru import logger
-from mqtt import extract_device_info
+from mqtt import extract_device_info, _register_reconnect_handler
 from paho.mqtt.client import MQTTMessage
 from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
 import xml.etree.ElementTree as ET
@@ -68,6 +68,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             reboot_button = Button(settings, self._reboot_callback)
             reboot_button.set_availability(True)
+            _register_reconnect_handler(reboot_button)
             
             # Consider only indoor units for the next sensors
             # if doorbell._type is not DeviceType.INDOOR:
@@ -84,6 +85,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             reject_button = Button(settings, self._reject_call_callback)
             reject_button.set_availability(True)
+            _register_reconnect_handler(reject_button)
 
             ###########
             # Hangup call button
@@ -96,6 +98,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             hangup_button = Button(settings, self._hangup_call_callback)
             hangup_button.set_availability(True)
+            _register_reconnect_handler(hangup_button)
             
             ###########
             # Answer call button
@@ -108,6 +111,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             answer_button = Button(settings, self._answer_call_callback)
             answer_button.set_availability(True)
+            _register_reconnect_handler(answer_button)
 
             ###########
             # Mute audio output button
@@ -120,6 +124,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             mute_button = Button(settings, self._mute_audio_output_callback)
             mute_button.set_availability(True)
+            _register_reconnect_handler(mute_button)
 
             ###########
             # Unmute audio output button
@@ -132,6 +137,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             unmute_button = Button(settings, self._unmute_audio_output_callback)
             unmute_button.set_availability(True)
+            _register_reconnect_handler(unmute_button)
 
             ###########
             # ISAPI request input text
@@ -145,6 +151,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell)
             isapi_text = Text(settings, self._isapi_input_callback)
             isapi_text.set_availability(True)
+            _register_reconnect_handler(isapi_text)
             self._sensors[doorbell]['isapi_text'] = isapi_text
      
             ###########
@@ -158,6 +165,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             caller_info_button = Button(settings, self._caller_info_callback)
             caller_info_button.set_availability(True)
+            _register_reconnect_handler(caller_info_button)
             self._sensors[doorbell]['caller_info'] = caller_info_button
             
             ###########
@@ -171,6 +179,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             call_status_button = Button(settings, self._call_status_callback)
             call_status_button.set_availability(True)
+            _register_reconnect_handler(call_status_button)
             self._sensors[doorbell]['call_status'] = call_status_button
 
             # if not doorbell._type is DeviceType.INDOOR:
@@ -185,6 +194,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
             take_snapshot_button = Button(settings, self._take_snapshot_callback)
             take_snapshot_button.set_availability(True)
+            _register_reconnect_handler(take_snapshot_button)
             self._sensors[doorbell]['take_snapshot'] = take_snapshot_button
 
             ###########
@@ -201,6 +211,7 @@ class MQTTInput():
             settings = Settings(mqtt=mqtt_settings, entity=image_info, manual_availability=True)
             snapshot_image = Image(settings)
             snapshot_image.set_availability(True)
+            _register_reconnect_handler(snapshot_image)
             self._sensors[doorbell]['snapshot_image'] = snapshot_image
             
             # Store the image topic for publishing
@@ -224,6 +235,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=select_info, manual_availability=True, user_data=doorbell)
                 mode_select = Select(settings, self._backlight_mode_callback)
                 mode_select.set_availability(True)
+                _register_reconnect_handler(mode_select)
 
 
             ##################
@@ -241,6 +253,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=scene_sensor_info, manual_availability=True, user_data=doorbell)
                 scene_sensor = Sensor(settings)
                 scene_sensor.set_availability(True)
+                _register_reconnect_handler(scene_sensor)
                 self._sensors[doorbell]['scene_sensor'] = scene_sensor
 
                 scene_state_poll_sec = doorbell._config.scene_state_poll
@@ -281,6 +294,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=alarm_sensor_info, manual_availability=True, user_data=doorbell)
                 alarm_sensor = Sensor(settings)
                 alarm_sensor.set_availability(True)
+                _register_reconnect_handler(alarm_sensor)
                 self._sensors[doorbell]['alarm_sensor'] = alarm_sensor
 
                 alarm_state_poll_sec = doorbell._config.alarm_state_poll
@@ -320,6 +334,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 at_home_button = Button(settings, self._at_home_callback)
                 at_home_button.set_availability(True)
+                _register_reconnect_handler(at_home_button)
 
                 ###########
                 # goOut Button
@@ -332,6 +347,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 go_out_button = Button(settings, self._go_out_callback)
                 go_out_button.set_availability(True)
+                _register_reconnect_handler(go_out_button)
 
                 ###########
                 # goToBed Button
@@ -344,6 +360,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 go_to_bed_button = Button(settings, self._go_to_bed_callback)
                 go_to_bed_button.set_availability(True)
+                _register_reconnect_handler(go_to_bed_button)
 
                 ###########
                 # custom Button
@@ -356,6 +373,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 custom_button = Button(settings, self._custom_callback)
                 custom_button.set_availability(True)
+                _register_reconnect_handler(custom_button)
 
                 ###########
                 # setupAlarm Button
@@ -368,6 +386,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 setupAlarm_button = Button(settings, self._setupAlarm_callback)
                 setupAlarm_button.set_availability(True)
+                _register_reconnect_handler(setupAlarm_button)
 
                 ###########
                 # closeAlarm Button
@@ -380,6 +399,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 closeAlarm_button = Button(settings, self._closeAlarm_callback)
                 closeAlarm_button.set_availability(True)
+                _register_reconnect_handler(closeAlarm_button)
 
             if doorbell._type is DeviceType.INDOOR:
 
@@ -393,6 +413,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 call_on_button = Button(settings, self._call_on_callback)
                 call_on_button.set_availability(True)
+                _register_reconnect_handler(call_on_button)
 
                 # Call Off Button
                 button_info = ButtonInfo(
@@ -404,6 +425,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 call_off_button = Button(settings, self._call_off_callback)
                 call_off_button.set_availability(True)
+                _register_reconnect_handler(call_off_button)
 
                 # Broadcast On Button
                 button_info = ButtonInfo(
@@ -415,6 +437,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 broadcast_on_button = Button(settings, self._broadcast_on_callback)
                 broadcast_on_button.set_availability(True)
+                _register_reconnect_handler(broadcast_on_button)
 
                 # Broadcast Off Button
                 button_info = ButtonInfo(
@@ -426,6 +449,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
                 broadcast_off_button = Button(settings, self._broadcast_off_callback)
                 broadcast_off_button.set_availability(True)
+                _register_reconnect_handler(broadcast_off_button)
 
                 # Broadcast Audio Path Text Entity
                 text_info = TextInfo(
@@ -438,6 +462,7 @@ class MQTTInput():
                 settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell, retain=True)
                 broadcast_audio_path_text = Text(settings, self._broadcast_audio_path_callback)
                 broadcast_audio_path_text.set_availability(True)
+                _register_reconnect_handler(broadcast_audio_path_text)
                 self._sensors[doorbell]['broadcast_audio_path'] = broadcast_audio_path_text
 
     def _load_persistent_data(self):

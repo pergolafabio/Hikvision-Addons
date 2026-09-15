@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.162 - 2026-09-15
+
+### Added
+
+- MQTT connection lost/restore functionality
+
 ## 3.0.0-beta.161 - 2026-09-15
 
 ### Fix

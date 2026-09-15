@@ -31,6 +31,36 @@ from sdk.utils import SDKError
 
 _current_mqtt_handler = None
 
+_mqtt_broker_online = True
+"""Global flag tracking whether the MQTT broker connection is currently up, used to avoid duplicate log lines"""
+
+def _register_reconnect_handler(entity: Discoverable) -> None:
+    """
+    Make sure an entity is marked available again after its MQTT client reconnects
+    (e.g. after the MQTT broker was restarted), and log the broker online/offline
+    transitions once globally instead of per-entity.
+    """
+    client = entity.mqtt_client
+    existing_on_connect = client.on_connect
+
+    def on_connect(client, userdata, flags, reason_code, properties=None):
+        global _mqtt_broker_online
+        if not _mqtt_broker_online:
+            logger.info("MQTT broker connection restored, entities back online")
+        _mqtt_broker_online = True
+        entity.set_availability(True)
+        if existing_on_connect:
+            existing_on_connect(client, userdata, flags, reason_code, properties)
+
+    def on_disconnect(client, userdata, *args):
+        global _mqtt_broker_online
+        if _mqtt_broker_online:
+            logger.info("MQTT broker connection lost, entities will be unavailable until it reconnects")
+        _mqtt_broker_online = False
+
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+
 def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
     """Build and instance of DeviceInfo from the ISAPI /deviceinfo endpoint, if available, otherwise skip populating additional fields"""
     try:
@@ -158,6 +188,7 @@ class MQTTHandler(EventHandler):
             call_sensor = Sensor(settings)
             call_sensor.set_state("idle")
             call_sensor.set_availability(True)
+            _register_reconnect_handler(call_sensor)
             self._sensors[doorbell]['call'] = call_sensor
 
             # If polling is defined, create a loop to update the call state periodically
@@ -237,6 +268,7 @@ class MQTTHandler(EventHandler):
                 door_switch = Switch(settings, lambda client, _, message, d=doorbell, i=door_id: self.door_switch_callback(client, (d, i), message))
                 door_switch.off()
                 door_switch.set_availability(True)
+                _register_reconnect_handler(door_switch)
                 self._sensors[doorbell][f'door_{door_id}'] = door_switch
 
             ##################
@@ -258,6 +290,7 @@ class MQTTHandler(EventHandler):
                     com_switch = Switch(settings, lambda client, _, message, d=doorbell, i=com_id: self.com_switch_callback(client, (d, i), message))
                     com_switch.off()
                     com_switch.set_availability(True)
+                    _register_reconnect_handler(com_switch)
                     self._sensors[doorbell][f'com_{com_id}'] = com_switch
 
     def com_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
