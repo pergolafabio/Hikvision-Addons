@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.160 - 2026-09-15
+
+### Fix
+
+- Memory leak in call_ISAPI: ctypes cast() creates reference cycles on the 1 MB buffers
+
 ## 3.0.0-beta.159 - 2026-08-24
 
 ### Added

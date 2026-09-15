@@ -1,5 +1,5 @@
 
-from ctypes import CDLL, POINTER, c_char, c_char_p, c_int, c_long, c_void_p, cast, cdll, sizeof
+from ctypes import CDLL, POINTER, addressof, create_string_buffer, c_char, c_char_p, c_int, c_long, c_void_p, cast, cdll, sizeof
 from ctypes.wintypes import LPVOID
 from enum import IntEnum
 import os
@@ -129,14 +129,16 @@ def call_ISAPI(sdk: CDLL, user_id: int, http_method: str, url: str, requestBody:
 
     urlSize = (c_char * 256)()
 
-    requestUrlBuffer = bytes(inUrl, "ascii")
-    inputStruct.lpRequestUrl = cast(c_char_p(requestUrlBuffer), c_void_p)
+    # addressof() instead of cast(): cast() links the buffer into its own _objects dict, creating a
+    # reference cycle that only the cyclic GC can free. With 2x1MB buffers per call and polling every few
+    # seconds that leaked hundreds of MB between GC runs. See GH issue #371.
+    requestUrlBuffer = create_string_buffer(bytes(inUrl, "ascii"))
+    inputStruct.lpRequestUrl = addressof(requestUrlBuffer)
     inputStruct.dwRequestUrlLen = len(urlSize)
 
-    inputBuffer = bytes(requestBody, "ascii")
-
-    inputStruct.lpInBuffer = cast(c_char_p(inputBuffer), c_void_p)
-    inputStruct.dwInBufferSize = len(inputBuffer)
+    inputBuffer = create_string_buffer(bytes(requestBody, "ascii"))
+    inputStruct.lpInBuffer = addressof(inputBuffer)
+    inputStruct.dwInBufferSize = len(requestBody)
 
     inputStruct.dwSize = sizeof(inputStruct)
 
@@ -144,15 +146,17 @@ def call_ISAPI(sdk: CDLL, user_id: int, http_method: str, url: str, requestBody:
     outputStruct = NET_DVR_XML_CONFIG_OUTPUT()
     outputBufferSize = 1024 * 1024
     responseStatusBuffer = (c_char * outputBufferSize)()
-    outputStruct.lpStatusBuffer = cast(responseStatusBuffer, c_void_p)
+    outputStruct.lpStatusBuffer = addressof(responseStatusBuffer)
     outputStruct.dwStatusSize = outputBufferSize
 
     outputSize = (1024 * 1024)
     outputBuffer = (c_char * outputSize)()
 
-    outputStruct.lpOutBuffer = cast(outputBuffer, c_void_p)
+    outputStruct.lpOutBuffer = addressof(outputBuffer)
     outputStruct.dwOutBufferSize = outputSize
     outputStruct.dwSize = sizeof(outputStruct)
+    # Keep the buffers alive for as long as the caller holds the output struct (plain refcount, no cycle)
+    outputStruct._buffers = (outputBuffer, responseStatusBuffer, requestUrlBuffer, inputBuffer)
 
     # Do the actual call
     result = sdk.NET_DVR_STDXMLConfig(user_id, inputStruct, outputStruct)
