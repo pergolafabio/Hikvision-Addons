@@ -1,4 +1,4 @@
-FROM python:3.10.8-slim AS builder
+FROM python:3.10.21-slim-bookworm AS builder
 
 ARG BUILD_ARCH
 WORKDIR /build
@@ -16,13 +16,13 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 
 # Build final image
-FROM python:3.10.8-slim
+FROM python:3.10.21-slim-bookworm
 
 ARG BUILD_ARCH
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libffi7 \
+    libffi8 \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 

@@ -5,6 +5,7 @@
 ### Fix
 
 - Memory leak in call_ISAPI: ctypes cast() creates reference cycles on the 1 MB buffers
+- 3.10.21-slim-bookworm
 
 ## 3.0.0-beta.159 - 2026-08-24
 
