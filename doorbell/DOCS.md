@@ -22,6 +22,8 @@ For each of your doorbells, repeat the following configuration:
 | output_relays   | 2             | (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
 | scenes          | false         | (optional) Extra Scene buttons for indoor panels
 | call_state_poll | 5             | (optional) Make the call state poll every 5 sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer... 
+| scene_state_poll | 15           | (optional) Make the scene state poll every 15 sec if scenes are enabled
+| alarm_state_poll | 15           | (optional) Make the alarm state poll every 15 sec if scenes are enabled
 
 
 #### Example config
@@ -103,6 +105,8 @@ For each of your doorbells, the following entities are available:
   - `Reject call`
   - `Reboot`
   - `Take Snapshot` (Grabs a snapshot from the outdoor station and updates the image entity)
+  - `Broadcast` (Plays a custom audio file on an indoor panel)
+  - `Call` (Start a call on an indoor panel and you can also speak (not working with HA Addon, audio card is needed))
   - ...
 - Device triggers (depending on device model)
   - `Motion detected`
@@ -201,7 +205,11 @@ The input string must be in the format
   | callerInfo | Manually get the Caller Info
   | backlightOn | Manually turn on the backlight
   | backlightOff | Manually turn off the backlight
-  | backlightAuto | Define auto mode on the backlight 
+  | backlightAuto | Define auto mode on the backlight
+  | callOn | Start an audio call
+  | callOff | Stops the audio call
+  | broadcastOn | Start an broadcast
+  | broadcastOff | Stops the broadcast
 
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 

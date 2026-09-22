@@ -30,6 +30,9 @@ You feedback is very welcome! If you have any doubt, would like to report an iss
 - Remote scenes / alarm / zone support such as **atHome**/**goOut**/**goToBed**/**custom** on indoor stations
 - Take a snapshot on incoming call
 - Control the backlight of your outdoor station
+- Broadcast an audio file to an indoor station
+- Making a call with an indoor panel with audio
+- ...
 
 ### Example
 
@@ -81,6 +84,7 @@ If your device is not on the list, we are happy to include it. Just [open an iss
 - DS-K1T670M
 - DS-KB8113
 - DS-KV9503 (no call event)
+- DS-K1T344
 - Seems other rebranded devices confirmed working like: VDM10 made by Metzler 
 - ...
 - This is just a confirmed list, probably other devices are working too...

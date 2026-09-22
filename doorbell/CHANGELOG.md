@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.0.34 - 2026-09-22
+
+### Change
+
+- Added MQTT connection lost/restore event in logbook
+- Fixed Memory leak in call_ISAPI: ctypes cast() creates reference cycles on the 1 MB buffers
+- Using now: 3.10.21-slim-bookworm
+- Add support for: K1T344
+- Make "take snapshot" an option with doorbell ring event
+- Added custom alarm/scene polling interval when scenes are enabled
+- Added tty inputs for call/broadcast
+- Added Broadcast Function for indoor stations, so you can make the indoor station play a sound, usefull with tts service function for example
+- Added call buttons, so you can actually speak to an indoor panel (not working as addon, since there is no audio hardware)
+- Fix for exception door/com unlock
+
 ## 3.0.33 - 2026-02-17
 
 ### Change
