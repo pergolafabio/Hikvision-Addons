@@ -513,23 +513,21 @@ class MQTTInput():
         # 2. Make it vowel-blind
         vowel_blind_topic = re.sub(r'[aeiou]', '', clean_topic)
 
+        # 3. Try exact match first across all doorbells
         for d in self._doorbells.values():
-            # 3. Clean the config name.
             clean_name = sanitize_doorbell_name(d._config.name)
-            
-            # Try exact match first
             if clean_name and clean_name in clean_topic:
                 return d
-                
-            # 4. Try vowel-blind match:
+
+        # 4. Try vowel-blind match fallback across all doorbells
+        for d in self._doorbells.values():
+            clean_name = sanitize_doorbell_name(d._config.name)
             vowel_blind_name = re.sub(r'[aeiou]', '', clean_name)
-            
-            # Now 'vowel-blind' name WILL be found in 'hmdbutton...'
             if vowel_blind_name and vowel_blind_name in vowel_blind_topic:
                 return d
-                
-        # If we get here, log the failure and return None (which causes the crash)
-        logger.error(f"NO MATCH! Vowel-blind Name: {vowel_blind_name} | Vowel-blind Topic: {vowel_blind_topic}")
+
+        # If we get here, log the failure and return None
+        logger.error(f"NO MATCH! Clean Topic: {clean_topic} | Vowel-blind Topic: {vowel_blind_topic}")
         return None
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
