@@ -479,10 +479,14 @@ class MQTTHandler(EventHandler):
                     print(f"Unknown unlock type: {unlock_type}")
                     unlock_name = "Unknown"
 
-                # For face unlocks the control source holds the employee number of the recognized person
-                user_name = None
-                if unlock_name == UnlockType.FACE.name and control_source_decoded:
-                    user_name = doorbell.get_user_name(control_source_decoded)
+                # The control source holds the card number for card unlocks, and also for face unlocks of
+                # users who have a card. For other face unlocks it holds the employee number.
+                employee_no = None
+                if unlock_name in (UnlockType.FACE.name, UnlockType.CARD.name) and control_source_decoded:
+                    employee_no = doorbell.get_card_employee_no(control_source_decoded)
+                    if not employee_no and unlock_name == UnlockType.FACE.name:
+                        employee_no = control_source_decoded
+                user_name = doorbell.get_user_name(employee_no) if employee_no else None
 
                 # card_number = alarm_info.uEventInfo.struAuthInfo.cardNo()
                 # Name of the entity inside the dict array containing all the sensors
