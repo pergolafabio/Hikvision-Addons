@@ -430,7 +430,7 @@ class MQTTHandler(EventHandler):
             buffer_length,
             user_pointer: c_void_p):
 
-        async def update_door_entities(door_id: str, control_source: str, control_source_decoded: str, unlock_name: str, card_user_id: int):
+        async def update_door_entities(door_id: str, control_source: str, control_source_decoded: str, unlock_name: str, card_user_id: int, user_name: Optional[str] = None):
             """
             Helper function to update the sensor and device trigger of a given door
             """
@@ -445,6 +445,8 @@ class MQTTHandler(EventHandler):
                 'card_user_id': card_user_id,
                 'last_unlocked': last_unlocked,
             }
+            if user_name:
+                attributes['name'] = user_name
             door_sensor.set_attributes(attributes)
             door_sensor.on()
             logger.debug("Doorbell updating sensor {}", door_sensor)
@@ -477,7 +479,11 @@ class MQTTHandler(EventHandler):
                     print(f"Unknown unlock type: {unlock_type}")
                     unlock_name = "Unknown"
 
-                
+                # For face unlocks the control source holds the employee number of the recognized person
+                user_name = None
+                if unlock_name == UnlockType.FACE.name and control_source_decoded:
+                    user_name = doorbell.get_user_name(control_source_decoded)
+
                 # card_number = alarm_info.uEventInfo.struAuthInfo.cardNo()
                 # Name of the entity inside the dict array containing all the sensors
                 entity_id = f'door_{door_id}'
@@ -491,9 +497,9 @@ class MQTTHandler(EventHandler):
                     # logger.debug("Changing switches back to OFF position")
                     num_doors = doorbell.get_num_outputs()
                     for door_id in range(num_doors):
-                        await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id)
+                        await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id, user_name)
                     return
-                await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id)
+                await update_door_entities(door_id, control_source, control_source_decoded, unlock_name, card_user_id, user_name)
 
             case VideoInterComEventType.ILLEGAL_CARD_SWIPING_EVENT:
                 control_source = alarm_info.uEventInfo.struUnlockRecord.controlSource()

@@ -182,3 +182,30 @@ def test_unlock_door_isapi(mock_doorbell: Doorbell):
     # Check that ISAPI call has been made
     mock_doorbell._sdk.NET_DVR_STDXMLConfig.assert_called_once()   # type: ignore 
 """
+
+class TestGetUserName:
+    def test_found(self, mock_doorbell: Doorbell, mocker: MockerFixture):
+        response = json.dumps({"UserInfoSearch": {"responseStatusStrg": "OK", "numOfMatches": 1,
+                                                  "UserInfo": [{"employeeNo": "2", "name": "David"}]}})
+        call_isapi = mocker.patch.object(mock_doorbell, '_call_isapi', return_value=response)
+
+        assert mock_doorbell.get_user_name("2") == "David"
+        method, url, body = call_isapi.call_args.args
+        assert (method, url) == ("POST", "/ISAPI/AccessControl/UserInfo/Search?format=json")
+        assert json.loads(body)["UserInfoSearchCond"]["EmployeeNoList"] == [{"employeeNo": "2"}]
+
+    def test_not_found(self, mock_doorbell: Doorbell, mocker: MockerFixture):
+        response = json.dumps({"UserInfoSearch": {"responseStatusStrg": "NO MATCH", "numOfMatches": 0}})
+        mocker.patch.object(mock_doorbell, '_call_isapi', return_value=response)
+
+        assert mock_doorbell.get_user_name("9") is None
+
+    def test_not_supported(self, mock_doorbell: Doorbell, mocker: MockerFixture):
+        mocker.patch.object(mock_doorbell, '_call_isapi', side_effect=SDKError(mock_doorbell._sdk, "not supported"))
+
+        assert mock_doorbell.get_user_name("1") is None
+
+    def test_invalid_response(self, mock_doorbell: Doorbell, mocker: MockerFixture):
+        mocker.patch.object(mock_doorbell, '_call_isapi', return_value="")
+
+        assert mock_doorbell.get_user_name("1") is None
