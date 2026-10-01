@@ -1037,6 +1037,38 @@ class Doorbell():
         xml_string = self._call_isapi("GET", "/ISAPI/System/deviceInfo")
         return ET.fromstring(xml_string)
 
+    def get_user_name(self, employee_no: str) -> Optional[str]:
+        """Look up the name of the access control user with the given employee number.
+        Return None if the device does not support it or the user is not found"""
+        request_body = json.dumps({"UserInfoSearchCond": {
+            "searchID": "1",
+            "searchResultPosition": 0,
+            "maxResults": 1,
+            "EmployeeNoList": [{"employeeNo": employee_no}]}})
+        try:
+            response = self._call_isapi("POST", "/ISAPI/AccessControl/UserInfo/Search?format=json", request_body)
+            users = json.loads(response)["UserInfoSearch"].get("UserInfo", [])
+        except (SDKError, ValueError, KeyError) as err:
+            logger.debug("Unable to look up user {}: {}", employee_no, err)
+            return None
+        return users[0].get("name") if users else None
+
+    def get_card_employee_no(self, card_no: str) -> Optional[str]:
+        """Look up the employee number of the access control user the given card belongs to.
+        Return None if the device does not support it or the card is not found"""
+        request_body = json.dumps({"CardInfoSearchCond": {
+            "searchID": "1",
+            "searchResultPosition": 0,
+            "maxResults": 1,
+            "CardNoList": [{"cardNo": card_no}]}})
+        try:
+            response = self._call_isapi("POST", "/ISAPI/AccessControl/CardInfo/Search?format=json", request_body)
+            cards = json.loads(response)["CardInfoSearch"].get("CardInfo", [])
+        except (SDKError, ValueError, KeyError) as err:
+            logger.debug("Unable to look up card {}: {}", card_no, err)
+            return None
+        return cards[0].get("employeeNo") if cards else None
+
     def get_audio_out_settings(self):
         """Retrieve audio output seetings of channel 1 (volume of the output and talk volume) using the ISAPI endpoint.
         Return the parsed XML document"""

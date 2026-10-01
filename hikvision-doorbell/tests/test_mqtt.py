@@ -8,7 +8,7 @@ from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler, extract_device_info
 from ha_mqtt_discoverable import DeviceInfo
 import xml.etree.ElementTree as ET
 
-from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VideoInterComAlarmType
+from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VideoInterComAlarmType, UnlockType
 from sdk.utils import SDKError
 
 
@@ -179,3 +179,88 @@ class TestDeviceTrigger:
 
         asyncio.run(handler.video_intercom_alarm(mocked_doorbell, 0, None, video_intercom_alarm, 0, None))
     '''
+
+
+class TestUnlockUserName:
+    @pytest.fixture(autouse=True)
+    def current_event_loop(self):
+        # The handler fixture schedules its polling task on the current event loop, which asyncio.run()
+        # in earlier tests leaves unset. The events themselves run in asyncio.run(), so that task never runs.
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        yield
+        loop.close()
+
+    def _unlock_event(self, mocker: MockerFixture, unlock_type: UnlockType, decoded: str = "1"):
+        event = mocker.patch('sdk.hcnetsdk.NET_DVR_VIDEO_INTERCOM_EVENT')
+        event.byEventType = VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
+        record = event.uEventInfo.struUnlockRecord
+        record.wLockID = 0
+        record.controlSource = lambda: "4900"
+        record.controlSource_decoded = lambda: decoded
+        record.byUnlockType = unlock_type.value
+        record.dwCardUserID = 0
+        mocker.patch('mqtt.asyncio.sleep')
+        return event
+
+    def test_face_unlock_adds_name(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        event = self._unlock_event(mocker, UnlockType.FACE)
+        mocked_doorbell.get_card_employee_no.return_value = None
+        mocked_doorbell.get_user_name.return_value = "Alice"
+
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, event, 0, c_void_p(None)))
+
+        mocked_doorbell.get_user_name.assert_called_once_with("1")
+        attributes = handler._sensors[mocked_doorbell]['door_0'].set_attributes.call_args.args[0]
+        assert attributes['name'] == "Alice"
+
+    def test_face_unlock_with_card_number(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        event = self._unlock_event(mocker, UnlockType.FACE, decoded="1234567890")
+        mocked_doorbell.get_card_employee_no.return_value = "1"
+        mocked_doorbell.get_user_name.return_value = "Alice"
+
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, event, 0, c_void_p(None)))
+
+        mocked_doorbell.get_user_name.assert_called_once_with("1")
+        attributes = handler._sensors[mocked_doorbell]['door_0'].set_attributes.call_args.args[0]
+        assert attributes['name'] == "Alice"
+
+    def test_face_unlock_unknown_user(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        event = self._unlock_event(mocker, UnlockType.FACE)
+        mocked_doorbell.get_card_employee_no.return_value = None
+        mocked_doorbell.get_user_name.return_value = None
+
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, event, 0, c_void_p(None)))
+
+        attributes = handler._sensors[mocked_doorbell]['door_0'].set_attributes.call_args.args[0]
+        assert 'name' not in attributes
+
+    def test_card_unlock_adds_name(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        event = self._unlock_event(mocker, UnlockType.CARD, decoded="1234567890")
+        mocked_doorbell.get_card_employee_no.return_value = "1"
+        mocked_doorbell.get_user_name.return_value = "Alice"
+
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, event, 0, c_void_p(None)))
+
+        mocked_doorbell.get_card_employee_no.assert_called_once_with("1234567890")
+        mocked_doorbell.get_user_name.assert_called_once_with("1")
+        attributes = handler._sensors[mocked_doorbell]['door_0'].set_attributes.call_args.args[0]
+        assert attributes['name'] == "Alice"
+
+    def test_unknown_card_skips_user_lookup(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        event = self._unlock_event(mocker, UnlockType.CARD, decoded="123")
+        mocked_doorbell.get_card_employee_no.return_value = None
+
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, event, 0, c_void_p(None)))
+
+        mocked_doorbell.get_user_name.assert_not_called()
+        attributes = handler._sensors[mocked_doorbell]['door_0'].set_attributes.call_args.args[0]
+        assert 'name' not in attributes
+
+    def test_other_unlock_skips_lookup(self, mocked_doorbell: Doorbell, handler: MQTTHandler, mocker: MockerFixture):
+        event = self._unlock_event(mocker, UnlockType.HOUSEHOLDER)
+
+        asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, event, 0, c_void_p(None)))
+
+        mocked_doorbell.get_user_name.assert_not_called()
+        mocked_doorbell.get_card_employee_no.assert_not_called()

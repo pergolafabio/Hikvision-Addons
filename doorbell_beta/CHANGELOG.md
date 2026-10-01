@@ -1,11 +1,17 @@
 # Changelog
 
+## 3.0.0-beta.164 - 2026-09-28
+
+### Added
+
+- Add name as attribute in the event when door is unlocked with badge/face
+
 ## 3.0.0-beta.163 - 2026-09-28
+
+### Added
 
 - Fix: Commands for "Innen OG" are sent to "Innen EG" – vowel-blind name matching in _get_doorbell_from_args confuses doorbells whose names differ only in vowels
 
-
-### Added
 
 ## 3.0.0-beta.162 - 2026-09-15
 
