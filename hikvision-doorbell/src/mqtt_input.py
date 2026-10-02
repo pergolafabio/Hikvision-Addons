@@ -728,8 +728,13 @@ class MQTTInput():
         """Publish snapshot image to MQTT image entity"""
         try:
             with open(image_path, 'rb') as f:
-                image_data = f.read()
-            
+                self.publish_image(doorbell, f.read())
+        except Exception as e:
+            logger.error("Failed to publish snapshot image: {}", e)
+
+    def publish_image(self, doorbell: Doorbell, image_data: bytes):
+        """Publish a JPEG to the Latest Snapshot image entity"""
+        try:
             # Encode image to base64
             image_base64 = base64.b64encode(image_data).decode('utf-8')
             
