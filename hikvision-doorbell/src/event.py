@@ -265,7 +265,10 @@ class EventManager:
         # Cast the alarm_info pointer to the correct Python class
         alarm_info = self._cast_alarm_info(command, alarm_info_pointer)
         if isinstance(alarm_info, NET_DVR_VIDEO_INTERCOM_EVENT):
-            alarm_info.picture = event_picture(alarm_info)
+            # The handlers may run after the callback has returned and the SDK has reused the buffer
+            picture = event_picture(alarm_info)
+            alarm_info = NET_DVR_VIDEO_INTERCOM_EVENT.from_buffer_copy(alarm_info)
+            alarm_info.picture = picture
 
         # Invoke the registered handlers on the main asyncio loop
         future = asyncio.run_coroutine_threadsafe(

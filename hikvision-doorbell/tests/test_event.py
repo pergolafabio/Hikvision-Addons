@@ -31,6 +31,13 @@ def test_no_picture():
     assert event_picture(event) is None
 
 
+def test_length_without_pointer():
+    event = NET_DVR_VIDEO_INTERCOM_EVENT()
+    event.byEventType = VideoInterComEventType.UNLOCK_LOG
+    event.uEventInfo.struUnlockRecord.dwPicDataLen = 100
+    assert event_picture(event) is None
+
+
 def test_other_event_type():
     event, _ = _event(VideoInterComEventType.MAGNETIC_DOOR_STATUS, 'struUnlockRecord', b'\xff\xd8')
     assert event_picture(event) is None
