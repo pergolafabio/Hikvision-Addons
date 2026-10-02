@@ -1,12 +1,29 @@
 """Manage events coming from the Hikvision devices"""
 import asyncio
-from ctypes import CDLL, CFUNCTYPE, POINTER, c_void_p, cast
+from ctypes import CDLL, CFUNCTYPE, POINTER, c_void_p, cast, string_at
+from typing import Optional
 from typing_extensions import override
 from loguru import logger
 from doorbell import Doorbell, Registry
 
-from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, DWORD, LONG, NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, NET_DVR_ALARM_ISAPI_INFO, NET_DVR_ACS_ALARM_INFO, COMM_ISAPI_ALARM, COMM_ALARM_ACS, MessageCallbackAlarmInfoUnion
+from sdk.hcnetsdk import ALARMINFO_V30_ALARMTYPE_MOTION_DETECTION, BOOL, COMM_ALARM_V30, COMM_ALARM_VIDEO_INTERCOM, COMM_UPLOAD_VIDEO_INTERCOM_EVENT, DWORD, LONG, NET_DVR_ALARMER, NET_DVR_ALARMINFO_V30, NET_DVR_VIDEO_INTERCOM_ALARM, NET_DVR_VIDEO_INTERCOM_EVENT, NET_DVR_ALARM_ISAPI_INFO, NET_DVR_ACS_ALARM_INFO, COMM_ISAPI_ALARM, COMM_ALARM_ACS, MessageCallbackAlarmInfoUnion, VIDEO_INTERCOM_EVENT_EVENTTYPE_AUTHENTICATION_LOG, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
 from sdk.utils import SDKError
+
+
+def event_picture(alarm_info) -> Optional[bytes]:
+    """Return the JPEG attached to an unlock or authentication event, or None.
+    It has to be copied inside the SDK callback, the SDK frees the buffer when the callback returns"""
+    if not isinstance(alarm_info, NET_DVR_VIDEO_INTERCOM_EVENT):
+        return None
+    if alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG:
+        record = alarm_info.uEventInfo.struUnlockRecord
+    elif alarm_info.byEventType == VIDEO_INTERCOM_EVENT_EVENTTYPE_AUTHENTICATION_LOG:
+        record = alarm_info.uEventInfo.struAuthInfo
+    else:
+        return None
+    if not record.dwPicDataLen or not record.pImage:
+        return None
+    return string_at(record.pImage, record.dwPicDataLen)
 
 
 class EventHandler:
@@ -247,6 +264,8 @@ class EventManager:
 
         # Cast the alarm_info pointer to the correct Python class
         alarm_info = self._cast_alarm_info(command, alarm_info_pointer)
+        if isinstance(alarm_info, NET_DVR_VIDEO_INTERCOM_EVENT):
+            alarm_info.picture = event_picture(alarm_info)
 
         # Invoke the registered handlers on the main asyncio loop
         future = asyncio.run_coroutine_threadsafe(
