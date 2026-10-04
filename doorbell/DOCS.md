@@ -208,7 +208,7 @@ The input string must be in the format
   | backlightAuto | Define auto mode on the backlight
   | callOn | Start an audio call
   | callOff | Stops the audio call
-  | broadcastOn | Start an broadcast
+  | broadcastOn | Start a broadcast. Audio file must be under `/media` or `/config` (URLs are not fetched)
   | broadcastOff | Stops the broadcast
 
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 

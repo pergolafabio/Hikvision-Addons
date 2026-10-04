@@ -15,6 +15,37 @@ from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG
 from sdk.utils import SDKError, call_ISAPI
 import xml.etree.ElementTree as ET
 
+ALLOWED_BROADCAST_ROOTS = ("/media", "/config")
+
+
+def resolve_broadcast_audio_path(file_path_or_url: Optional[str]) -> str:
+    """Return a local path under /media or /config.
+
+    Raises ValueError for empty values, URLs, relative paths, and anything
+    that resolves outside those roots (including ``/media/../etc/passwd``).
+    Does not check that the file exists.
+    """
+    if file_path_or_url is None:
+        raise ValueError("Broadcast audio path is empty")
+    value = str(file_path_or_url).strip()
+    if not value:
+        raise ValueError("Broadcast audio path is empty")
+    if "://" in value:
+        raise ValueError(
+            "Broadcast audio path must be a local file under /media or /config, not a URL"
+        )
+    if not value.startswith("/"):
+        raise ValueError("Broadcast audio path must be under /media or /config")
+    try:
+        resolved = os.path.realpath(value)
+    except OSError as exc:
+        raise ValueError(f"Broadcast audio path is invalid: {exc}") from exc
+    for root in ALLOWED_BROADCAST_ROOTS:
+        root_real = os.path.realpath(root)
+        if resolved == root_real or resolved.startswith(root_real + os.sep):
+            return resolved
+    raise ValueError("Broadcast audio path must be under /media or /config")
+
 
 class DeviceType(IntEnum):
     OUTDOOR = 603
@@ -695,37 +726,32 @@ class Doorbell():
         return True
     
     def _stream_audio_file(self, file_path_or_url):
-            import time, os, io, tempfile, requests
+            import time, os, io
             from pydub import AudioSegment
 
-            target_path = file_path_or_url
-            temp_file = None
+            try:
+                target_path = resolve_broadcast_audio_path(file_path_or_url)
+            except ValueError as e:
+                logger.error(
+                    "Cannot play broadcast audio: {}. "
+                    "Set 'Broadcast Audio Path' to a file under /media or /config.",
+                    e,
+                )
+                self.stop_voice_talk()
+                return
+
+            if not os.path.exists(target_path):
+                logger.error(
+                    "Cannot play broadcast audio. The configured audio file is missing or unreachable: {}. "
+                    "Update the 'Broadcast Audio Path' entity with a valid file path.",
+                    target_path,
+                )
+                self.stop_voice_talk()
+                return
+
+            logger.info("Using local audio file path: {}", target_path)
 
             try:
-                # 1. Handle HTTP/HTTPS URLs
-                if file_path_or_url.startswith(("http://", "https://")):
-                    logger.info("Downloading audio from URL: {}", file_path_or_url)
-                    response = requests.get(file_path_or_url, timeout=15)
-                    response.raise_for_status()
-                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".audio")
-                    temp_file.write(response.content)
-                    temp_file.close()
-                    target_path = temp_file.name
-
-                # 2. Handle Home Assistant / Local Paths (e.g., /config/... or /media/...)
-                elif os.path.exists(file_path_or_url):
-                    logger.info("Using local audio file path: {}", file_path_or_url)
-                    target_path = file_path_or_url
-                else:
-                    logger.error(
-                        "Cannot play broadcast audio. The configured audio file is missing or unreachable: {}. "
-                        "Update the 'Broadcast Audio Path' entity with a valid file path.",
-                        file_path_or_url,
-                    )
-                    self.stop_voice_talk()
-                    return
-                
-
                 logger.info("Converting audio for Hikvision G711 μ-law: {}", target_path)
 
                 audio = AudioSegment.from_file(target_path)
@@ -770,16 +796,9 @@ class Doorbell():
                 time.sleep(0.2)
                 if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
                     self.stop_voice_talk()
-            except requests.RequestException as e:
+            except Exception as e:
                 self.stop_voice_talk()
-                logger.error(f"Exception during audio streaming: {e}")
-
-            finally:
-                if temp_file:
-                    try:
-                        os.unlink(temp_file.name)
-                    except Exception:
-                        pass
+                logger.error("Exception during audio streaming: {}", e)
 
     def stop_voice_talk(self):
         if hasattr(self, "voice_talk_handle") and self.voice_talk_handle >= 0:
