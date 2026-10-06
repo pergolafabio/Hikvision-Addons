@@ -56,7 +56,7 @@ __NOTE__: To use this _stable_ version, enable __Advanced mode__ in you Home Ass
      </p>
 - Click the following button to automatically open the app in you Home Assistance UI:
    <p align="center">
-      <a href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell_beta&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons" target="_blank">
+      <a href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=aff2db71_hikvision_doorbell&repository_url=https%3A%2F%2Fgithub.com%2Fpergolafabio%2FHikvision-Addons" target="_blank">
          <img src="https://my.home-assistant.io/badges/supervisor_addon.svg" alt="Open your Home Assistant instance and show the dashboard of a Supervisor app." />
       </a>
    </p>
@@ -65,7 +65,7 @@ __NOTE__: To use this _stable_ version, enable __Advanced mode__ in you Home Ass
    - Open you Home Assistance interface, and navigate to `Settings` -> `Apps` -> `Apps store` -> `Repositories` (in the upper-right corner)
    - Paste the following URL in the input field: `https://github.com/pergolafabio/Hikvision-Addons`
    - Confirm the dialog by clicking **ADD**.
-   - **Hikvision Doorbell (Beta)** should be available in the _app store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _appss_ -> _apps store_).
+   - **Hikvision Doorbell** should be available in the _app store_ of your Home Assistant. (If it is not visible after some minutes, reload the store page by navigating to _Settings_ -> _appss_ -> _apps store_).
 - Select the **Hikvision Doorbell ** app, then click **INSTALL**.
 - Have a look at the **Documentation** tab of the app to setup the required configuration and to understand how this app can be integrated in Home Assistant
 (The documentation can also be browsed online in the [Github repository](DOCS.md)).
