@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.165 - 2026-10-07
+
+### Added
+
+- Publish the picture of unlock and authentication events to the Latest Snapshot image (thanks @lackas)
+
 ## 3.0.0-beta.164 - 2026-09-28
 
 ### Added
