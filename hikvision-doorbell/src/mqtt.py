@@ -464,6 +464,11 @@ class MQTTHandler(EventHandler):
             logger.warning("Received unknown Event type: {}", alarm_info.byEventType)
             return
         
+        picture = getattr(alarm_info, 'picture', None)
+        if isinstance(picture, bytes):
+            logger.debug("Event picture of {} bytes received for event {} on {}", len(picture), event_type.name.lower(), doorbell._config.name)
+            self._publish_event_picture(doorbell, picture)
+
         match event_type:
             case VideoInterComEventType.UNLOCK_LOG:
                 door_id = alarm_info.uEventInfo.struUnlockRecord.wLockID
@@ -474,9 +479,9 @@ class MQTTHandler(EventHandler):
 
                 try:
                     unlock_name = UnlockType(unlock_type).name
-                    print(f"Unlock Method: {unlock_name}")
+                    logger.debug("Unlock Method: {}", unlock_name)
                 except ValueError:
-                    print(f"Unknown unlock type: {unlock_type}")
+                    logger.warning("Received unknown unlock type: {}", unlock_type)
                     unlock_name = "Unknown"
 
                 # The control source holds the card number for card unlocks, and also for face unlocks of
@@ -527,6 +532,14 @@ class MQTTHandler(EventHandler):
                 
                 logger.info("Video intercom event {} detected on {}", event_type.name.lower(), doorbell._config.name)
                 self.handle_device_trigger(doorbell, DEVICE_TRIGGERS_DEFINITIONS_EVENT[event_type])
+
+    def _publish_event_picture(self, doorbell: Doorbell, picture: bytes):
+        """Show the picture the device took for the event in the Latest Snapshot image entity"""
+        from mqtt_input import get_mqtt_input
+        mqtt_input = get_mqtt_input()
+        if mqtt_input and doorbell in mqtt_input._sensors:
+            logger.debug("Publishing {} byte event picture for {}", len(picture), doorbell._config.name)
+            mqtt_input.publish_image(doorbell, picture)
 
     @override
     async def video_intercom_alarm(
