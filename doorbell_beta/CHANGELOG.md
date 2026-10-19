@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.166 - 2026-10-19
+
+### Fix
+
+- excessive connections to Mosquitto server
+
 ## 3.0.0-beta.165 - 2026-10-07
 
 ### Added

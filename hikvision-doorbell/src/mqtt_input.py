@@ -11,7 +11,7 @@ from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from ha_mqtt_discoverable import Settings, Discoverable
 from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, SensorInfo, Sensor, ImageInfo, Image, SelectInfo, Select, SwitchInfo
 from loguru import logger
-from mqtt import extract_device_info, _register_reconnect_handler
+from mqtt import extract_device_info, _register_reconnect_handler, get_shared_client
 from paho.mqtt.client import MQTTMessage
 from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
 import xml.etree.ElementTree as ET
@@ -36,11 +36,13 @@ class MQTTInput():
 
         self._doorbells = doorbells
         logger.debug("Setting up MQTTInput")
+        shared_client = get_shared_client(config)
         mqtt_settings = Settings.MQTT(
             host=config.host,
             port=config.port,
             username=config.username,
-            password=config.password
+            password=config.password,
+            client=shared_client
         )
 
         # Initialize storage

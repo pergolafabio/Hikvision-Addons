@@ -5,6 +5,7 @@ from typing import Any, Optional, TypedDict, cast
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, sanitize_doorbell_name
 from event import EventHandler
+import paho.mqtt.client as mqtt
 from paho.mqtt.client import MQTTMessage
 from ha_mqtt_discoverable import Settings, DeviceInfo, Discoverable
 from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, SensorInfo, Sensor, SwitchInfo, Switch, DeviceTrigger, DeviceTriggerInfo
@@ -34,32 +35,44 @@ _current_mqtt_handler = None
 _mqtt_broker_online = True
 """Global flag tracking whether the MQTT broker connection is currently up, used to avoid duplicate log lines"""
 
+_shared_client = None
+_registered_entities = {}
+
+def get_shared_client(config):
+    global _shared_client
+    if not _shared_client:
+        _shared_client = mqtt.Client()
+        if config.username:
+            _shared_client.username_pw_set(config.username, config.password)
+        if getattr(config, 'ssl', False):
+            _shared_client.tls_set()
+        try:
+            _shared_client.connect(config.host, config.port)
+            _shared_client.loop_start()
+        except Exception:
+            pass
+    return _shared_client
+
+def _on_connect(client, userdata, *args):
+    global _mqtt_broker_online
+    if not _mqtt_broker_online:
+        logger.info("MQTT broker connection restored, entities back online")
+    _mqtt_broker_online = True
+    for e in _registered_entities.values():
+        e.set_availability(True)
+        if hasattr(e, '_command_topic'):
+            client.subscribe(e._command_topic, qos=1)
+
+def _on_disconnect(client, userdata, *args):
+    global _mqtt_broker_online
+    if _mqtt_broker_online:
+        logger.info("MQTT broker connection lost, entities will be unavailable until it reconnects")
+    _mqtt_broker_online = False
+
 def _register_reconnect_handler(entity: Discoverable) -> None:
-    """
-    Make sure an entity is marked available again after its MQTT client reconnects
-    (e.g. after the MQTT broker was restarted), and log the broker online/offline
-    transitions once globally instead of per-entity.
-    """
-    client = entity.mqtt_client
-    existing_on_connect = client.on_connect
-
-    def on_connect(client, userdata, flags, reason_code, properties=None):
-        global _mqtt_broker_online
-        if not _mqtt_broker_online:
-            logger.info("MQTT broker connection restored, entities back online")
-        _mqtt_broker_online = True
-        entity.set_availability(True)
-        if existing_on_connect:
-            existing_on_connect(client, userdata, flags, reason_code, properties)
-
-    def on_disconnect(client, userdata, *args):
-        global _mqtt_broker_online
-        if _mqtt_broker_online:
-            logger.info("MQTT broker connection lost, entities will be unavailable until it reconnects")
-        _mqtt_broker_online = False
-
-    client.on_connect = on_connect
-    client.on_disconnect = on_disconnect
+    _registered_entities[entity.config_topic] = entity
+    entity.mqtt_client.on_connect = _on_connect
+    entity.mqtt_client.on_disconnect = _on_disconnect
 
 def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
     """Build and instance of DeviceInfo from the ISAPI /deviceinfo endpoint, if available, otherwise skip populating additional fields"""
@@ -152,12 +165,14 @@ class MQTTHandler(EventHandler):
         # Initialize task storage at the start
         self._call_sensor_tasks: dict[Doorbell, asyncio.Task] = {}
         
-        # Save the MQTT settings as an attribute
+        # Save the MQTT settings as an attribute with the shared client
+        self._client = get_shared_client(config)
         self._mqtt_settings = Settings.MQTT(
             host=config.host,
             port=config.port,
             username=config.username,
-            password=config.password
+            password=config.password,
+            client=self._client
         )
         # Create the sensors for each doorbell:
         for doorbell in doorbells.values():
