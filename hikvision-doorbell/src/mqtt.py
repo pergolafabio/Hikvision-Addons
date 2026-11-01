@@ -216,13 +216,13 @@ class MQTTHandler(EventHandler):
                     logger.warning("call_state_poll_sec is 0. Automatically setting it to 15 seconds.")
                     call_state_poll_sec = 15
 
-                async def poll_call_sensor(d=doorbell, c=call_sensor):
+                async def poll_call_sensor(d=doorbell, c=call_sensor, poll_interval=call_state_poll_sec):
 
                     url = "/ISAPI/VideoIntercom/callStatus?format=json"
                     requestBody = ""
                     while True:
                         try:
-                            logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
+                            logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, poll_interval)
                             response = d._call_isapi("GET", url, requestBody)
                             data = json.loads(response)
                             
@@ -241,7 +241,7 @@ class MQTTHandler(EventHandler):
                         except Exception as e:
                             logger.exception("Unexpected error in polling loop: {}", e)
                             
-                        await asyncio.sleep(call_state_poll_sec)
+                        await asyncio.sleep(poll_interval)
                         
                 loop = asyncio.get_event_loop()
                 self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
