@@ -264,7 +264,7 @@ class MQTTInput():
                     logger.warning("scene_state_poll_sec is 0. Automatically setting it to 15 seconds.")
                     scene_state_poll_sec = 15
 
-                async def poll_scene_sensor(d: Doorbell, s: Sensor):
+                async def poll_scene_sensor(d: Doorbell, s: Sensor, poll_interval=scene_state_poll_sec):
                     while True:
                         try:
                             xml_string = d._call_isapi("GET", "/ISAPI/VideoIntercom/scene/nowMode")
@@ -272,13 +272,13 @@ class MQTTInput():
                             if len(root) > 0 and root[0].text is not None:
                                 element = root[0].text
                                 s.set_state(element)
-                                logger.info("Polling scene sensor every {} sec, found scene: {}", scene_state_poll_sec, element)
+                                logger.info("Polling scene sensor every {} sec, found scene: {}", poll_interval, element)
                             else:
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
                         except Exception as e:
                             logger.error("Error polling scene sensor for {}: {}", d._config.name, e)
                         
-                        await asyncio.sleep(scene_state_poll_sec)
+                        await asyncio.sleep(poll_interval)
                 
                 loop = asyncio.get_event_loop()
                 # Store the task using the doorbell as the key
@@ -305,7 +305,7 @@ class MQTTInput():
                     logger.warning("alarm_state_poll_sec is 0. Automatically setting it to 15 seconds.")
                     alarm_state_poll_sec = 15
 
-                async def poll_alarm_sensor(d: Doorbell, a: Sensor):
+                async def poll_alarm_sensor(d: Doorbell, a: Sensor, poll_interval=alarm_state_poll_sec):
                     while True:
                         try:
                             xml_string = d._call_isapi("GET", "/ISAPI/SecurityCP/AlarmControlByPhone")
@@ -313,13 +313,13 @@ class MQTTInput():
                             if len(root) > 0 and root[0].text is not None:
                                 element = root[0].text
                                 a.set_state(element)
-                                logger.info("Polling alarm sensor every {} sec, found alarm: {}", alarm_state_poll_sec, element)
+                                logger.info("Polling alarm sensor every {} sec, found alarm: {}", poll_interval, element)
                             else:
                                 raise RuntimeError(f'Unexpected XML response: {xml_string}')
                         except Exception as e:
                             logger.error("Error polling alarm sensor for {}: {}", d._config.name, e)
                         
-                        await asyncio.sleep(alarm_state_poll_sec)
+                        await asyncio.sleep(poll_interval)
 
                 loop = asyncio.get_event_loop()
                 # Store the task using the doorbell as the key

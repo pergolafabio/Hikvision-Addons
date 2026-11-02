@@ -164,6 +164,9 @@ class MQTTHandler(EventHandler):
 
         # Initialize task storage at the start
         self._call_sensor_tasks: dict[Doorbell, asyncio.Task] = {}
+        self._call_states: dict[Doorbell, str] = {}
+        self._call_state_versions: dict[Doorbell, int] = {}
+        self._snapshot_tasks: dict[Doorbell, asyncio.Task] = {}
         
         # Save the MQTT settings as an attribute with the shared client
         self._client = get_shared_client(config)
@@ -216,13 +219,13 @@ class MQTTHandler(EventHandler):
                     logger.warning("call_state_poll_sec is 0. Automatically setting it to 15 seconds.")
                     call_state_poll_sec = 15
 
-                async def poll_call_sensor(d=doorbell, c=call_sensor):
+                async def poll_call_sensor(d=doorbell, c=call_sensor, poll_interval=call_state_poll_sec):
 
                     url = "/ISAPI/VideoIntercom/callStatus?format=json"
                     requestBody = ""
                     while True:
                         try:
-                            logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, call_state_poll_sec)
+                            logger.debug("Trying to get call status for doorbell: {} every {} sec", d._config.name, poll_interval)
                             response = d._call_isapi("GET", url, requestBody)
                             data = json.loads(response)
                             
@@ -231,7 +234,7 @@ class MQTTHandler(EventHandler):
                             if call_status_obj:
                                 call_state = call_status_obj.get("status")
                                 if call_state:
-                                    c.set_state(call_state)
+                                    self._set_call_state(d, call_state)
                                     logger.info("Call sensor polling for : {} changed to {}", d._config.name, call_state)
                             else:
                                 logger.warning("Unexpected ISAPI response from {}: {}", d._config.name, response)
@@ -241,7 +244,7 @@ class MQTTHandler(EventHandler):
                         except Exception as e:
                             logger.exception("Unexpected error in polling loop: {}", e)
                             
-                        await asyncio.sleep(call_state_poll_sec)
+                        await asyncio.sleep(poll_interval)
                         
                 loop = asyncio.get_event_loop()
                 self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
@@ -307,6 +310,40 @@ class MQTTHandler(EventHandler):
                     com_switch.set_availability(True)
                     _register_reconnect_handler(com_switch)
                     self._sensors[doorbell][f'com_{com_id}'] = com_switch
+
+    def _set_call_state(self, doorbell: Doorbell, state: str) -> int:
+        """Keep public state values and take one opt-in snapshot per ring edge."""
+        previous = self._call_states.get(doorbell)
+        if previous != state:
+            self._call_state_versions[doorbell] = self._call_state_versions.get(doorbell, 0) + 1
+        self._call_states[doorbell] = state
+        self._sensors[doorbell]['call'].set_state(state)
+        ringing = ('ring', 'ringing')
+        if state in ringing and previous not in ringing and doorbell._config.snapshot is True:
+            pending = self._snapshot_tasks.get(doorbell)
+            if pending is None or pending.done():
+                self._snapshot_tasks[doorbell] = asyncio.create_task(self._publish_call_snapshot(doorbell))
+            else:
+                logger.warning("Skipping overlapping snapshot for {}", doorbell._config.name)
+        return self._call_state_versions.get(doorbell, 0)
+
+    async def _publish_call_snapshot(self, doorbell: Doorbell):
+        """Shared snapshot path for a new SDK or polled incoming call."""
+        try:
+            from mqtt_input import get_mqtt_input
+            snapshot_path = doorbell.take_snapshot()
+            mqtt_input = get_mqtt_input()
+            if snapshot_path and os.path.exists(snapshot_path):
+                if mqtt_input:
+                    mqtt_input._last_snapshot_paths[doorbell] = snapshot_path
+                    mqtt_input._publish_snapshot_image(doorbell, snapshot_path)
+                    logger.info("Auto-snapshot published to MQTT: {}", snapshot_path)
+                else:
+                    logger.warning("MQTTInput not available, snapshot saved but not published: {}", snapshot_path)
+            else:
+                logger.warning("Auto-snapshot failed or file not created")
+        except Exception as err:
+            logger.error("Failed to take auto-snapshot: {}", err)
 
     def com_switch_callback(self, client, user_data: tuple[Doorbell, int], message: MQTTMessage):
         doorbell, com_id = user_data
@@ -590,53 +627,21 @@ class MQTTHandler(EventHandler):
                     'device_number': dev_number,   
                 }
                 call_sensor.set_attributes(attributes)
-                call_sensor.set_state('ringing')
-
-                # Take snapshot and publish via MQTT
-                async def take_and_publish_snapshot():
-                    """Take snapshot and publish to MQTT"""
-                    try:
-                        # Import here to avoid circular imports
-                        from mqtt_input import get_mqtt_input
-                        
-                        # Take snapshot
-                        snapshot_path = doorbell.take_snapshot()
-                        
-                        if snapshot_path and os.path.exists(snapshot_path):
-                            # Get MQTTInput instance
-                            mqtt_input = get_mqtt_input()
-                            if mqtt_input:
-                                # Store the latest snapshot path
-                                mqtt_input._last_snapshot_paths[doorbell] = snapshot_path
-                                
-                                # Publish the image to MQTT
-                                mqtt_input._publish_snapshot_image(doorbell, snapshot_path)
-                                logger.info(f"Auto-snapshot published to MQTT: {snapshot_path}")
-                            else:
-                                logger.warning("MQTTInput not available, snapshot saved but not published: {}", snapshot_path)
-                        else:
-                            logger.warning("Auto-snapshot failed or file not created")
-                            
-                    except Exception as e:
-                        logger.error(f"Failed to take auto-snapshot: {e}")
-
-                if doorbell._config.snapshot is True:
-                    # Start the snapshot task without waiting for it
-                    logger.info(f"Auto snapshot enabled for doorbell: {doorbell._config.name}")
-                    asyncio.create_task(take_and_publish_snapshot())
-                else:
-                    logger.info(f"Auto snapshot disabled for doorbell: {doorbell._config.name}")
+                state_version = self._set_call_state(doorbell, 'ringing')
 
                 # After 60 seconds, put the sensor back to idle
                 await asyncio.sleep(60)
-                logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
-                call_sensor.set_state('idle')
+                # Do not let this old timer reset a later call or onCall state.
+                if (self._call_state_versions.get(doorbell) == state_version
+                        and self._call_states.get(doorbell) in ('ring', 'ringing')):
+                    logger.info("Updating doorbell sensor back to 'idle' after 60 seconds")
+                    self._set_call_state(doorbell, 'idle')
             case VideoInterComAlarmType.DISMISS_INCOMING_CALL:
                 logger.info("Call dismissed, updating sensor")
                 logger.debug("Doorbell updating sensor {}", call_sensor)
-                call_sensor.set_state('dismissed')
+                self._set_call_state(doorbell, 'dismissed')
                 # Put sensor back to idle
-                call_sensor.set_state('idle')
+                self._set_call_state(doorbell, 'idle')
             case VideoInterComAlarmType.ZONE_ALARM:
                 #zone_name = str(alarm_info.uAlarmInfo.struZoneAlarm.byZoneName,'UTF-8')
                 zone_type_id = alarm_info.uAlarmInfo.struZoneAlarm.byZoneType
