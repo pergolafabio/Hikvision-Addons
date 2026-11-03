@@ -99,6 +99,8 @@ For each of your doorbells, the following entities are available:
   - `Backlight` (Turn the backlight of the outdoor station to on/off/auto)
 - Input Text
   - `ISAPI Request` (Custom ISAPI control, see more info below!)
+  - `Notice text` (Indoor only: `Title | Body`, e.g. `Home | Gate opened`; body alone uses `Home Assistant`. Up to 255 characters total; title up to 63 UTF-8 bytes.)
+  - `Notice JPEG` (Indoor only: optional local path such as `/media/gate.jpg` or an HTTP(S) URL; JPEG up to 512 KiB. Leave empty for text only.)
 - Buttons
   - `Answer call` (The device needs to be connected to Hikconnect in to make "answer" work, if its not possible, you can use "reject" instead)
   - `Hangup call` (The device needs to be connected to Hikconnect in to make "hangup" work, if its not possible, you can use "reject" instead)
@@ -106,6 +108,7 @@ For each of your doorbells, the following entities are available:
   - `Reboot`
   - `Take Snapshot` (Grabs a snapshot from the outdoor station and updates the image entity)
   - `Broadcast` (Plays a custom audio file on an indoor panel)
+  - `Send notice` (Indoor only: sends the current `Notice text` and optional `Notice JPEG` values.)
   - `Call` (Start a call on an indoor panel and you can also speak (not working with HA Addon, audio card is needed))
   - ...
 - Device triggers (depending on device model)
@@ -169,22 +172,6 @@ There are two ways in which you can interact with your doorbells:
 
 This app automatically creates [switches](https://www.home-assistant.io/integrations/switch/) and [buttons](https://www.home-assistant.io/integrations/button/) you can toggle and react to from the Home Assistant UI or from your own automations.
 
-#### Indoor notices
-
-Indoor stations have two text entities and one **Send notice** button:
-
-1. Set **Notice text** (required, up to 255 characters and 1023 UTF-8 bytes).
-2. Optionally set **Notice JPEG** to a local path such as `/media/gate.jpg` or `/config/www/gate.jpg`, or an `https://` / `http://` image URL. Leave it empty for text only.
-3. Press **Send notice** once. Editing either field does not send anything.
-
-The title is **Home Assistant**. Each station has its own draft. Field commands and displayed values are retained in MQTT, so fields can be restored after an app or Home Assistant restart. Retained field updates never send a notice; retained/duplicate button commands are ignored. A missing or invalid picture blocks the entire send; correct or clear the picture field before pressing again. Errors are logged without automatic retry.
-
-Local paths refer to files accessible inside the app container; there is no fixed directory. Home Assistant already shares `/media` and `/config` with the app. For standalone Docker, bind-mount the directory you want to use, preferably read-only. Paths/URLs share the text entity's 255-character limit. HTTP(S) image bodies stream with 5-second connect and 10-second read timeouts, using Requests' normal TLS verification and redirect handling. Download failures block the whole send; fetch-error messages do not include the URL.
-
-The SDK's [indoor guide, section 4.37, p. 79](https://git.pyer.club/kingecg/hksdk/raw/branch/main/CH-HCNetSDKV6.1.9.47_build20221111_linux64/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/%E8%AE%BE%E5%A4%87%E7%BD%91%E7%BB%9CSDK%E7%BC%96%E7%A8%8B%E6%8C%87%E5%8D%97%EF%BC%88%E5%8F%AF%E8%A7%86%E5%AF%B9%E8%AE%B2%E5%AE%A4%E5%86%85%E6%9C%BA%EF%BC%89.pdf) (`NET_DVR_NOTICE_PIC`), documents a maximum of **512 KB per JPEG**; the app bounds reads/downloads to **512 KiB (524,288 bytes)** instead of the initial conservative 24 KiB. A device/firmware may advertise a lower limit in `NoticeData/maxSinglePicSize` (KB), so 512 KiB is not a compatibility guarantee. Prepare a baseline RGB JPEG, for example 640 × 360; the app checks size and JPEG start/end markers, without decoding or resizing it.
-
-These controls use native normal notices (SDK command 16008, level 4, zero or one picture). Display and image support depend on the station and firmware. A successful SDK call does not confirm screen display, sound or screen wake. Some Android stations show messages only in the notification drawer.
-
 ### STDIN service (advanced)
 
 There is an advanced method to interact with the devices by sending a text message to the app on its `standard input` (STDIN).
@@ -226,6 +213,7 @@ The input string must be in the format
   | callOff | Stops the audio call
   | broadcastOn | Start an broadcast
   | broadcastOff | Stops the broadcast
+  | sendNotice | Sends the current `Notice text` and `Notice JPEG` values, e.g. `sendNotice indoor`
 
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 

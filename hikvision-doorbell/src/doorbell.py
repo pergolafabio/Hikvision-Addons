@@ -848,6 +848,16 @@ class Doorbell():
             raise ValueError("Notices require a valid SDK login")
         if not isinstance(text, str) or not text.strip():
             raise ValueError("Notice text is required")
+        title, separator, detail = text.partition("|")
+        if separator:
+            title, text = title.strip(), detail.strip()
+        else:
+            title = "Home Assistant"
+        theme = title.encode("utf-8")
+        if not theme or len(theme) > 63 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in title):
+            raise ValueError("Notice title must be 1-63 UTF-8 bytes without control characters")
+        if not text.strip():
+            raise ValueError("Notice body is required")
         body = text.encode("utf-8")
         if len(body) > 1023 or any(ord(c) < 32 and c not in "\n\t" or 127 <= ord(c) < 160 for c in text):
             raise ValueError("Notice text exceeds 1023 UTF-8 bytes or contains control characters")
@@ -860,7 +870,7 @@ class Doorbell():
         notice.struTime = NET_DVR_TIME_EX(now.year, now.month, now.day, now.hour, now.minute, now.second, 0)
         for field, value in (
             ("byNoticeNumber", now.strftime("ha-%Y%m%d%H%M%S%f").encode("ascii")),
-            ("byNoticeTheme", b"Home Assistant"),
+            ("byNoticeTheme", theme),
             ("byNoticeDetail", body),
         ):
             memmove(byref(notice, getattr(NET_DVR_NOTICE_DATA, field).offset), value, len(value))

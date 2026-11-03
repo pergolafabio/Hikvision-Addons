@@ -13,6 +13,7 @@ from loguru import logger
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry, MAX_NOTICE_IMAGE_BYTES
 from mqtt_input import MQTTInput
+from input import InputReader
 from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_NOTICE_PIC
 from sdk.utils import SDKError
 
@@ -64,6 +65,35 @@ def test_sdk_rejection_preserves_error_code_without_retry():
         door.send_notice("Hello")
     assert caught.value.args[1] == 23
     door._sdk.NET_DVR_RemoteControl.assert_called_once()
+
+
+@pytest.mark.parametrize("value,title,body", [
+    (" Home | Door open | Garage closed ", "Home", "Door open | Garage closed"),
+    ("Я" * 31 + "! | Русский текст", "Я" * 31 + "!", "Русский текст"),
+])
+def test_custom_title_splits_once_and_preserves_utf8(value, title, body):
+    door, captured = station(), []
+
+    def send(user, command, pointer, size):
+        captured.append(NET_DVR_NOTICE_DATA.from_buffer_copy(string_at(pointer, size)))
+        return 1
+
+    door._sdk.NET_DVR_RemoteControl.side_effect = send
+    door.send_notice(value)
+    assert len(captured) == 1
+    assert bytes(captured[0].byNoticeTheme).split(b"\0")[0] == title.encode()
+    assert bytes(captured[0].byNoticeTheme)[-1] == 0
+    assert bytes(captured[0].byNoticeDetail).split(b"\0")[0] == body.encode()
+
+
+@pytest.mark.parametrize("value", [" | Body", "Title | ", "x" * 64 + " | Body", "Я" * 32 + " | Body",
+                                    "bad\nTitle | Body", "bad\0Title | Body", "bad\x7fTitle | Body"])
+def test_invalid_title_or_empty_body_does_not_fetch_or_send(value, mocker):
+    get, door = mocker.patch("doorbell.requests.get"), station()
+    with pytest.raises(ValueError):
+        door.send_notice(value, "https://example.invalid/image")
+    get.assert_not_called()
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
 @pytest.mark.parametrize("kind,user_id", [(DeviceType.OUTDOOR, 7), (DeviceType.INDOOR, -1)])
@@ -364,6 +394,30 @@ def test_discovery_flow_accepts_utf8_and_optional_image(controls):
     assert c.wire[door].byPicNum == 1
     assert c.wire[door].struNoticePic[0].dwPicDataLen == len(jpeg)
     door._sdk.NET_DVR_RemoteControl.assert_called_once()
+
+
+def test_stdin_and_button_share_fields_for_the_correct_station(controls, mocker):
+    c, first, second = controls, controls.doors[0], controls.doors[1]
+    c.edit(first, "text", "Дом | Дверь открыта | Проверка")
+    c.edit(second, "text", "x" * 64 + " | Body")
+    mocker.patch("input.get_mqtt_input", return_value=c.instance)
+    reader = InputReader(Registry(enumerate(c.doors)))
+    reader.execute_command("sendNotice indoor_b")  # A bad draft must not kill STDIN.
+    second._sdk.NET_DVR_RemoteControl.assert_not_called()
+    c.edit(second, "text", "Гараж | Ворота закрыты")
+    image = c.image_dir / "gate.jpg"
+    image.write_bytes(b"\xff\xd8sample\xff\xd9")
+    c.edit(second, "image", str(image))
+    reader.execute_command("sendNotice indoor_b")
+    first._sdk.NET_DVR_RemoteControl.assert_not_called()
+    second._sdk.NET_DVR_RemoteControl.assert_called_once()
+    assert bytes(c.wire[second].byNoticeTheme).split(b"\0")[0] == "Гараж".encode()
+    assert bytes(c.wire[second].byNoticeDetail).split(b"\0")[0] == "Ворота закрыты".encode()
+    assert c.wire[second].byPicNum == 1
+    c.press(first)
+    first._sdk.NET_DVR_RemoteControl.assert_called_once()
+    assert bytes(c.wire[first].byNoticeTheme).split(b"\0")[0] == "Дом".encode()
+    assert bytes(c.wire[first].byNoticeDetail).split(b"\0")[0] == "Дверь открыта | Проверка".encode()
 
 
 def test_ignored_press_logs_flags_without_message_contents(controls):

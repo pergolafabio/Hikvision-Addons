@@ -581,6 +581,10 @@ class MQTTInput():
                     doorbell._config.name, message.retain, message.dup, message.payload == b"PRESS")
         if message.retain or message.dup or message.payload != b"PRESS":
             return
+        self.send_notice(doorbell)
+
+    def send_notice(self, doorbell: Doorbell):
+        """Send the current fields, shared by the MQTT button and STDIN command."""
         try:
             draft = dict(self._notice_drafts[doorbell])
             doorbell.send_notice(draft["text"], draft["image"])

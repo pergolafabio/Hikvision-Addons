@@ -1,6 +1,7 @@
 import asyncio
 import sys
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
+from types import SimpleNamespace
 import pytest
 from pytest_mock import MockerFixture
 from input import InputReader
@@ -81,3 +82,29 @@ def test_not_raise_exception(mocker: MockerFixture):
     reader = InputReader(mocked_registry)
 
     asyncio.run(reader.loop_forever())
+
+
+def test_stdin_notice_uses_existing_field_sender(mocker):
+    door, service = Mock(), Mock()
+    registry = Mock()
+    registry.getByName.return_value = door
+    mocker.patch("input.get_mqtt_input", return_value=service)
+    stdin = SimpleNamespace(readline=AsyncMock(side_effect=[b'"sendNotice indoor"\n', b""]))
+    mocker.patch("input.connect_stdin", new=AsyncMock(return_value=stdin))
+    asyncio.run(InputReader(registry).loop_forever())
+    registry.getByName.assert_called_once_with("indoor")
+    service.send_notice.assert_called_once_with(door)
+
+
+@pytest.mark.parametrize("command", ["sendNotice", "sendNotice missing"])
+def test_stdin_notice_without_a_valid_device_does_not_send(command, mocker):
+    registry = Mock()
+    registry.getByName.return_value = None
+    get = mocker.patch("input.get_mqtt_input")
+    InputReader(registry).execute_command(command)
+    get.assert_not_called()
+
+
+def test_stdin_notice_before_inputs_are_ready_does_not_crash(mocker):
+    mocker.patch("input.get_mqtt_input", return_value=None)
+    InputReader(Mock()).execute_command("sendNotice indoor")
