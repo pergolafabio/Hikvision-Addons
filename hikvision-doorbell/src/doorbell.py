@@ -14,12 +14,8 @@ from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_VIDEO_CALL_COND, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
-from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_SEND_NOTICE_DATA, NET_DVR_TIME_EX
+from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_SEND_NOTICE_DATA, NET_DVR_TIME_EX, MAX_NOTICE_IMAGE_BYTES
 import xml.etree.ElementTree as ET
-
-# Indoor SDK guide, section 4.37: one JPEG is at most 512 KB.
-MAX_NOTICE_IMAGE_BYTES = 512 * 1024
-
 
 class DeviceType(IntEnum):
     OUTDOOR = 603

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.167 - 2026-11-03
+
+### Added
+
+- Send Notice with text/image to indoor stations
+
 ## 3.0.0-beta.166 - 2026-10-19
 
 ### Fix

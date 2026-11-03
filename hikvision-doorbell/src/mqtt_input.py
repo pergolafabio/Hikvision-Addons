@@ -406,7 +406,6 @@ class MQTTInput():
 
             if doorbell._type is DeviceType.INDOOR:
 
-                # Editing these inputs only updates a draft; the button sends it.
                 self._notice_drafts[doorbell] = {"text": "", "image": ""}
                 for field, label in (("text", "Notice text"), ("image", "Notice JPEG")):
                     text_info = TextInfo(
@@ -588,7 +587,7 @@ class MQTTInput():
         try:
             draft = dict(self._notice_drafts[doorbell])
             doorbell.send_notice(draft["text"], draft["image"])
-            logger.info("Notice accepted by SDK for {}; display is not confirmed", doorbell._config.name)
+            logger.info("Notice accepted by SDK for {}", doorbell._config.name)
         except SDKError as err:
             logger.error("Notice failed for {}: {} (no automatic retry)", doorbell._config.name, err)
         except Exception as err:
