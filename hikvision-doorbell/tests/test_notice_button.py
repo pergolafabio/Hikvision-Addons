@@ -7,6 +7,7 @@ import pytest
 from ha_mqtt_discoverable import DeviceInfo
 from ha_mqtt_discoverable.sensors import Button
 from paho.mqtt.client import Client
+from loguru import logger
 
 from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
@@ -75,6 +76,18 @@ def test_invalid_target_or_login_does_not_send(kind, user_id):
 def test_replayed_or_invalid_commands_do_not_send(flags):
     door = station()
     MQTTInput.__new__(MQTTInput)._test_notice_callback(None, door, message(**flags))
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
+
+
+def test_ignored_press_logs_flags_without_message_contents():
+    door, logs = station(), []
+    sink = logger.add(lambda record: logs.append(str(record)))
+    try:
+        MQTTInput.__new__(MQTTInput)._test_notice_callback(None, door, message(payload=b"PRIVATE-PAYLOAD-5f1a"))
+    finally:
+        logger.remove(sink)
+    assert any("retain=False, dup=False, press=False" in line for line in logs)
+    assert not any("PRIVATE-PAYLOAD-5f1a" in line for line in logs)
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 

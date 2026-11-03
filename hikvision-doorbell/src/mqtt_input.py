@@ -418,6 +418,7 @@ class MQTTInput():
                     settings, lambda client, userdata, message, target=doorbell: self._test_notice_callback(client, target, message))
                 test_notice_button.set_availability(True)
                 _register_reconnect_handler(test_notice_button)
+                logger.info("Registered Test notice diagnostic button for {}", doorbell._config.name)
 
                 # Call On Button
                 button_info = ButtonInfo(
@@ -547,6 +548,8 @@ class MQTTInput():
         return None
 
     def _test_notice_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received test notice command for {} (retain={}, dup={}, press={})",
+                    doorbell._config.name, message.retain, message.dup, message.payload == b"PRESS")
         if message.retain or message.dup or message.payload != b"PRESS":
             return
         try:
