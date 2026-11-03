@@ -161,6 +161,85 @@ For each of your doorbells, the following entities are available:
 
 ## Sending commands to the doorbells
 
+### Indoor text/JPEG notices (proposed command)
+
+On configured **indoor** devices, publish non-retained JSON to
+`hikvision/<normalised_name>/notice/set`. The name follows the existing add-on
+normalisation: lowercase letters/digits, without whitespace or punctuation.
+An empty or colliding indoor name disables the notice topic; rename it first.
+The command is bound to that exact device and re-subscribed after MQTT reconnect.
+Allow only trusted broker clients to publish device commands.
+
+Example Home Assistant action (uses a fresh ID for one new event):
+
+```yaml
+action: mqtt.publish
+data:
+  topic: hikvision/indoor/notice/set
+  qos: 1
+  retain: false
+  payload: >-
+    {{ dict(id='ha-' ~ now().strftime('%Y%m%dT%H%M%S%f'),
+            title='House status', text='The gate is closed.', level='notice',
+            expires_at=as_timestamp(now()) + 60) | to_json }}
+```
+
+For repeated delivery of the **same event**, preserve its original ID. Fields:
+
+| Field | Limit / meaning |
+|---|---|
+| `id` | Required; 1-31 ASCII letters/digits/underscore/hyphen, starts with letter/digit |
+| `title` | Required; 1-63 UTF-8 bytes |
+| `text` | Required; 1-1023 UTF-8 bytes; Cyrillic supported |
+| `expires_at` | Required Unix timestamp; future, at most300 seconds ahead |
+| `level` | `notice` (default, native4) or `alarm` (native3) |
+| `picture` | Optional basename such as `home-status.jpg` in `/media/hikvision-notices` |
+
+Maximum JSON payload8192 bytes. Unknown/duplicate JSON keys are rejected.
+One trusted baseline three-component JPEG, maximum24KiB and640x360; EXIF,
+progressive JPEG, URLs, arbitrary paths, symlinks and special files are rejected.
+The add-on performs a bounded structural check rather than a full JPEG decode.
+Prepare images using a trusted decoder/normaliser outside the add-on. No extra
+Python dependency is introduced here. Docker users need to mount that media
+directory if pictures are used; text does not need it.
+
+Results are published without retain to `hikvision/<name>/notice/result`:
+`accepted`, `rejected`, `unknown`, or `not_sent`, with `send_attempted` and an
+optional SDK code/reason. Successful results include the request ID; invalid
+commands may have no ID. `accepted` confirms SDK acceptance, not screen rendering,
+audible sound or a reading receipt. Result publication is not an end-to-end ACK.
+
+Claims are committed with SQLite FULL synchronous durability **before** SDK16008.
+The existing authenticated SDK session is reused. A repeated ID/content is never
+sent again, including after restart; changed content with the same ID is rejected.
+An interrupted or ambiguous send becomes `unknown` and blocks further IDs for
+that target until reviewed. Busy/unavailable/non-idle devices are rejected with
+no queue or automatic retry. The status read and device write are not atomic, so
+an incoming call can still race them. Messages marked retained by the broker
+(retained delivery on subscription) and expired commands are rejected. Publishers
+must use retain=false. At most one attempt per device per60 seconds;4096 total journal records.
+
+The private journal is `/data/notice-journal/notices.sqlite3` in the add-on,
+`./data/notice-journal` during local development (directory0700/file0600). It stores
+hashes, request IDs, times, statuses and SDK codes; no texts, pictures, credentials
+or raw serials. Preserve this directory across upgrades/rollback. Capacity is a
+hard stop; records are not automatically deleted. After investigating a timeout,
+an administrator can call `NoticeService(...).review(target_sha256, notice_id)`
+inside the existing environment. This only acknowledges the unknown and allows
+new events; it preserves the old ID/status and never retries it.
+
+`alarm` requests the device's built-in alarm-notice sound. This command does not
+change volume, talk volume, scene, quiet hours or call settings; mute may suppress
+sound and firmware controls duration. It does not arm/disarm the security system.
+Native text/JPEG/alarm were observed on VDP-H3212W/V2.2.22 build230720 in the source
+installation. This MQTT adaptation is covered by offline SDK/broker doubles,
+not a new hardware acceptance test. ABI is restricted to the verified64-bit
+layout (NOTICE1552/PIC48/TIME8); other layouts fail closed. No SDK wrapper-wide
+signature or callback changes are made.
+
+Portable renderer, HA examples, regression tests and recorded limitations:
+[companion module](https://github.com/giflydimarik-gif/hikvision-asterisk-dect/tree/main/indoor-notifications).
+
 There are two ways in which you can interact with your doorbells: 
 - via the automatically created MQTT entities (switches, buttons)
 - manually invoking the app `stdin` service

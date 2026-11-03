@@ -3,6 +3,7 @@ from enum import IntEnum
 import re
 import unicodedata
 import json
+import hashlib
 import os
 import requests
 from requests.auth import HTTPDigestAuth
@@ -13,6 +14,7 @@ from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_VIDEO_CALL_COND, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
+from indoor_notice import NoticeError, sdk_send
 import xml.etree.ElementTree as ET
 
 
@@ -1030,6 +1032,24 @@ class Doorbell():
         logger.debug("Unable to get the number of coms for the indoor station")
         return 0
         #raise RuntimeError("Unable to get the number of coms")
+
+    def send_indoor_notice(self, payload, service):
+        """Send one bounded native notice using this existing indoor session."""
+        if self._type != DeviceType.INDOOR:
+            raise NoticeError("indoor_device_required")
+        if type(getattr(self, "user_id", None)) is not int or self.user_id < 0:
+            raise NoticeError("sdk_session_invalid")
+        serial = self._device_info.serialNumber()
+        if not isinstance(serial, str) or not serial:
+            raise NoticeError("target_identity_unavailable")
+        target = hashlib.sha256(serial.encode("utf-8")).hexdigest()
+
+        def is_idle():
+            raw = self._call_isapi("GET", "/ISAPI/VideoIntercom/callStatus?format=json")
+            status = json.loads(raw)
+            return isinstance(status, dict) and status.get("CallStatus", {}).get("status") == "idle"
+
+        return service.send(payload, target, is_idle, lambda notice: sdk_send(self._sdk, self.user_id, notice))
 
     def get_device_info(self):
         """Retrieve device information (model, sw version, etc) using the ISAPI endpoint.

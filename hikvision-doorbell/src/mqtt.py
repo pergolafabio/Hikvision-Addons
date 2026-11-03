@@ -37,6 +37,14 @@ _mqtt_broker_online = True
 
 _shared_client = None
 _registered_entities = {}
+_command_topics = {}
+
+
+def _register_command_topic(client, topic, callback):
+    """Register an exact command topic and retain it for reconnect subscriptions."""
+    _command_topics[topic] = callback
+    client.message_callback_add(topic, callback)
+    client.subscribe(topic, qos=1)
 
 def get_shared_client(config):
     global _shared_client
@@ -62,6 +70,8 @@ def _on_connect(client, userdata, *args):
         e.set_availability(True)
         if hasattr(e, '_command_topic'):
             client.subscribe(e._command_topic, qos=1)
+    for topic in _command_topics:
+        client.subscribe(topic, qos=1)
 
 def _on_disconnect(client, userdata, *args):
     global _mqtt_broker_online
