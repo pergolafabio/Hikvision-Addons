@@ -5,7 +5,6 @@ import unicodedata
 import json
 import os
 import stat
-from pathlib import Path
 import requests
 from requests.auth import HTTPDigestAuth
 from datetime import datetime, time
@@ -18,8 +17,8 @@ from sdk.utils import SDKError, call_ISAPI
 from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_SEND_NOTICE_DATA, NET_DVR_TIME_EX
 import xml.etree.ElementTree as ET
 
-NOTICE_IMAGE_DIR = Path("/media/hikvision-notices")
-MAX_NOTICE_IMAGE_BYTES = 24576
+# Indoor SDK guide, section 4.37: one JPEG is at most 512 KB.
+MAX_NOTICE_IMAGE_BYTES = 512 * 1024
 
 
 class DeviceType(IntEnum):
@@ -842,7 +841,7 @@ class Doorbell():
     '''
         
     def send_notice(self, text: str, image: str = ""):
-        """Send custom text and one optional JPEG from the notice media folder."""
+        """Send custom text and one optional JPEG from a local path or HTTP(S) URL."""
         if self._type is not DeviceType.INDOOR:
             raise ValueError("Notices require an indoor station")
         if type(self.user_id) is not int or not 0 <= self.user_id <= 2147483647:
@@ -852,8 +851,8 @@ class Doorbell():
         body = text.encode("utf-8")
         if len(body) > 1023 or any(ord(c) < 32 and c not in "\n\t" or 127 <= ord(c) < 160 for c in text):
             raise ValueError("Notice text exceeds 1023 UTF-8 bytes or contains control characters")
-        if not isinstance(image, str):
-            raise ValueError("Notice JPEG filename is invalid")
+        if not isinstance(image, str) or "\0" in image:
+            raise ValueError("Notice JPEG path or URL is invalid")
 
         now = datetime.now()
         notice = NET_DVR_NOTICE_DATA()
@@ -868,20 +867,26 @@ class Doorbell():
         notice.byLevel = 4  # Normal notice, rather than an alarm notice (3).
         image_buffer = None
         if image:
-            if len(image) > 128 or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.(jpg|jpeg)", image, re.IGNORECASE):
-                raise ValueError("Use a JPEG basename, for example gate.jpg")
-            if NOTICE_IMAGE_DIR.is_symlink():
-                raise ValueError("Notice media folder must not be a symlink")
-            flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-            path = NOTICE_IMAGE_DIR / image
-            if path.is_symlink():
-                raise ValueError("Notice JPEG must not be a symlink")
-            with os.fdopen(os.open(path, flags), "rb") as stream:
-                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-                    raise ValueError("Notice JPEG must be a regular file")
-                data = stream.read(MAX_NOTICE_IMAGE_BYTES + 1)
+            if image.lower().startswith(("https://", "http://")):
+                try:
+                    with requests.get(image, stream=True, timeout=(5, 10)) as response:
+                        response.raise_for_status()
+                        data = bytearray()
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if len(data) + len(chunk) > MAX_NOTICE_IMAGE_BYTES:
+                                raise ValueError("Notice JPEG exceeds 512 KiB")
+                            data.extend(chunk)
+                        data = bytes(data)
+                except requests.RequestException:
+                    raise ValueError("Unable to fetch notice JPEG over HTTP(S)") from None
+            else:
+                flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
+                with os.fdopen(os.open(image, flags), "rb") as stream:
+                    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                        raise ValueError("Notice JPEG must be a regular file")
+                    data = stream.read(MAX_NOTICE_IMAGE_BYTES + 1)
             if len(data) > MAX_NOTICE_IMAGE_BYTES or not data.startswith(b"\xff\xd8") or not data.endswith(b"\xff\xd9"):
-                raise ValueError("Notice image must be a JPEG of at most 24 KiB")
+                raise ValueError("Notice image must be a JPEG of at most 512 KiB")
             image_buffer = create_string_buffer(data, len(data))
             notice.byPicNum = 1
             notice.struNoticePic[0].pPicData = cast(image_buffer, c_void_p).value

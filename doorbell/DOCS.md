@@ -174,12 +174,14 @@ This app automatically creates [switches](https://www.home-assistant.io/integrat
 Indoor stations have two text entities and one **Send notice** button:
 
 1. Set **Notice text** (required, up to 255 characters and 1023 UTF-8 bytes).
-2. Optionally set **Notice JPEG** to a filename such as `gate.jpg`. Leave it empty for text only.
+2. Optionally set **Notice JPEG** to a local path such as `/media/gate.jpg` or `/config/www/gate.jpg`, or an `https://` / `http://` image URL. Leave it empty for text only.
 3. Press **Send notice** once. Editing either field does not send anything.
 
 The title is **Home Assistant**. Each station has its own draft. Field commands and displayed values are retained in MQTT, so fields can be restored after an app or Home Assistant restart. Retained field updates never send a notice; retained/duplicate button commands are ignored. A missing or invalid picture blocks the entire send; correct or clear the picture field before pressing again. Errors are logged without automatic retry.
 
-Place pictures in `/media/hikvision-notices` inside the app container. Home Assistant already shares `/media` with the app. For standalone Docker, bind-mount your picture directory there, preferably read-only. Enter only a JPEG basename, not a path or URL; symlinks are rejected. The file must be at most 24 KiB. Prepare a baseline RGB JPEG, for example 640 × 360; the app checks size and JPEG start/end markers, without decoding or resizing it.
+Local paths refer to files accessible inside the app container; there is no fixed directory. Home Assistant already shares `/media` and `/config` with the app. For standalone Docker, bind-mount the directory you want to use, preferably read-only. Paths/URLs share the text entity's 255-character limit. HTTP(S) image bodies stream with 5-second connect and 10-second read timeouts, using Requests' normal TLS verification and redirect handling. Download failures block the whole send; fetch-error messages do not include the URL.
+
+The SDK's [indoor guide, section 4.37, p. 79](https://git.pyer.club/kingecg/hksdk/raw/branch/main/CH-HCNetSDKV6.1.9.47_build20221111_linux64/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/%E8%AE%BE%E5%A4%87%E7%BD%91%E7%BB%9CSDK%E7%BC%96%E7%A8%8B%E6%8C%87%E5%8D%97%EF%BC%88%E5%8F%AF%E8%A7%86%E5%AF%B9%E8%AE%B2%E5%AE%A4%E5%86%85%E6%9C%BA%EF%BC%89.pdf) (`NET_DVR_NOTICE_PIC`), documents a maximum of **512 KB per JPEG**; the app bounds reads/downloads to **512 KiB (524,288 bytes)** instead of the initial conservative 24 KiB. A device/firmware may advertise a lower limit in `NoticeData/maxSinglePicSize` (KB), so 512 KiB is not a compatibility guarantee. Prepare a baseline RGB JPEG, for example 640 × 360; the app checks size and JPEG start/end markers, without decoding or resizing it.
 
 These controls use native normal notices (SDK command 16008, level 4, zero or one picture). Display and image support depend on the station and firmware. A successful SDK call does not confirm screen display, sound or screen wake. Some Android stations show messages only in the notification drawer.
 

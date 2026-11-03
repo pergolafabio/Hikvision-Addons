@@ -1,16 +1,17 @@
 """Native notice buffers and real discovery callbacks, without hardware/MQTT."""
 from ctypes import c_void_p, sizeof, string_at
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 
 import pytest
+import requests
 from ha_mqtt_discoverable import DeviceInfo
 from ha_mqtt_discoverable.sensors import Button, Text
 from paho.mqtt.client import Client
 from loguru import logger
 
 from config import AppConfig
-from doorbell import DeviceType, Doorbell, Registry
+from doorbell import DeviceType, Doorbell, Registry, MAX_NOTICE_IMAGE_BYTES
 from mqtt_input import MQTTInput
 from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_NOTICE_PIC
 from sdk.utils import SDKError
@@ -82,9 +83,9 @@ def test_invalid_text_does_not_send(text):
 
 
 def test_image_pointer_stays_valid_during_native_call(tmp_path, mocker):
-    mocker.patch("doorbell.NOTICE_IMAGE_DIR", tmp_path)
     jpeg = b"\xff\xd8" + b"sample-data" + b"\xff\xd9"
-    (tmp_path / "gate.jpg").write_bytes(jpeg)
+    image = tmp_path / "Картинка.jpg"
+    image.write_bytes(jpeg)
     door = station()
 
     def send(user, command, pointer, size):
@@ -97,12 +98,12 @@ def test_image_pointer_stays_valid_during_native_call(tmp_path, mocker):
         return 1
 
     door._sdk.NET_DVR_RemoteControl.side_effect = send
-    door.send_notice("Hello", "gate.jpg")
+    door.send_notice("Hello", str(image))
     door._sdk.NET_DVR_RemoteControl.assert_called_once()
 
 
-@pytest.mark.parametrize("filename", ["../gate.jpg", "/media/gate.jpg", "https://example.invalid/a.jpg", "a\\b.jpg", "a.png", None])
-def test_invalid_filename_is_rejected_before_open(filename, mocker):
+@pytest.mark.parametrize("filename", ["bad\0name", None])
+def test_invalid_image_source_is_rejected_before_open(filename, mocker):
     opened, door = mocker.patch("doorbell.os.open"), station()
     with pytest.raises(ValueError):
         door.send_notice("Hello", filename)
@@ -110,34 +111,124 @@ def test_invalid_filename_is_rejected_before_open(filename, mocker):
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
-@pytest.mark.parametrize("data", [b"not JPEG", b"\xff\xd8unfinished", b"\xff\xd8" + b"x" * 24576 + b"\xff\xd9"])
+@pytest.mark.parametrize("data", [b"not JPEG", b"\xff\xd8unfinished", b"\xff\xd8" + b"x" * 524288 + b"\xff\xd9"])
 def test_invalid_or_oversized_image_does_not_send(data, tmp_path, mocker):
-    mocker.patch("doorbell.NOTICE_IMAGE_DIR", tmp_path)
     (tmp_path / "gate.jpg").write_bytes(data)
     door = station()
     with pytest.raises(ValueError):
-        door.send_notice("Hello", "gate.jpg")
+        door.send_notice("Hello", str(tmp_path / "gate.jpg"))
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
-def test_missing_symlink_and_nonregular_image_do_not_send(tmp_path, mocker):
+def test_missing_and_nonregular_image_do_not_send(tmp_path):
     import os
-    mocker.patch("doorbell.NOTICE_IMAGE_DIR", tmp_path)
     door = station()
     with pytest.raises(FileNotFoundError):
-        door.send_notice("Hello", "missing.jpg")
-    (tmp_path / "link.jpg").symlink_to(tmp_path / "missing.jpg")
-    with pytest.raises(ValueError):
-        door.send_notice("Hello", "link.jpg")
+        door.send_notice("Hello", str(tmp_path / "missing.jpg"))
     os.mkfifo(tmp_path / "pipe.jpg")
     with pytest.raises(ValueError):
-        door.send_notice("Hello", "pipe.jpg")
+        door.send_notice("Hello", str(tmp_path / "pipe.jpg"))
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
+
+
+def test_local_image_may_be_a_symlink(tmp_path):
+    image = tmp_path / "gate.jpg"
+    image.write_bytes(b"\xff\xd8sample\xff\xd9")
+    link = tmp_path / "link.jpg"
+    link.symlink_to(image)
+    door = station()
+    door.send_notice("Hello", str(link))
+    door._sdk.NET_DVR_RemoteControl.assert_called_once()
+
+
+def test_image_at_documented_sdk_limit_is_not_truncated(tmp_path):
+    assert MAX_NOTICE_IMAGE_BYTES == 524288
+    image = tmp_path / "large.jpg"
+    image.write_bytes(b"\xff\xd8" + b"x" * (524288 - 4) + b"\xff\xd9")
+    door, lengths = station(), []
+
+    def send(user, command, pointer, size):
+        value = NET_DVR_NOTICE_DATA.from_buffer_copy(string_at(pointer, size))
+        pic = value.struNoticePic[0]
+        lengths.append(pic.dwPicDataLen)
+        assert string_at(pic.pPicData, pic.dwPicDataLen) == image.read_bytes()
+        return 1
+
+    door._sdk.NET_DVR_RemoteControl.side_effect = send
+    door.send_notice("Hello", str(image))
+    assert lengths == [524288]
+
+
+def download_response(mocker, chunks):
+    response = MagicMock()
+    response.__enter__.return_value = response
+    response.iter_content.return_value = iter(chunks)
+    get = mocker.patch("doorbell.requests.get", return_value=response)
+    return response, get
+
+
+@pytest.mark.parametrize("url", ["http://example.invalid/image", "https://example.invalid/image?token=private"])
+def test_http_and_https_stream_into_live_native_picture(url, mocker):
+    jpeg = b"\xff\xd8sample\xff\xd9"
+    response, get = download_response(mocker, [jpeg[:4], b"", jpeg[4:]])
+    opened, door = mocker.patch("doorbell.os.open"), station()
+
+    def send(user, command, pointer, size):
+        value = NET_DVR_NOTICE_DATA.from_buffer_copy(string_at(pointer, size))
+        pic = value.struNoticePic[0]
+        assert value.byPicNum == 1 and string_at(pic.pPicData, pic.dwPicDataLen) == jpeg
+        return 1
+
+    door._sdk.NET_DVR_RemoteControl.side_effect = send
+    door.send_notice("Hello", url)
+    get.assert_called_once_with(url, stream=True, timeout=(5, 10))  # TLS verification is not disabled.
+    response.__exit__.assert_called_once()
+    opened.assert_not_called()
+    door._sdk.NET_DVR_RemoteControl.assert_called_once()
+
+
+def test_oversized_http_stream_stops_before_native_send(mocker):
+    consumed = []
+
+    def chunks():
+        for index, chunk in enumerate([b"x" * 524288, b"x", b"never consumed"]):
+            consumed.append(index)
+            yield chunk
+
+    response, get = download_response(mocker, [])
+    response.iter_content.return_value = chunks()
+    response.headers = {"Content-Length": "1"}  # Do not trust the claimed length.
+    door = station()
+    with pytest.raises(ValueError, match="512 KiB"):
+        door.send_notice("Hello", "https://example.invalid/image")
+    assert consumed == [0, 1]
+    response.__exit__.assert_called_once()
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
+
+
+@pytest.mark.parametrize("error", [requests.Timeout, requests.exceptions.SSLError, requests.ConnectionError])
+def test_fetch_failure_does_not_send_or_expose_url(error, mocker):
+    mocker.patch("doorbell.requests.get", side_effect=error("https://example.invalid/?token=PRIVATE-TOKEN"))
+    door = station()
+    with pytest.raises(ValueError, match="Unable to fetch") as caught:
+        door.send_notice("Hello", "https://example.invalid/?token=PRIVATE-TOKEN")
+    assert "PRIVATE-TOKEN" not in str(caught.value)
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
+
+
+def test_http_error_or_nonjpeg_body_does_not_send(mocker):
+    response, get = download_response(mocker, [b"an HTML error page"])
+    door = station()
+    with pytest.raises(ValueError, match="JPEG"):
+        door.send_notice("Hello", "https://example.invalid/image")
+    response.raise_for_status.side_effect = requests.HTTPError("404 PRIVATE-TOKEN")
+    with pytest.raises(ValueError, match="Unable to fetch"):
+        door.send_notice("Hello", "https://example.invalid/image")
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
 @pytest.fixture
 def controls(mocker, tmp_path):
-    mocker.patch("doorbell.NOTICE_IMAGE_DIR", tmp_path)
     doors = [station("Indoor A"), station("Indoor B"), station("Outdoor", DeviceType.OUTDOOR)]
     client, callbacks, buttons, inputs, wire = Mock(spec=Client), {}, {}, {}, {}
     client.is_connected.return_value = False
@@ -254,7 +345,7 @@ def test_empty_text_and_missing_image_block_send_until_cleared(controls):
     c, door = controls, controls.doors[0]
     c.press(door)
     c.edit(door, "text", "Hello")
-    c.edit(door, "image", "missing.jpg")
+    c.edit(door, "image", str(c.image_dir / "missing.jpg"))
     c.press(door)
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
     c.edit(door, "image", "")
@@ -267,7 +358,7 @@ def test_discovery_flow_accepts_utf8_and_optional_image(controls):
     jpeg = b"\xff\xd8sample-data\xff\xd9"
     (c.image_dir / "gate.jpg").write_bytes(jpeg)
     c.edit(door, "text", "😀" * 255)
-    c.edit(door, "image", "gate.jpg")
+    c.edit(door, "image", str(c.image_dir / "gate.jpg"))
     c.press(door)
     assert bytes(c.wire[door].byNoticeDetail).split(b"\0")[0] == ("😀" * 255).encode()
     assert c.wire[door].byPicNum == 1
