@@ -161,7 +161,50 @@ For each of your doorbells, the following entities are available:
 
 ## Sending commands to the doorbells
 
-### Indoor text/JPEG notices (proposed command)
+### Indoor text/JPEG notices
+
+The indoor station's built-in notice function can display text and an optional
+JPEG, for example "Gate left open" with a snapshot. Like Broadcast, this uses
+discovered Home Assistant inputs and a button on the existing device page.
+
+#### Home Assistant controls
+
+| Control | Purpose |
+|---|---|
+| `Notice title` (text) | Heading, up to63 UTF-8 bytes |
+| `Notice text` (text) | Message, up to255 characters in HA's text entity |
+| `Notice JPEG` (text) | Optional normalised filename, e.g. `gate.jpg`; blank means text only |
+| `Notice type` (select) | `notice` or `alarm`, default `notice` |
+| `Send notice` (button) | Send the current draft once |
+| `Notice result` (sensor) | Last attempt status, with ID/reason/SDK-code attributes |
+
+Fill in title and text, optionally enter a JPEG filename, select the type, then
+press **Send notice**. Editing a field never sends anything. After acceptance,
+the message text clears; explicitly fill it again for another message. A missing
+or invalid picture rejects the attempt and preserves the draft. Clear its filename
+to intentionally send text only. Alarm requests the built-in sound at the current
+volume; it does not arm the security system or change quiet hours.
+
+Drafts expire five minutes after the last valid edit. Editing again prepares a
+fresh draft. Empty/invalid fields, retained/replayed commands and old button
+presses are rejected. Each discovery button payload identifies the current draft:
+if `stale_draft_press_rejected` appears just after an edit, wait for HA to receive
+the updated discovery state and press again. Reconnect restores draft field states
+without sending; add-on restart starts with empty title/text. Unknown delivery
+still blocks new attempts until reviewed, including after restart.
+
+Draft values are in add-on memory; their MQTT state echoes are non-retained and
+the new callbacks do not log message contents. Home Assistant may retain entity
+history according to its recorder configuration. The HA text field uses255
+characters so even four-byte UTF-8 characters fit within the native1023-byte
+limit. The advanced atomic JSON command below retains the full native byte limit
+and is preferable for automations that need one consistent payload.
+
+These controls are proposed in this PR and are not part of stable3.0.34. Their
+discovery/callback flow is tested with the actual discovery library and synthetic
+MQTT/SDK transports. Live HA rendering and hardware validation remain pending.
+
+#### Atomic MQTT command (advanced)
 
 On configured **indoor** devices, publish non-retained JSON to
 `hikvision/<normalised_name>/notice/set`. The name follows the existing add-on

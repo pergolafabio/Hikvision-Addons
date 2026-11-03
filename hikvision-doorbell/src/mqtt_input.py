@@ -14,6 +14,7 @@ from ha_mqtt_discoverable.sensors import Button, ButtonInfo, Text, TextInfo, Sen
 from loguru import logger
 from mqtt import extract_device_info, _register_reconnect_handler, _register_command_topic, get_shared_client
 from indoor_notice import NoticeError, NoticeService
+from indoor_notice_inputs import NoticeInputs
 from paho.mqtt.client import MQTTMessage
 from sdk.hcnetsdk import (NET_DVR_JPEGPARA, NET_DVR_DEVICEINFO_V30)
 import xml.etree.ElementTree as ET
@@ -40,6 +41,7 @@ class MQTTInput():
         logger.debug("Setting up MQTTInput")
         shared_client = get_shared_client(config)
         self._notice_service = NoticeService(DATA_DIR / "notice-journal", Path("/media/hikvision-notices"))
+        self._notice_inputs = {}
         mqtt_settings = Settings.MQTT(
             host=config.host,
             port=config.port,
@@ -72,6 +74,11 @@ class MQTTInput():
                     self._notice_callback(client, device, message)
 
                 _register_command_topic(shared_client, topic, notice_callback)
+                self._notice_inputs[doorbell] = NoticeInputs(
+                    mqtt_settings, device, sanitized_doorbell_name, doorbell,
+                    send=lambda payload, d=doorbell: self._send_notice_payload(shared_client, d, payload),
+                    report=lambda result, d=doorbell: self._publish_notice_result(shared_client, d, result),
+                    register=_register_reconnect_handler)
             elif doorbell._type == DeviceType.INDOOR:
                 logger.warning("Notice topic is empty or ambiguous; use unique configured indoor station names")
             
@@ -486,19 +493,28 @@ class MQTTInput():
     def _notice_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         # This callback is bound to the exact device at registration; it never
         # uses the legacy fuzzy topic/name resolver for a notice destination.
-        topic = f"hikvision/{sanitize_doorbell_name(doorbell._config.name)}/notice"
-        if message.retain:
+        return self._send_notice_payload(client, doorbell, message.payload, message.retain)
+
+    def _send_notice_payload(self, client, doorbell, payload, retained=False):
+        if retained:
             result = {"status": "not_sent", "reason": "retained_command_rejected", "send_attempted": False}
         else:
             try:
-                result = doorbell.send_indoor_notice(message.payload, self._notice_service)
+                result = doorbell.send_indoor_notice(payload, self._notice_service)
             except NoticeError as error:
                 result = {"status": "not_sent", "reason": str(error), "send_attempted": False}
             except (SDKError, OSError, sqlite3.Error, ValueError, TypeError, AttributeError):
                 result = {"status": "not_sent", "reason": "notice_unavailable", "send_attempted": False}
+        return self._publish_notice_result(client, doorbell, result)
+
+    def _publish_notice_result(self, client, doorbell, result):
+        topic = f"hikvision/{sanitize_doorbell_name(doorbell._config.name)}/notice"
         # Message content, paths, serials and exception strings are not logged.
         logger.info("Indoor notice result: {}", result["status"])
         client.publish(topic + "/result", json.dumps(result), qos=1, retain=False)
+        inputs = getattr(self, "_notice_inputs", {}).get(doorbell)
+        if inputs:
+            inputs.publish_result(result)
         return result
 
     def _load_persistent_data(self):
