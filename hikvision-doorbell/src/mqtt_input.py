@@ -430,7 +430,6 @@ class MQTTInput():
                     settings, lambda client, userdata, message, target=doorbell: self._send_notice_callback(client, target, message))
                 notice_button.set_availability(True)
                 _register_reconnect_handler(notice_button)
-                logger.info("Registered notice controls for {}", doorbell._config.name)
 
                 # Call On Button
                 button_info = ButtonInfo(
