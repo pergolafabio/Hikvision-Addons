@@ -564,9 +564,6 @@ class MQTTInput():
         # Retained field commands restore the draft after reconnect; only the button sends.
         if message.dup:
             return
-        entity = self._sensors.get(doorbell, {}).get(f"notice_{field}")
-        if entity is None:
-            return
         try:
             value = message.payload.decode("utf-8")
             if len(value) > 255 or "\0" in value:
@@ -575,7 +572,9 @@ class MQTTInput():
             value = None  # A bad edit blocks sending instead of reusing old text or dropping an image.
             logger.error("Invalid notice {} input for {}", field, doorbell._config.name)
         self._notice_drafts[doorbell][field] = value
-        client.publish(entity.state_topic, value if value is not None else "", retain=True)
+        entity = self._sensors.get(doorbell, {}).get(f"notice_{field}")
+        if entity is not None:
+            client.publish(entity.state_topic, value if value is not None else "", retain=True)
 
     def _send_notice_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         logger.info("Received notice command for {} (retain={}, dup={}, press={})",

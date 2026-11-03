@@ -227,6 +227,17 @@ def test_retained_fields_restore_draft_without_sending(controls):
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
+def test_retained_edit_during_entity_construction_is_not_lost():
+    door, client = station(), Mock(spec=Client)
+    instance = MQTTInput.__new__(MQTTInput)
+    instance._notice_drafts = {door: {"text": "", "image": ""}}
+    instance._sensors = {door: {}}
+    instance._notice_input_callback(client, door, message(payload=b"Restored", retain=True), "text")
+    assert instance._notice_drafts[door]["text"] == "Restored"
+    client.publish.assert_not_called()
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
+
+
 @pytest.mark.parametrize("field,payload", [("text", b"\xff"), ("text", "x" * 256), ("image", b"\0")])
 def test_bad_edit_blocks_old_draft_until_explicit_correction(controls, field, payload):
     c, door = controls, controls.doors[0]
