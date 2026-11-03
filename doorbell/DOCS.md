@@ -99,6 +99,8 @@ For each of your doorbells, the following entities are available:
   - `Backlight` (Turn the backlight of the outdoor station to on/off/auto)
 - Input Text
   - `ISAPI Request` (Custom ISAPI control, see more info below!)
+  - `Notice text` (Indoor only: `Title | Body`, e.g. `Home | Gate opened`; body alone uses `Home Assistant`. Up to 255 characters total; title up to 63 UTF-8 bytes.)
+  - `Notice JPEG` (Indoor only: optional local path such as `/media/gate.jpg` or an HTTP(S) URL; JPEG up to 512 KiB. Leave empty for text only.)
 - Buttons
   - `Answer call` (The device needs to be connected to Hikconnect in to make "answer" work, if its not possible, you can use "reject" instead)
   - `Hangup call` (The device needs to be connected to Hikconnect in to make "hangup" work, if its not possible, you can use "reject" instead)
@@ -106,6 +108,7 @@ For each of your doorbells, the following entities are available:
   - `Reboot`
   - `Take Snapshot` (Grabs a snapshot from the outdoor station and updates the image entity)
   - `Broadcast` (Plays a custom audio file on an indoor panel)
+  - `Send notice` (Indoor only: sends the current `Notice text` and optional `Notice JPEG` values.)
   - `Call` (Start a call on an indoor panel and you can also speak (not working with HA Addon, audio card is needed))
   - ...
 - Device triggers (depending on device model)
@@ -210,6 +213,7 @@ The input string must be in the format
   | callOff | Stops the audio call
   | broadcastOn | Start an broadcast
   | broadcastOff | Stops the broadcast
+  | sendNotice | Sends the current `Notice text` and `Notice JPEG` values, e.g. `sendNotice indoor`
 
 - `<doorbell_name>` is the custom name given to the doorbell in the configuration options, all lowercase and with whitespace substituted by underscores `_`. 
 

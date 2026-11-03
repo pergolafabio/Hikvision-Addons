@@ -47,6 +47,7 @@ class MQTTInput():
 
         # Initialize storage
         self._sensors = {}
+        self._notice_drafts = {}
         self._scene_sensor_tasks = {}
         self._alarm_sensor_tasks = {}
 
@@ -405,6 +406,33 @@ class MQTTInput():
 
             if doorbell._type is DeviceType.INDOOR:
 
+                # Editing these inputs only updates a draft; the button sends it.
+                self._notice_drafts[doorbell] = {"text": "", "image": ""}
+                for field, label in (("text", "Notice text"), ("image", "Notice JPEG")):
+                    text_info = TextInfo(
+                        name=label, unique_id=f"{sanitized_doorbell_name}_notice_{field}",
+                        device=device, min=0, max=255, retain=True,
+                        default_entity_id=f"{sanitized_doorbell_name}_notice_{field}")
+                    settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell)
+                    notice_input = Text(settings, lambda client, userdata, message, target=doorbell, key=field:
+                                        self._notice_input_callback(client, target, message, key))
+                    self._sensors[doorbell][f"notice_{field}"] = notice_input
+                    notice_input.set_availability(True)
+                    _register_reconnect_handler(notice_input)
+
+                button_info = ButtonInfo(
+                    name="Send notice",
+                    unique_id=f"{sanitized_doorbell_name}_send_notice",
+                    device=device,
+                    icon="mdi:message-text",
+                    default_entity_id=f"{sanitized_doorbell_name}_send_notice")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                notice_button = Button(
+                    settings, lambda client, userdata, message, target=doorbell: self._send_notice_callback(client, target, message))
+                notice_button.set_availability(True)
+                _register_reconnect_handler(notice_button)
+                logger.info("Registered notice controls for {}", doorbell._config.name)
+
                 # Call On Button
                 button_info = ButtonInfo(
                     name="Call On",
@@ -531,6 +559,40 @@ class MQTTInput():
         # If we get here, log the failure and return None
         logger.error(f"NO MATCH! Clean Topic: {clean_topic} | Vowel-blind Topic: {vowel_blind_topic}")
         return None
+
+    def _notice_input_callback(self, client, doorbell: Doorbell, message: MQTTMessage, field: str):
+        # Retained field commands restore the draft after reconnect; only the button sends.
+        if message.dup:
+            return
+        try:
+            value = message.payload.decode("utf-8")
+            if len(value) > 255 or "\0" in value:
+                raise ValueError()
+        except (UnicodeError, ValueError):
+            value = None  # A bad edit blocks sending instead of reusing old text or dropping an image.
+            logger.error("Invalid notice {} input for {}", field, doorbell._config.name)
+        self._notice_drafts[doorbell][field] = value
+        entity = self._sensors.get(doorbell, {}).get(f"notice_{field}")
+        if entity is not None:
+            client.publish(entity.state_topic, value if value is not None else "", retain=True)
+
+    def _send_notice_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        logger.info("Received notice command for {} (retain={}, dup={}, press={})",
+                    doorbell._config.name, message.retain, message.dup, message.payload == b"PRESS")
+        if message.retain or message.dup or message.payload != b"PRESS":
+            return
+        self.send_notice(doorbell)
+
+    def send_notice(self, doorbell: Doorbell):
+        """Send the current fields, shared by the MQTT button and STDIN command."""
+        try:
+            draft = dict(self._notice_drafts[doorbell])
+            doorbell.send_notice(draft["text"], draft["image"])
+            logger.info("Notice accepted by SDK for {}; display is not confirmed", doorbell._config.name)
+        except SDKError as err:
+            logger.error("Notice failed for {}: {} (no automatic retry)", doorbell._config.name, err)
+        except Exception as err:
+            logger.error("Unable to send notice for {}: {}", doorbell._config.name, err)
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)

@@ -237,6 +237,12 @@ class InputReader():
             case "broadcastOff":
                 logger.info("Turning Broadcast OFF")
                 self._send_broadcast(doorbell, "off")
+            case "sendNotice":
+                mqtt_input = get_mqtt_input()
+                if mqtt_input is None:
+                    logger.error("Notice inputs are not initialized")
+                    return
+                mqtt_input.send_notice(doorbell)
             case "debug":
                 # This is a special command that accept the name of a method,
                 # calls the method on the doorbell instance and outputs the result

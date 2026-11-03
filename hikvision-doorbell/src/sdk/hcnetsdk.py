@@ -25,6 +25,7 @@ MAX_DEV_NUMBER_LEN = 32
 ACS_CARD_NO_LEN = 32
 LOCK_NAME_LEN = 32
 MAX_NOTICE_NUMBER_LEN = 32
+NET_DVR_SEND_NOTICE_DATA = 16008
 MAX_FILE_PATH_LEN = 256
 
 NET_DVR_DEV_ADDRESS_MAX_LEN = 129
@@ -445,6 +446,27 @@ class NET_DVR_TIME_EX(Structure):
         ("byMinute", BYTE),
         ("bySecond", BYTE),
         ("byRes", BYTE)
+    ]
+
+class NET_DVR_NOTICE_PIC(Structure):
+    _fields_ = [
+        ("pPicData", c_void_p),
+        ("dwPicDataLen", DWORD),
+        ("byRes", BYTE * 32)
+    ]
+
+class NET_DVR_NOTICE_DATA(Structure):
+    _fields_ = [
+        ("dwSize", DWORD),
+        ("struTime", NET_DVR_TIME_EX),
+        ("byNoticeNumber", BYTE * MAX_NOTICE_NUMBER_LEN),
+        ("byNoticeTheme", BYTE * 64),
+        ("byNoticeDetail", BYTE * 1024),
+        ("byLevel", BYTE),
+        ("byPicNum", BYTE),
+        ("byRes1", BYTE * 2),
+        ("struNoticePic", NET_DVR_NOTICE_PIC * 6),
+        ("byRes2", BYTE * 128)
     ]
 
 class NET_DVR_ZONE_ALARM_INFO(Structure):

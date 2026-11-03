@@ -4,6 +4,7 @@ import re
 import unicodedata
 import json
 import os
+import stat
 import requests
 from requests.auth import HTTPDigestAuth
 from datetime import datetime, time
@@ -13,7 +14,11 @@ from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_VIDEO_CALL_COND, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
+from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_SEND_NOTICE_DATA, NET_DVR_TIME_EX
 import xml.etree.ElementTree as ET
+
+# Indoor SDK guide, section 4.37: one JPEG is at most 512 KB.
+MAX_NOTICE_IMAGE_BYTES = 512 * 1024
 
 
 class DeviceType(IntEnum):
@@ -835,6 +840,70 @@ class Doorbell():
         self._send_sip_packet(cancel_packet)
     '''
         
+    def send_notice(self, text: str, image: str = ""):
+        """Send custom text and one optional JPEG from a local path or HTTP(S) URL."""
+        if self._type is not DeviceType.INDOOR:
+            raise ValueError("Notices require an indoor station")
+        if type(self.user_id) is not int or not 0 <= self.user_id <= 2147483647:
+            raise ValueError("Notices require a valid SDK login")
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("Notice text is required")
+        title, separator, detail = text.partition("|")
+        if separator:
+            title, text = title.strip(), detail.strip()
+        else:
+            title = "Home Assistant"
+        theme = title.encode("utf-8")
+        if not theme or len(theme) > 63 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in title):
+            raise ValueError("Notice title must be 1-63 UTF-8 bytes without control characters")
+        if not text.strip():
+            raise ValueError("Notice body is required")
+        body = text.encode("utf-8")
+        if len(body) > 1023 or any(ord(c) < 32 and c not in "\n\t" or 127 <= ord(c) < 160 for c in text):
+            raise ValueError("Notice text exceeds 1023 UTF-8 bytes or contains control characters")
+        if not isinstance(image, str) or "\0" in image:
+            raise ValueError("Notice JPEG path or URL is invalid")
+
+        now = datetime.now()
+        notice = NET_DVR_NOTICE_DATA()
+        notice.dwSize = sizeof(notice)
+        notice.struTime = NET_DVR_TIME_EX(now.year, now.month, now.day, now.hour, now.minute, now.second, 0)
+        for field, value in (
+            ("byNoticeNumber", now.strftime("ha-%Y%m%d%H%M%S%f").encode("ascii")),
+            ("byNoticeTheme", theme),
+            ("byNoticeDetail", body),
+        ):
+            memmove(byref(notice, getattr(NET_DVR_NOTICE_DATA, field).offset), value, len(value))
+        notice.byLevel = 4  # Normal notice, rather than an alarm notice (3).
+        image_buffer = None
+        if image:
+            if image.lower().startswith(("https://", "http://")):
+                try:
+                    with requests.get(image, stream=True, timeout=(5, 10)) as response:
+                        response.raise_for_status()
+                        data = bytearray()
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if len(data) + len(chunk) > MAX_NOTICE_IMAGE_BYTES:
+                                raise ValueError("Notice JPEG exceeds 512 KiB")
+                            data.extend(chunk)
+                        data = bytes(data)
+                except requests.RequestException:
+                    raise ValueError("Unable to fetch notice JPEG over HTTP(S)") from None
+            else:
+                flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
+                with os.fdopen(os.open(image, flags), "rb") as stream:
+                    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                        raise ValueError("Notice JPEG must be a regular file")
+                    data = stream.read(MAX_NOTICE_IMAGE_BYTES + 1)
+            if len(data) > MAX_NOTICE_IMAGE_BYTES or not data.startswith(b"\xff\xd8") or not data.endswith(b"\xff\xd9"):
+                raise ValueError("Notice image must be a JPEG of at most 512 KiB")
+            image_buffer = create_string_buffer(data, len(data))
+            notice.byPicNum = 1
+            notice.struNoticePic[0].pPicData = cast(image_buffer, c_void_p).value
+            notice.struNoticePic[0].dwPicDataLen = len(data)
+        if not self._sdk.NET_DVR_RemoteControl(self.user_id, NET_DVR_SEND_NOTICE_DATA, byref(notice), sizeof(notice)):
+            raise SDKError(self._sdk, "NET_DVR_SEND_NOTICE_DATA failed")
+
     def reboot_device(self):
         # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
         try:
