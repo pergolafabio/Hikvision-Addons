@@ -4,6 +4,8 @@ import re
 import unicodedata
 import json
 import os
+import stat
+from pathlib import Path
 import requests
 from requests.auth import HTTPDigestAuth
 from datetime import datetime, time
@@ -15,6 +17,9 @@ from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG
 from sdk.utils import SDKError, call_ISAPI
 from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_SEND_NOTICE_DATA, NET_DVR_TIME_EX
 import xml.etree.ElementTree as ET
+
+NOTICE_IMAGE_DIR = Path("/media/hikvision-notices")
+MAX_NOTICE_IMAGE_BYTES = 24576
 
 
 class DeviceType(IntEnum):
@@ -836,25 +841,51 @@ class Doorbell():
         self._send_sip_packet(cancel_packet)
     '''
         
-    def send_test_notice(self):
-        """Send one fixed text-only notice to test indoor firmware support."""
+    def send_notice(self, text: str, image: str = ""):
+        """Send custom text and one optional JPEG from the notice media folder."""
         if self._type is not DeviceType.INDOOR:
-            raise ValueError("Test notices require an indoor station")
+            raise ValueError("Notices require an indoor station")
         if type(self.user_id) is not int or not 0 <= self.user_id <= 2147483647:
-            raise ValueError("Test notices require a valid SDK login")
+            raise ValueError("Notices require a valid SDK login")
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("Notice text is required")
+        body = text.encode("utf-8")
+        if len(body) > 1023 or any(ord(c) < 32 and c not in "\n\t" or 127 <= ord(c) < 160 for c in text):
+            raise ValueError("Notice text exceeds 1023 UTF-8 bytes or contains control characters")
+        if not isinstance(image, str):
+            raise ValueError("Notice JPEG filename is invalid")
 
         now = datetime.now()
         notice = NET_DVR_NOTICE_DATA()
         notice.dwSize = sizeof(notice)
         notice.struTime = NET_DVR_TIME_EX(now.year, now.month, now.day, now.hour, now.minute, now.second, 0)
         for field, value in (
-            ("byNoticeNumber", now.strftime("ha-test-%Y%m%d%H%M%S%f").encode("ascii")),
-            ("byNoticeTheme", b"Home Assistant test"),
-            ("byNoticeDetail", b"Test notice from Home Assistant."),
+            ("byNoticeNumber", now.strftime("ha-%Y%m%d%H%M%S%f").encode("ascii")),
+            ("byNoticeTheme", b"Home Assistant"),
+            ("byNoticeDetail", body),
         ):
-            getattr(notice, field)[:len(value)] = value
+            memmove(byref(notice, getattr(NET_DVR_NOTICE_DATA, field).offset), value, len(value))
         notice.byLevel = 4  # Normal notice, rather than an alarm notice (3).
-        # byPicNum and all reserved/picture fields remain zero.
+        image_buffer = None
+        if image:
+            if len(image) > 128 or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.(jpg|jpeg)", image, re.IGNORECASE):
+                raise ValueError("Use a JPEG basename, for example gate.jpg")
+            if NOTICE_IMAGE_DIR.is_symlink():
+                raise ValueError("Notice media folder must not be a symlink")
+            flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+            path = NOTICE_IMAGE_DIR / image
+            if path.is_symlink():
+                raise ValueError("Notice JPEG must not be a symlink")
+            with os.fdopen(os.open(path, flags), "rb") as stream:
+                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                    raise ValueError("Notice JPEG must be a regular file")
+                data = stream.read(MAX_NOTICE_IMAGE_BYTES + 1)
+            if len(data) > MAX_NOTICE_IMAGE_BYTES or not data.startswith(b"\xff\xd8") or not data.endswith(b"\xff\xd9"):
+                raise ValueError("Notice image must be a JPEG of at most 24 KiB")
+            image_buffer = create_string_buffer(data, len(data))
+            notice.byPicNum = 1
+            notice.struNoticePic[0].pPicData = cast(image_buffer, c_void_p).value
+            notice.struNoticePic[0].dwPicDataLen = len(data)
         if not self._sdk.NET_DVR_RemoteControl(self.user_id, NET_DVR_SEND_NOTICE_DATA, byref(notice), sizeof(notice)):
             raise SDKError(self._sdk, "NET_DVR_SEND_NOTICE_DATA failed")
 

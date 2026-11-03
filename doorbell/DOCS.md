@@ -169,6 +169,20 @@ There are two ways in which you can interact with your doorbells:
 
 This app automatically creates [switches](https://www.home-assistant.io/integrations/switch/) and [buttons](https://www.home-assistant.io/integrations/button/) you can toggle and react to from the Home Assistant UI or from your own automations.
 
+#### Indoor notices
+
+Indoor stations have two text entities and one **Send notice** button:
+
+1. Set **Notice text** (required, up to 255 characters and 1023 UTF-8 bytes).
+2. Optionally set **Notice JPEG** to a filename such as `gate.jpg`. Leave it empty for text only.
+3. Press **Send notice** once. Editing either field does not send anything.
+
+The title is **Home Assistant**. Each station keeps its own draft in memory; fields start empty after an app restart. State values are retained for Home Assistant reconnects, but retained/duplicate commands are ignored. A missing or invalid picture blocks the entire send; correct or clear the picture field before pressing again. Errors are logged without automatic retry.
+
+Place pictures in `/media/hikvision-notices` inside the app container. Home Assistant already shares `/media` with the app. For standalone Docker, bind-mount your picture directory there, preferably read-only. Enter only a JPEG basename, not a path or URL; symlinks are rejected. The file must be at most 24 KiB. Prepare a baseline RGB JPEG, for example 640 × 360; the app checks size and JPEG start/end markers, without decoding or resizing it.
+
+These controls use native normal notices (SDK command 16008, level 4, zero or one picture). Display and image support depend on the station and firmware. A successful SDK call does not confirm screen display, sound or screen wake. Some Android stations show messages only in the notification drawer.
+
 ### STDIN service (advanced)
 
 There is an advanced method to interact with the devices by sending a text message to the app on its `standard input` (STDIN).
