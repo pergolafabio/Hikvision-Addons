@@ -405,6 +405,20 @@ class MQTTInput():
 
             if doorbell._type is DeviceType.INDOOR:
 
+                # Fixed test message for checking indoor notice support.
+                button_info = ButtonInfo(
+                    name="Test notice",
+                    unique_id=f"{sanitized_doorbell_name}_test_notice",
+                    device=device,
+                    entity_category="diagnostic",
+                    icon="mdi:message-text",
+                    default_entity_id=f"{sanitized_doorbell_name}_test_notice")
+                settings = Settings(mqtt=mqtt_settings, entity=button_info, manual_availability=True, user_data=doorbell)
+                test_notice_button = Button(
+                    settings, lambda client, userdata, message, target=doorbell: self._test_notice_callback(client, target, message))
+                test_notice_button.set_availability(True)
+                _register_reconnect_handler(test_notice_button)
+
                 # Call On Button
                 button_info = ButtonInfo(
                     name="Call On",
@@ -531,6 +545,17 @@ class MQTTInput():
         # If we get here, log the failure and return None
         logger.error(f"NO MATCH! Clean Topic: {clean_topic} | Vowel-blind Topic: {vowel_blind_topic}")
         return None
+
+    def _test_notice_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
+        if message.retain or message.dup or message.payload != b"PRESS":
+            return
+        try:
+            doorbell.send_test_notice()
+            logger.info("Test notice accepted by SDK for {}; display is not confirmed", doorbell._config.name)
+        except SDKError as err:
+            logger.error("Test notice failed for {}: {} (no automatic retry)", doorbell._config.name, err)
+        except Exception as err:
+            logger.error("Unable to send test notice for {}: {}", doorbell._config.name, err)
 
     def _reboot_callback(self, client, doorbell: Doorbell, message: MQTTMessage):
         doorbell = self._get_doorbell_from_args(doorbell, message)

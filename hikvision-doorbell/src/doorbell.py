@@ -13,6 +13,7 @@ from loguru import logger
 from config import AppConfig
 from sdk.hcnetsdk import BOOL, BYTE, DWORD, NET_DVR_VIDEO_INTERCOM_RELATEDEV_CFG, NET_DVR_CALL_STATUS, NET_DVR_JPEGPARA, NET_DVR_VIDEO_CALL_COND, NET_DVR_CLIENTINFO, NET_DVR_VIDEO_CALL_PARAM, NET_DVR_CONTROL_GATEWAY, NET_DVR_DEVICEINFO_V30, NET_DVR_SETUPALARM_PARAM_V50, NET_DVR_VIDEO_INTERCOM_DEVICEID_CFG,  DeviceAbilityType
 from sdk.utils import SDKError, call_ISAPI
+from sdk.hcnetsdk import NET_DVR_NOTICE_DATA, NET_DVR_SEND_NOTICE_DATA, NET_DVR_TIME_EX
 import xml.etree.ElementTree as ET
 
 
@@ -835,6 +836,28 @@ class Doorbell():
         self._send_sip_packet(cancel_packet)
     '''
         
+    def send_test_notice(self):
+        """Send one fixed text-only notice to test indoor firmware support."""
+        if self._type is not DeviceType.INDOOR:
+            raise ValueError("Test notices require an indoor station")
+        if type(self.user_id) is not int or not 0 <= self.user_id <= 2147483647:
+            raise ValueError("Test notices require a valid SDK login")
+
+        now = datetime.now()
+        notice = NET_DVR_NOTICE_DATA()
+        notice.dwSize = sizeof(notice)
+        notice.struTime = NET_DVR_TIME_EX(now.year, now.month, now.day, now.hour, now.minute, now.second, 0)
+        for field, value in (
+            ("byNoticeNumber", now.strftime("ha-test-%Y%m%d%H%M%S%f").encode("ascii")),
+            ("byNoticeTheme", b"Home Assistant test"),
+            ("byNoticeDetail", b"Test notice from Home Assistant."),
+        ):
+            getattr(notice, field)[:len(value)] = value
+        notice.byLevel = 4  # Normal notice, rather than an alarm notice (3).
+        # byPicNum and all reserved/picture fields remain zero.
+        if not self._sdk.NET_DVR_RemoteControl(self.user_id, NET_DVR_SEND_NOTICE_DATA, byref(notice), sizeof(notice)):
+            raise SDKError(self._sdk, "NET_DVR_SEND_NOTICE_DATA failed")
+
     def reboot_device(self):
         # We know that the SDK gives error when rebooting since it cannot contact the device, raising error code 10
         try:
