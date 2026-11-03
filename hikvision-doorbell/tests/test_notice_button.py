@@ -192,7 +192,7 @@ def test_real_discovery_edits_do_not_send_and_press_binds_exact_device(controls)
         assert entity.generate_config()["payload_press"] == "PRESS"
         assert any(call.args[0] is entity for call in c.reconnect.call_args_list)
         for field in ("text", "image"):
-            assert c.inputs[door, field].generate_config()["retain"] is False
+            assert c.inputs[door, field].generate_config()["retain"] is True
         c.edit(door, "text", door._config.name)
     for door in c.doors:
         door._sdk.NET_DVR_RemoteControl.assert_not_called()
@@ -211,12 +211,20 @@ def test_replayed_or_invalid_commands_do_not_send(controls, flags):
     door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
-@pytest.mark.parametrize("flags", [{"retain": True}, {"dup": True}])
-def test_replayed_edits_do_not_change_draft(controls, flags):
+def test_duplicate_edit_does_not_change_draft(controls):
     c, door = controls, controls.doors[0]
     c.edit(door, "text", "Hello")
-    c.edit(door, "text", "Stale", **flags)
+    c.edit(door, "text", "Stale", dup=True)
     assert c.instance._notice_drafts[door]["text"] == "Hello"
+
+
+def test_retained_fields_restore_draft_without_sending(controls):
+    c, door = controls, controls.doors[0]
+    c.edit(door, "text", "Restored text", retain=True)
+    c.edit(door, "image", "gate.jpg", retain=True)
+    assert c.instance._notice_drafts[door] == {"text": "Restored text", "image": "gate.jpg"}
+    c.press(door, retain=True)
+    door._sdk.NET_DVR_RemoteControl.assert_not_called()
 
 
 @pytest.mark.parametrize("field,payload", [("text", b"\xff"), ("text", "x" * 256), ("image", b"\0")])

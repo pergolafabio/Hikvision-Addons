@@ -177,7 +177,7 @@ Indoor stations have two text entities and one **Send notice** button:
 2. Optionally set **Notice JPEG** to a filename such as `gate.jpg`. Leave it empty for text only.
 3. Press **Send notice** once. Editing either field does not send anything.
 
-The title is **Home Assistant**. Each station keeps its own draft in memory; fields start empty after an app restart. State values are retained for Home Assistant reconnects, but retained/duplicate commands are ignored. A missing or invalid picture blocks the entire send; correct or clear the picture field before pressing again. Errors are logged without automatic retry.
+The title is **Home Assistant**. Each station has its own draft. Field commands and displayed values are retained in MQTT, so fields can be restored after an app or Home Assistant restart. Retained field updates never send a notice; retained/duplicate button commands are ignored. A missing or invalid picture blocks the entire send; correct or clear the picture field before pressing again. Errors are logged without automatic retry.
 
 Place pictures in `/media/hikvision-notices` inside the app container. Home Assistant already shares `/media` with the app. For standalone Docker, bind-mount your picture directory there, preferably read-only. Enter only a JPEG basename, not a path or URL; symlinks are rejected. The file must be at most 24 KiB. Prepare a baseline RGB JPEG, for example 640 × 360; the app checks size and JPEG start/end markers, without decoding or resizing it.
 

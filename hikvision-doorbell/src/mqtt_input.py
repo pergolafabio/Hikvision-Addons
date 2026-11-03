@@ -411,7 +411,7 @@ class MQTTInput():
                 for field, label in (("text", "Notice text"), ("image", "Notice JPEG")):
                     text_info = TextInfo(
                         name=label, unique_id=f"{sanitized_doorbell_name}_notice_{field}",
-                        device=device, min=0, max=255, retain=False,
+                        device=device, min=0, max=255, retain=True,
                         default_entity_id=f"{sanitized_doorbell_name}_notice_{field}")
                     settings = Settings(mqtt=mqtt_settings, entity=text_info, manual_availability=True, user_data=doorbell)
                     notice_input = Text(settings, lambda client, userdata, message, target=doorbell, key=field:
@@ -419,7 +419,6 @@ class MQTTInput():
                     self._sensors[doorbell][f"notice_{field}"] = notice_input
                     notice_input.set_availability(True)
                     _register_reconnect_handler(notice_input)
-                    notice_input.set_text("")
 
                 button_info = ButtonInfo(
                     name="Send notice",
@@ -562,7 +561,8 @@ class MQTTInput():
         return None
 
     def _notice_input_callback(self, client, doorbell: Doorbell, message: MQTTMessage, field: str):
-        if message.retain or message.dup:
+        # Retained field commands restore the draft after reconnect; only the button sends.
+        if message.dup:
             return
         entity = self._sensors.get(doorbell, {}).get(f"notice_{field}")
         if entity is None:
