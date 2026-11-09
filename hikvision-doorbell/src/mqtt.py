@@ -424,6 +424,16 @@ class MQTTHandler(EventHandler):
                     minor_alarm = AcsAlarmInfoMajorEvent(minor)
             logger.info("Access control event: {} found with event: {}", major_alarm.name.lower(), minor_alarm.name.lower())
             match minor_alarm.name:
+                case "MINOR_LEGAL_CARD_PASS":
+                    card_no = bytes(alarm_info.struAcsEventInfo.byCardNo).split(b'\0', 1)[0].decode('utf-8', errors='ignore')
+                    logger.debug("Legal card pass on door {} with card number: {}", door_id, card_no)
+                    attributes = {
+                        'event': 'legal_card_pass',
+                        'card_no': card_no,
+                        'door': door_id,
+                    }
+                    trigger = DeviceTriggerMetadata(name=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", type=f"", subtype=f"{major_alarm.name.lower()} {minor_alarm.name.lower()}", payload=attributes)
+                    self.handle_device_trigger(doorbell, trigger)
                 case "MINOR_FACE_VERIFY_PASS":
                     logger.debug("Minor control event: {} found on door {} with employee id: {}", minor_alarm.name.lower(), door_id, employee_id)
                     attributes = {
@@ -499,6 +509,8 @@ class MQTTHandler(EventHandler):
             }
             if user_name:
                 attributes['name'] = user_name
+            if unlock_name == 'CARD':
+                attributes['card_no'] = control_source_decoded
             door_sensor.set_attributes(attributes)
             door_sensor.on()
             logger.debug("Doorbell updating sensor {}", door_sensor)

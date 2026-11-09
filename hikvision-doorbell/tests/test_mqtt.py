@@ -8,7 +8,8 @@ from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler, extract_device_info
 from ha_mqtt_discoverable import DeviceInfo
 import xml.etree.ElementTree as ET
 
-from sdk.hcnetsdk import VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, VideoInterComAlarmType, UnlockType
+from sdk.hcnetsdk import NET_DVR_ACS_ALARM_INFO, NET_DVR_VIDEO_INTERCOM_EVENT, VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, UnlockType, VideoInterComAlarmType
+from sdk.acsalarminfo import AcsAlarmInfoMajor, AcsAlarmInfoMajorEvent
 from sdk.utils import SDKError
 
 
@@ -88,6 +89,47 @@ def test_extract_device_info_with_exception(mocker: MockerFixture):
     mocked_doorbell = mocker.patch('doorbell.Doorbell', **attributes)
     info = extract_device_info(mocked_doorbell)
     assert info is not None
+
+
+def test_legal_card_pass_includes_card_number_and_door(mocked_doorbell: Doorbell, mocker: MockerFixture):
+    handler = MQTTHandler.__new__(MQTTHandler)
+    handler.handle_device_trigger = mocker.Mock()
+    alarm_info = NET_DVR_ACS_ALARM_INFO()
+    alarm_info.dwMajor = AcsAlarmInfoMajor.MAJOR_EVENT.value
+    alarm_info.dwMinor = AcsAlarmInfoMajorEvent.MINOR_LEGAL_CARD_PASS.value
+    card_no = b'0319845527'
+    alarm_info.struAcsEventInfo.byCardNo[:len(card_no)] = card_no
+    alarm_info.struAcsEventInfo.dwDoorNo = 1
+
+    asyncio.run(handler.acs_alarm(mocked_doorbell, 0, None, alarm_info, 0, c_void_p(None)))
+
+    trigger = handler.handle_device_trigger.call_args.args[1]
+    assert trigger['payload'] == {
+        'event': 'legal_card_pass',
+        'card_no': '0319845527',
+        'door': 1,
+    }
+
+
+def test_card_unlock_adds_card_number_to_door_attributes(mocked_doorbell: Doorbell, mocker: MockerFixture):
+    handler = MQTTHandler.__new__(MQTTHandler)
+    door_sensor = mocker.Mock()
+    handler._sensors = {mocked_doorbell: {'door_0': door_sensor}}
+    handler.handle_device_trigger = mocker.Mock()
+
+    alarm_info = NET_DVR_VIDEO_INTERCOM_EVENT()
+    alarm_info.byEventType = VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG
+    unlock_record = alarm_info.uEventInfo.struUnlockRecord
+    unlock_record.wLockID = 0
+    unlock_record.byUnlockType = UnlockType.CARD.value
+    card_no = b'0319845527'
+    unlock_record.byControlSrc[:len(card_no)] = card_no
+
+    asyncio.run(handler.video_intercom_event(mocked_doorbell, 0, None, alarm_info, 0, c_void_p(None)))
+
+    attributes = door_sensor.set_attributes.call_args.args[0]
+    assert attributes['card_no'] == '0319845527'
+    assert attributes['unlock_type'] == 'CARD'
 
 '''
 async def test_video_intercom_event(mocker: MockerFixture, mocked_doorbell: Doorbell, handler: MQTTHandler):
