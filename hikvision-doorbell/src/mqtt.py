@@ -509,8 +509,6 @@ class MQTTHandler(EventHandler):
             }
             if user_name:
                 attributes['name'] = user_name
-            if unlock_name == 'CARD':
-                attributes['card_no'] = control_source_decoded
             door_sensor.set_attributes(attributes)
             door_sensor.on()
             logger.debug("Doorbell updating sensor {}", door_sensor)
