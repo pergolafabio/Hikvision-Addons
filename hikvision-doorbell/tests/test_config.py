@@ -15,6 +15,10 @@ def test_AppConfig():
     assert config.system.log_level == LogLevel.WARNING
     assert config.system.sdk_log_level == SDKLogLevel.NONE
 
+def test_online_sensor_is_disabled_by_default():
+    doorbell = AppConfig.Doorbell(name="test", ip="localhost", username="admin", password="password")
+    assert doorbell.online_sensor is False
+
 @pytest.fixture(autouse=True)
 def setup_test_env(monkeypatch):
     monkeypatch.setenv("SUPERVISOR_TOKEN", "fake_test_token")

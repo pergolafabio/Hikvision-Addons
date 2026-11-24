@@ -25,6 +25,7 @@ def mocked_doorbell(mocker: MockerFixture) -> Doorbell:
 
 @pytest.fixture()
 def handler(mocked_doorbell: Doorbell, mocker: MockerFixture) -> MQTTHandler:
+    mocked_doorbell._config.online_sensor = False
     registry = Registry()
 
     registry[0] = mocked_doorbell
@@ -45,6 +46,24 @@ def handler(mocked_doorbell: Doorbell, mocker: MockerFixture) -> MQTTHandler:
     # Instantiate the handler
     handler = MQTTHandler(mqtt_config, registry)
     return handler
+
+def test_online_sensor_is_created_when_enabled(mocked_doorbell: Doorbell, mocker: MockerFixture):
+    mocked_doorbell._config.online_sensor = True
+    mocked_doorbell.get_num_outputs.return_value = 0
+    registry = Registry()
+    registry[0] = mocked_doorbell
+    mocker.patch('mqtt.extract_device_info', return_value=DeviceInfo(name="Outdoor unit", identifiers="id"))
+    mocker.patch("mqtt.Sensor")
+    mocker.patch("mqtt.Switch")
+    mocker.patch("mqtt.DeviceTrigger")
+
+    handler = MQTTHandler(AppConfig.MQTT(host="localhost"), registry)
+
+    assert handler._sensors[mocked_doorbell]['online'].set_state.call_args.args == ("online",)
+
+def test_online_sensor_is_not_created_by_default(mocked_doorbell: Doorbell, handler: MQTTHandler):
+    assert "online" not in handler._sensors[mocked_doorbell]
+
 
 '''
 async def test_init(mocked_doorbell, mocker: MockerFixture):

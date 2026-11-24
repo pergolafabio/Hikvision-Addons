@@ -182,9 +182,10 @@ class EventManager:
     _handlers: set[EventHandler] = set()
     _background_tasks = set()
 
-    def __init__(self, sdk: CDLL, doorbells: Registry):
+    def __init__(self, sdk: CDLL, doorbells: Registry, enable_exception_callback: bool = False):
         self._sdk = sdk
         self._doorbells = doorbells
+        self._enable_exception_callback = enable_exception_callback
         # Save a reference to the main asyncio loop to schedule from another thread
         self._async_loop = asyncio.get_running_loop()
 
@@ -277,7 +278,6 @@ class EventManager:
             self._async_loop)
         future.result()
 
-    '''
     async def _process_exception(self, exception_type: int, user_id: int):
         """Toggles the HA sensor state purely based on native SDK connection exceptions"""
         target_index = None
@@ -332,7 +332,6 @@ class EventManager:
                 )
         return exc_callback
 
-    '''
     def register_handler(self, handler: EventHandler):
         logger.debug("Adding event handler {}", handler)
         self._handlers.add(handler)
@@ -364,15 +363,12 @@ class EventManager:
         if not result:
             raise SDKError(self._sdk, "Error while setting up event manager")
         
-        '''
-        # ==================== ADD THESE LINES HERE ====================
-        logger.debug("Registering global exception callback function using SDK")
-        self.exception_callback_func = self._get_exception_callback_func()
-        exc_result = self._sdk.NET_DVR_SetExceptionCallBack_V30(0, None, self.exception_callback_func, None)
-        if not exc_result:
-            raise SDKError(self._sdk, "Error while setting up event manager exception callback")
-        # ==============================================================
-        '''
+        if self._enable_exception_callback:
+            logger.debug("Exception callback enabled for the Online Sensor")
+            self.exception_callback_func = self._get_exception_callback_func()
+            exc_result = self._sdk.NET_DVR_SetExceptionCallBack_V30(0, None, self.exception_callback_func, None)
+            if not exc_result:
+                raise SDKError(self._sdk, "Error while setting up event manager exception callback")
         
         # Warn if there are no handlers defined (apart from ConsoleHandler, that is only useful for troubleshooting)
         if not any([not isinstance(handler, ConsoleHandler) for handler in self._handlers]):

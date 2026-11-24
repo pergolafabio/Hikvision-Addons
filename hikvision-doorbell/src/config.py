@@ -94,6 +94,7 @@ class AppConfig(GoodConf):
         output_relays: Optional[int] = None
         snapshot: Optional[bool] = False
         scenes: Optional[bool] = False
+        online_sensor: Optional[bool] = False
         call_state_poll: Optional[int] = None
         scene_state_poll: Optional[int] = 15
         alarm_state_poll: Optional[int] = 15

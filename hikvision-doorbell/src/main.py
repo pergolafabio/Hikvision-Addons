@@ -197,7 +197,11 @@ async def main():
             # START BACKGROUND TASK: Keep trying this specific doorbell
             failed_indices.append(index)
 
-    event_manager = EventManager(sdk, doorbell_registry)
+    event_manager = EventManager(
+        sdk,
+        doorbell_registry,
+        enable_exception_callback=any(doorbell.online_sensor for doorbell in config.doorbells),
+    )
     console = ConsoleHandler()
     event_manager.register_handler(console)
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.168 - 2026-11-24
+
+### Added
+
+- Added back the online sensor, but default not enabled
+
 ## 3.0.0-beta.167 - 2026-11-03
 
 ### Added

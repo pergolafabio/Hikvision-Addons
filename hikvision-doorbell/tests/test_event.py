@@ -1,6 +1,10 @@
+import asyncio
 from ctypes import POINTER, cast, create_string_buffer
+from types import SimpleNamespace
+from unittest.mock import Mock
 import pytest
-from event import event_picture
+from doorbell import Registry
+from event import EventManager, event_picture
 from sdk.hcnetsdk import BYTE, NET_DVR_VIDEO_INTERCOM_EVENT, VideoInterComEventType
 
 
@@ -41,3 +45,49 @@ def test_length_without_pointer():
 def test_other_event_type():
     event, _ = _event(VideoInterComEventType.MAGNETIC_DOOR_STATUS, 'struUnlockRecord', b'\xff\xd8')
     assert event_picture(event) is None
+
+
+@pytest.mark.parametrize(("exception_type", "expected_state"), [
+    (0x8006, "offline"),
+    (0x8016, "online"),
+])
+def test_sdk_connection_exceptions_update_online_sensor(exception_type, expected_state):
+    doorbell = SimpleNamespace(user_id=7, _config=SimpleNamespace(name="Test doorbell"))
+    sensor = Mock()
+    handler = SimpleNamespace(name="MQTT", _sensors={doorbell: {"online": sensor}})
+    registry = Registry()
+    registry[0] = doorbell
+
+    async def process_exception():
+        event_manager = EventManager(Mock(), registry)
+        event_manager._handlers = {handler}
+        await event_manager._process_exception(exception_type, 7)
+
+    asyncio.run(process_exception())
+
+    sensor.set_state.assert_called_once_with(expected_state)
+
+
+def test_start_registers_sdk_exception_callback():
+    sdk = Mock()
+    sdk.NET_DVR_SetDVRMessageCallBack_V50.return_value = True
+    sdk.NET_DVR_SetExceptionCallBack_V30.return_value = True
+
+    async def start_event_manager():
+        EventManager(sdk, Registry(), enable_exception_callback=True).start()
+
+    asyncio.run(start_event_manager())
+
+    sdk.NET_DVR_SetExceptionCallBack_V30.assert_called_once()
+
+
+def test_start_skips_sdk_exception_callback_by_default():
+    sdk = Mock()
+    sdk.NET_DVR_SetDVRMessageCallBack_V50.return_value = True
+
+    async def start_event_manager():
+        EventManager(sdk, Registry()).start()
+
+    asyncio.run(start_event_manager())
+
+    sdk.NET_DVR_SetExceptionCallBack_V30.assert_not_called()

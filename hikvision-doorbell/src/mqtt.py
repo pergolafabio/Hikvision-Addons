@@ -249,23 +249,21 @@ class MQTTHandler(EventHandler):
                 loop = asyncio.get_event_loop()
                 self._call_sensor_tasks[doorbell] = loop.create_task(poll_call_sensor())
 
-            '''
-            ############
-            # Online state
-            online_sensor_info = SensorInfo(
-                name="Online state",
-                unique_id=f"{device.identifiers}-online_state",
-                device=device,
-                default_entity_id=f"{sanitized_doorbell_name}_online_state",
-                icon="mdi:cloud-check"
-            )
+            if doorbell._config.online_sensor:
+                online_sensor_info = SensorInfo(
+                    name="Online state",
+                    unique_id=f"{device.identifiers}-online_state",
+                    device=device,
+                    default_entity_id=f"{sanitized_doorbell_name}_online_state",
+                    icon="mdi:cloud-check"
+                )
 
-            online_settings = Settings(mqtt=self._mqtt_settings, entity=online_sensor_info, manual_availability=True)
-            online_sensor = Sensor(online_settings)
-            online_sensor.set_state("online")
-            online_sensor.set_availability(True)
-            self._sensors[doorbell]['online'] = online_sensor
-            '''
+                online_settings = Settings(mqtt=self._mqtt_settings, entity=online_sensor_info, manual_availability=True)
+                online_sensor = Sensor(online_settings)
+                online_sensor.set_state("online")
+                online_sensor.set_availability(True)
+                _register_reconnect_handler(online_sensor)
+                self._sensors[doorbell]['online'] = online_sensor
             
             ##################
             # Doors

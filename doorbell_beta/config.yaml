@@ -1,6 +1,6 @@
 name: Hikvision Doorbell (Beta)
 description: Connect your Hikvision doorbells to Home Assistant (Beta version)
-version: '3.0.0-beta.167'
+version: '3.0.0-beta.168'
 image: ghcr.io/pergolafabio/hikvision-doorbell
 slug: hikvision_doorbell_beta
 url: https://github.com/pergolafabio/Hikvision-Addons/tree/main/doorbell_beta
@@ -25,6 +25,7 @@ options:
       username: admin
       password: ""
       scenes: false
+      online_sensor: false
   system:
     log_level: INFO
     sdk_log_level: NONE
@@ -41,6 +42,7 @@ schema:
       output_relays: "int?"
       snapshot: "bool?"
       scenes: "bool?"
+      online_sensor: "bool?"
       call_state_poll: "int?"
       scene_state_poll: "int?"
       alarm_state_poll: "int?"

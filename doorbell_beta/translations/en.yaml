@@ -40,6 +40,10 @@ configuration:
         name: Scenes
         description: >-
           (optional) Poll scenes/alarm state every 15 seconds by default, only for Indoor Panels that support scenes
+      online_sensor:
+        name: Online State Sensor
+        description: >-
+          (optional) Create an MQTT sensor that reports the doorbell online/offline state using SDK connection events. Disabled by default.
       call_state_poll:
         name: Call State Poll Interval
         description: >-
