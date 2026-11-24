@@ -46,11 +46,7 @@ def test_other_event_type():
     assert event_picture(event) is None
 
 
-@pytest.mark.parametrize(("exception_type", "expected_state"), [
-    (0x8006, "offline"),
-    (0x8016, "online"),
-])
-def test_sdk_connection_exceptions_update_online_sensor(exception_type, expected_state):
+def _event_manager_with_sensor():
     doorbell = Mock()
     doorbell.user_id = 7
     doorbell._config.name = "Test doorbell"
@@ -60,15 +56,44 @@ def test_sdk_connection_exceptions_update_online_sensor(exception_type, expected
     handler._sensors = {doorbell: {"online": sensor}}
     registry = Registry()
     registry[0] = doorbell
+    event_manager = EventManager(Mock(), registry)
+    event_manager._handlers = {handler}
+    return event_manager, sensor
 
+
+def test_sdk_reconnect_updates_online_sensor():
     async def process_exception():
-        event_manager = EventManager(Mock(), registry)
-        event_manager._handlers = {handler}
-        await event_manager._process_exception(exception_type, 7)
+        event_manager, sensor = _event_manager_with_sensor()
+        await event_manager._process_exception(0x8016, 7)
+        sensor.set_state.assert_called_once_with("online")
 
     asyncio.run(process_exception())
 
-    sensor.set_state.assert_called_once_with(expected_state)
+
+def test_sdk_offline_exception_is_debounced(monkeypatch):
+    monkeypatch.setattr(EventManager, "_offline_debounce_seconds", 0.01)
+
+    async def process_exception():
+        event_manager, sensor = _event_manager_with_sensor()
+        await event_manager._process_exception(0x8006, 7)
+        sensor.set_state.assert_not_called()
+        await asyncio.sleep(0.02)
+        sensor.set_state.assert_called_once_with("offline")
+
+    asyncio.run(process_exception())
+
+
+def test_sdk_reconnect_cancels_pending_offline_exception(monkeypatch):
+    monkeypatch.setattr(EventManager, "_offline_debounce_seconds", 0.01)
+
+    async def process_exception():
+        event_manager, sensor = _event_manager_with_sensor()
+        await event_manager._process_exception(0x8006, 7)
+        await event_manager._process_exception(0x8016, 7)
+        await asyncio.sleep(0.02)
+        sensor.set_state.assert_called_once_with("online")
+
+    asyncio.run(process_exception())
 
 
 def test_start_registers_sdk_exception_callback():

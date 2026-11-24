@@ -181,11 +181,13 @@ class EventManager:
     """
     _handlers: set[EventHandler] = set()
     _background_tasks = set()
+    _offline_debounce_seconds = 1.0
 
     def __init__(self, sdk: CDLL, doorbells: Registry, enable_exception_callback: bool = False):
         self._sdk = sdk
         self._doorbells = doorbells
         self._enable_exception_callback = enable_exception_callback
+        self._pending_offline_tasks: dict[int, asyncio.Task] = {}
         # Save a reference to the main asyncio loop to schedule from another thread
         self._async_loop = asyncio.get_running_loop()
 
@@ -293,28 +295,44 @@ class EventManager:
         if target_index is not None and target_doorbell is not None:
             # Determine target state based on the exception code
             if exception_type == 0x8006:
-                new_state = "offline"
                 log_msg = f"Doorbell index {target_index} dropped connection (SDK exception 0x8006)"
             elif exception_type == 0x8016:
-                new_state = "online"
                 log_msg = f"Doorbell index {target_index} reconnected successfully (SDK exception 0x8016)"
             else:
                 return
 
             logger.debug(log_msg)
-            
-            # Push the updated state directly to the HA entity handler
-            for handler in self._handlers:
-                if handler.__class__.__name__ == 'MQTTHandler' or handler.name == 'MQTT':
-                    try:
-                        if hasattr(handler, '_sensors') and target_doorbell in handler._sensors:
-                            doorbell_sensors = handler._sensors[target_doorbell]
-                            online_sensor = doorbell_sensors.get('online') or doorbell_sensors.get('online_state')
-                            if online_sensor:
-                                online_sensor.set_state(new_state)
-                                logger.info(f"Successfully changed entity state for {target_doorbell._config.name} to {new_state}.")
-                    except Exception as sensor_err:
-                        logger.error(f"Failed to update entity state to {new_state}: {sensor_err}")
+
+            if exception_type == 0x8006:
+                if user_id not in self._pending_offline_tasks:
+                    self._pending_offline_tasks[user_id] = asyncio.create_task(
+                        self._set_offline_after_debounce(user_id, target_doorbell)
+                    )
+                return
+
+            pending_task = self._pending_offline_tasks.pop(user_id, None)
+            if pending_task:
+                pending_task.cancel()
+            await self._set_online_sensor_state(target_doorbell, "online")
+
+    async def _set_offline_after_debounce(self, user_id: int, target_doorbell: Doorbell):
+        await asyncio.sleep(self._offline_debounce_seconds)
+        self._pending_offline_tasks.pop(user_id, None)
+        await self._set_online_sensor_state(target_doorbell, "offline")
+
+    async def _set_online_sensor_state(self, target_doorbell: Doorbell, new_state: str):
+        # Push the updated state directly to the HA entity handler
+        for handler in self._handlers:
+            if handler.__class__.__name__ == 'MQTTHandler' or handler.name == 'MQTT':
+                try:
+                    if hasattr(handler, '_sensors') and target_doorbell in handler._sensors:
+                        doorbell_sensors = handler._sensors[target_doorbell]
+                        online_sensor = doorbell_sensors.get('online') or doorbell_sensors.get('online_state')
+                        if online_sensor:
+                            online_sensor.set_state(new_state)
+                            logger.info(f"Successfully changed entity state for {target_doorbell._config.name} to {new_state}.")
+                except Exception as sensor_err:
+                    logger.error(f"Failed to update entity state to {new_state}: {sensor_err}")
 
     def _get_exception_callback_func(self):
         """C-compatible wrapper that catches hardware drops and reconnects"""
