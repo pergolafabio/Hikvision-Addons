@@ -1,6 +1,5 @@
 import asyncio
 from ctypes import POINTER, cast, create_string_buffer
-from types import SimpleNamespace
 from unittest.mock import Mock
 import pytest
 from doorbell import Registry
@@ -52,9 +51,13 @@ def test_other_event_type():
     (0x8016, "online"),
 ])
 def test_sdk_connection_exceptions_update_online_sensor(exception_type, expected_state):
-    doorbell = SimpleNamespace(user_id=7, _config=SimpleNamespace(name="Test doorbell"))
+    doorbell = Mock()
+    doorbell.user_id = 7
+    doorbell._config.name = "Test doorbell"
     sensor = Mock()
-    handler = SimpleNamespace(name="MQTT", _sensors={doorbell: {"online": sensor}})
+    handler = Mock()
+    handler.name = "MQTT"
+    handler._sensors = {doorbell: {"online": sensor}}
     registry = Registry()
     registry[0] = doorbell
 

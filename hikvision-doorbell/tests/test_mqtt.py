@@ -19,13 +19,15 @@ def mocked_doorbell(mocker: MockerFixture) -> Doorbell:
     mocked_doorbell = mocker.patch('doorbell.Doorbell')
     mocked_doorbell._type = DeviceType.OUTDOOR
     mocked_doorbell._config.name = "Test doorbell"
+    mocked_doorbell._config.call_state_poll = None
+    mocked_doorbell._config.online_sensor = False
     mocked_doorbell._device_info.serialNumber = lambda: "123"
+    mocked_doorbell.get_num_outputs.return_value = 1
     return mocked_doorbell
 
 
 @pytest.fixture()
 def handler(mocked_doorbell: Doorbell, mocker: MockerFixture) -> MQTTHandler:
-    mocked_doorbell._config.online_sensor = False
     registry = Registry()
 
     registry[0] = mocked_doorbell
