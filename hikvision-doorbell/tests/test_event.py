@@ -61,11 +61,15 @@ def _event_manager_with_sensor():
     return event_manager, sensor
 
 
-def test_sdk_reconnect_updates_online_sensor():
+def test_sdk_reconnect_updates_online_sensor(monkeypatch):
+    monkeypatch.setattr(EventManager, "_offline_debounce_seconds", 0.01)
+
     async def process_exception():
         event_manager, sensor = _event_manager_with_sensor()
+        await event_manager._process_exception(0x8006, 7)
+        await asyncio.sleep(0.02)
         await event_manager._process_exception(0x8016, 7)
-        sensor.set_state.assert_called_once_with("online")
+        assert [call.args[0] for call in sensor.set_state.call_args_list] == ["offline", "online"]
 
     asyncio.run(process_exception())
 
@@ -83,6 +87,20 @@ def test_sdk_offline_exception_is_debounced(monkeypatch):
     asyncio.run(process_exception())
 
 
+def test_repeated_sdk_offline_exception_does_not_repeat_sensor_update(monkeypatch):
+    monkeypatch.setattr(EventManager, "_offline_debounce_seconds", 0.01)
+
+    async def process_exception():
+        event_manager, sensor = _event_manager_with_sensor()
+        await event_manager._process_exception(0x8006, 7)
+        await asyncio.sleep(0.02)
+        await event_manager._process_exception(0x8006, 7)
+        await asyncio.sleep(0.02)
+        sensor.set_state.assert_called_once_with("offline")
+
+    asyncio.run(process_exception())
+
+
 def test_sdk_reconnect_cancels_pending_offline_exception(monkeypatch):
     monkeypatch.setattr(EventManager, "_offline_debounce_seconds", 0.01)
 
@@ -91,7 +109,7 @@ def test_sdk_reconnect_cancels_pending_offline_exception(monkeypatch):
         await event_manager._process_exception(0x8006, 7)
         await event_manager._process_exception(0x8016, 7)
         await asyncio.sleep(0.02)
-        sensor.set_state.assert_called_once_with("online")
+        sensor.set_state.assert_not_called()
 
     asyncio.run(process_exception())
 

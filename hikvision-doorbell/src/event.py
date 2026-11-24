@@ -181,13 +181,14 @@ class EventManager:
     """
     _handlers: set[EventHandler] = set()
     _background_tasks = set()
-    _offline_debounce_seconds = 1.0
+    _offline_debounce_seconds = 2.0
 
     def __init__(self, sdk: CDLL, doorbells: Registry, enable_exception_callback: bool = False):
         self._sdk = sdk
         self._doorbells = doorbells
         self._enable_exception_callback = enable_exception_callback
         self._pending_offline_tasks: dict[int, asyncio.Task] = {}
+        self._online_sensor_states: dict[Doorbell, str] = {}
         # Save a reference to the main asyncio loop to schedule from another thread
         self._async_loop = asyncio.get_running_loop()
 
@@ -281,10 +282,10 @@ class EventManager:
         future.result()
 
     async def _process_exception(self, exception_type: int, user_id: int):
-        """Toggles the HA sensor state purely based on native SDK connection exceptions"""
+        """Toggles the HA sensor state based on native SDK connection exceptions."""
         target_index = None
         target_doorbell = None
-        
+
         for index, doorbell in list(self._doorbells.items()):
             doorbell_id = getattr(doorbell, 'user_id', getattr(doorbell, '_user_id', None))
             if doorbell_id == user_id:
@@ -292,28 +293,29 @@ class EventManager:
                 target_doorbell = doorbell
                 break
 
-        if target_index is not None and target_doorbell is not None:
-            # Determine target state based on the exception code
-            if exception_type == 0x8006:
-                log_msg = f"Doorbell index {target_index} dropped connection (SDK exception 0x8006)"
-            elif exception_type == 0x8016:
-                log_msg = f"Doorbell index {target_index} reconnected successfully (SDK exception 0x8016)"
-            else:
-                return
+        if target_index is None or target_doorbell is None:
+            return
 
-            logger.debug(log_msg)
+        if exception_type == 0x8006:
+            log_msg = f"Doorbell index {target_index} dropped connection (SDK exception 0x8006)"
+        elif exception_type == 0x8016:
+            log_msg = f"Doorbell index {target_index} reconnected successfully (SDK exception 0x8016)"
+        else:
+            return
 
-            if exception_type == 0x8006:
-                if user_id not in self._pending_offline_tasks:
-                    self._pending_offline_tasks[user_id] = asyncio.create_task(
-                        self._set_offline_after_debounce(user_id, target_doorbell)
-                    )
-                return
+        logger.debug(log_msg)
 
-            pending_task = self._pending_offline_tasks.pop(user_id, None)
-            if pending_task:
-                pending_task.cancel()
-            await self._set_online_sensor_state(target_doorbell, "online")
+        if exception_type == 0x8006:
+            if user_id not in self._pending_offline_tasks:
+                self._pending_offline_tasks[user_id] = asyncio.create_task(
+                    self._set_offline_after_debounce(user_id, target_doorbell)
+                )
+            return
+
+        pending_task = self._pending_offline_tasks.pop(user_id, None)
+        if pending_task:
+            pending_task.cancel()
+        await self._set_online_sensor_state(target_doorbell, "online")
 
     async def _set_offline_after_debounce(self, user_id: int, target_doorbell: Doorbell):
         await asyncio.sleep(self._offline_debounce_seconds)
@@ -329,7 +331,11 @@ class EventManager:
                         doorbell_sensors = handler._sensors[target_doorbell]
                         online_sensor = doorbell_sensors.get('online') or doorbell_sensors.get('online_state')
                         if online_sensor:
+                            previous_state = self._online_sensor_states.setdefault(target_doorbell, "online")
+                            if previous_state == new_state:
+                                continue
                             online_sensor.set_state(new_state)
+                            self._online_sensor_states[target_doorbell] = new_state
                             logger.info(f"Successfully changed entity state for {target_doorbell._config.name} to {new_state}.")
                 except Exception as sensor_err:
                     logger.error(f"Failed to update entity state to {new_state}: {sensor_err}")
@@ -339,10 +345,8 @@ class EventManager:
         @CFUNCTYPE(None, DWORD, LONG, LONG, c_void_p)
         def exc_callback(dwType: int, lUserID: int, lHandle: int, pUser: c_void_p):
 
-            # Print every raw code from the SDK to stdout/log file for easy analysis
             logger.debug(f"SDK Global Exception Event Triggered -> Code: {hex(dwType)} (Dec: {dwType}) for UserID: {lUserID}")
-            
-            # Allow both drop (0x8006) and recovery (0x8016) codes through
+
             if dwType in (0x8006, 0x8016):
                 asyncio.run_coroutine_threadsafe(
                     self._process_exception(dwType, lUserID), 
