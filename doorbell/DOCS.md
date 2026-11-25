@@ -21,6 +21,7 @@ For each of your doorbells, repeat the following configuration:
 | password        |               | Password to access the doorbell
 | output_relays   | 2             | (optional) Set this option if you don't see the correct number of door switches or if you have attached an secure door control module on your indoor
 | scenes          | false         | (optional) Extra Scene buttons for indoor panels
+| online_sensor   | false         | (optional) An extra sensor that checks if the device is online by SDK event, disabled by default, can be resource hungry?
 | call_state_poll | 5             | (optional) Make the call state poll every 5 sec, for devices that dont support the ringing event, devices for example running 3.7.x or newer... 
 | scene_state_poll | 15           | (optional) Make the scene state poll every 15 sec if scenes are enabled
 | alarm_state_poll | 15           | (optional) Make the alarm state poll every 15 sec if scenes are enabled

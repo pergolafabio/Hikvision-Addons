@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.35 - 2026-11-25
+
+### Change
+
+- Added back the online sensor, but default not enabled, its a new config option, it checks if device is still online with SDK event, maybe resource hungry?
+- Added a new option to send notice with text/image to indoor stations
+- Fix for excessive connections to Mosquitto server
+- Publish the picture of unlock and authentication events to the Latest Snapshot image (thanks @lackas)
+- Make "take snapshot" an option with doorbell ring event
+- Add name as attribute in the event when door is unlocked with badge/face
+
 ## 3.0.34 - 2026-09-22
 
 ### Change
