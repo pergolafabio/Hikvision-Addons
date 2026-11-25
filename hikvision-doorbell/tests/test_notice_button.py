@@ -263,7 +263,7 @@ def controls(mocker, tmp_path):
     client, callbacks, buttons, inputs, wire = Mock(spec=Client), {}, {}, {}, {}
     client.is_connected.return_value = False
     client.message_callback_add.side_effect = lambda topic, callback: callbacks.update({topic: callback})
-    mocker.patch("mqtt_input.get_shared_client", return_value=client)
+    mocker.patch("mqtt.get_shared_client", return_value=client)
     mocker.patch("mqtt_input.extract_device_info", side_effect=lambda d: DeviceInfo(name=d._config.name, identifiers=d._config.name))
     reconnect = mocker.patch("mqtt_input._register_reconnect_handler")
     for name in ("Image", "Select", "Sensor"):

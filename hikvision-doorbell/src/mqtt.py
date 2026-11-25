@@ -8,6 +8,7 @@ from event import EventHandler
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import MQTTMessage
 from ha_mqtt_discoverable import Settings, DeviceInfo, Discoverable
+from ha_mqtt_discoverable.utils import clean_string
 from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, SensorInfo, Sensor, SwitchInfo, Switch, DeviceTrigger, DeviceTriggerInfo
 from loguru import logger
 # from home_assistant import sanitize_doorbell_name
@@ -27,6 +28,7 @@ from typing_extensions import override
 import xml.etree.ElementTree as ET
 import json
 import datetime
+import time
 
 from sdk.utils import SDKError
 
@@ -35,33 +37,64 @@ _current_mqtt_handler = None
 _mqtt_broker_online = True
 """Global flag tracking whether the MQTT broker connection is currently up, used to avoid duplicate log lines"""
 
-_shared_client = None
-_registered_entities = {}
+CONNECT_TIMEOUT_SECONDS = 10
 
-def get_shared_client(config):
-    global _shared_client
-    if not _shared_client:
-        _shared_client = mqtt.Client()
+_shared_clients: dict[str, mqtt.Client] = {}
+"""MQTT clients indexed by the name of the doorbell, each one is shared by all the entities of its doorbell"""
+
+_registered_entities: dict[str, Discoverable] = {}
+
+def _availability_topic(doorbell_name: str) -> str:
+    """A client can have a single last will, so the entities of a doorbell share the availability topic"""
+    return f"hmd/hikvision_doorbell/{clean_string(doorbell_name)}/availability"
+
+_generate_config = Discoverable.generate_config
+
+def _generate_config_with_shared_availability(entity: Discoverable) -> dict[str, Any]:
+    config = _generate_config(entity)
+    if "availability_topic" in config:
+        config["availability_topic"] = _availability_topic(entity._entity.device.name)
+    return config
+
+# The library only supports a separate availability topic for each entity
+Discoverable.generate_config = _generate_config_with_shared_availability
+
+def get_shared_client(config: AppConfig.MQTT, doorbell_name: str) -> mqtt.Client:
+    """Return the connected client of the given doorbell. Raise an OSError if it cannot connect to the broker"""
+    if doorbell_name not in _shared_clients:
+        client = mqtt.Client(userdata=doorbell_name)
+        # An error while handling a command must not stop the thread that handles all of them, only log it
+        client.suppress_exceptions = True
+        client.enable_logger()
+        client.will_set(_availability_topic(doorbell_name), "offline", qos=1, retain=True)
         if config.username:
-            _shared_client.username_pw_set(config.username, config.password)
-        if getattr(config, 'ssl', False):
-            _shared_client.tls_set()
-        try:
-            _shared_client.connect(config.host, config.port)
-            _shared_client.loop_start()
-        except Exception:
-            pass
-    return _shared_client
+            client.username_pw_set(config.username, config.password)
+        if config.ssl:
+            client.tls_set()
+        client.on_connect = _on_connect
+        client.on_disconnect = _on_disconnect
+        client.connect(config.host, config.port)
+        client.loop_start()
+        # Entities that are created before the client is connected may not subscribe to their command topic
+        deadline = time.monotonic() + CONNECT_TIMEOUT_SECONDS
+        while not client.is_connected():
+            if time.monotonic() > deadline:
+                client.disconnect()
+                client.loop_stop()
+                raise ConnectionError(f"Unable to log in to the MQTT broker {config.host}:{config.port}")
+            time.sleep(0.05)
+        _shared_clients[doorbell_name] = client
+    return _shared_clients[doorbell_name]
 
-def _on_connect(client, userdata, *args):
+def _on_connect(client, doorbell_name, *args):
     global _mqtt_broker_online
     if not _mqtt_broker_online:
         logger.info("MQTT broker connection restored, entities back online")
     _mqtt_broker_online = True
-    for e in _registered_entities.values():
-        e.set_availability(True)
-        if hasattr(e, '_command_topic'):
+    for e in list(_registered_entities.values()):
+        if e.mqtt_client is client and hasattr(e, '_command_topic'):
             client.subscribe(e._command_topic, qos=1)
+    client.publish(_availability_topic(doorbell_name), "online", qos=1, retain=True)
 
 def _on_disconnect(client, userdata, *args):
     global _mqtt_broker_online
@@ -73,6 +106,16 @@ def _register_reconnect_handler(entity: Discoverable) -> None:
     _registered_entities[entity.config_topic] = entity
     entity.mqtt_client.on_connect = _on_connect
     entity.mqtt_client.on_disconnect = _on_disconnect
+
+def get_mqtt_settings(config: AppConfig.MQTT, doorbell: Doorbell) -> Settings.MQTT:
+    """Settings for the entities of the given doorbell"""
+    return Settings.MQTT(
+        host=config.host,
+        port=config.port,
+        username=config.username,
+        password=config.password,
+        client=get_shared_client(config, doorbell._config.name)
+    )
 
 def extract_device_info(doorbell: Doorbell) -> DeviceInfo:
     """Build and instance of DeviceInfo from the ISAPI /deviceinfo endpoint, if available, otherwise skip populating additional fields"""
@@ -168,15 +211,8 @@ class MQTTHandler(EventHandler):
         self._call_state_versions: dict[Doorbell, int] = {}
         self._snapshot_tasks: dict[Doorbell, asyncio.Task] = {}
         
-        # Save the MQTT settings as an attribute with the shared client
-        self._client = get_shared_client(config)
-        self._mqtt_settings = Settings.MQTT(
-            host=config.host,
-            port=config.port,
-            username=config.username,
-            password=config.password,
-            client=self._client
-        )
+        # Save the MQTT config, needed when a doorbell that was offline is set up later
+        self._mqtt_config = config
         # Create the sensors for each doorbell:
         for doorbell in doorbells.values():
 
@@ -184,6 +220,7 @@ class MQTTHandler(EventHandler):
             # Create an empty dict to hold the sensors
             self._sensors[doorbell] = {}
             doorbell_name = doorbell._config.name
+            mqtt_settings = get_mqtt_settings(config, doorbell)
             # Get the device information using ISAPI
             device = extract_device_info(doorbell)
 
@@ -202,7 +239,7 @@ class MQTTHandler(EventHandler):
                 default_entity_id=f"{sanitized_doorbell_name}_call_state",
                 icon="mdi:bell")
 
-            settings = Settings(mqtt=self._mqtt_settings, entity=call_sensor_info, manual_availability=True)
+            settings = Settings(mqtt=mqtt_settings, entity=call_sensor_info, manual_availability=True)
             call_sensor = Sensor(settings)
             call_sensor.set_state("idle")
             call_sensor.set_availability(True)
@@ -258,7 +295,7 @@ class MQTTHandler(EventHandler):
                     icon="mdi:cloud-check"
                 )
 
-                online_settings = Settings(mqtt=self._mqtt_settings, entity=online_sensor_info, manual_availability=True)
+                online_settings = Settings(mqtt=mqtt_settings, entity=online_sensor_info, manual_availability=True)
                 online_sensor = Sensor(online_settings)
                 online_sensor.set_state("online")
                 online_sensor.set_availability(True)
@@ -280,7 +317,7 @@ class MQTTHandler(EventHandler):
                     unique_id=f"{device.identifiers}-door_relay_{door_id}",
                     device=device,
                     default_entity_id=f"{sanitized_doorbell_name}_door_relay_{door_id}")
-                settings = Settings(mqtt=self._mqtt_settings, entity=door_switch_info, manual_availability=True)
+                settings = Settings(mqtt=mqtt_settings, entity=door_switch_info, manual_availability=True)
                 door_switch = Switch(settings, lambda client, _, message, d=doorbell, i=door_id: self.door_switch_callback(client, (d, i), message))
                 door_switch.off()
                 door_switch.set_availability(True)
@@ -301,7 +338,7 @@ class MQTTHandler(EventHandler):
                         unique_id=f"{device.identifiers}-com_relay_{com_id}",
                         device=device,
                         default_entity_id=f"{sanitized_doorbell_name}_com_relay_{com_id}")
-                    settings = Settings(mqtt=self._mqtt_settings, entity=com_switch_info, manual_availability=True, assume_state=False)
+                    settings = Settings(mqtt=mqtt_settings, entity=com_switch_info, manual_availability=True, assume_state=False)
                     # Change the lambda to capture doorbell and com_id as defaults
                     com_switch = Switch(settings, lambda client, _, message, d=doorbell, i=com_id: self.com_switch_callback(client, (d, i), message))
                     com_switch.off()
@@ -733,7 +770,7 @@ class MQTTHandler(EventHandler):
                                                     type=trigger['type'], 
                                                     subtype=trigger["subtype"],
                                                     unique_id=f"{device_info.identifiers}-{trigger['name']}")
-            settings = Settings(mqtt=self._mqtt_settings, entity=device_trigger_info)
+            settings = Settings(mqtt=get_mqtt_settings(self._mqtt_config, doorbell), entity=device_trigger_info)
             device_trigger = DeviceTrigger(settings)
             # Save the entity in the dict for future reference
             self._sensors[doorbell][trigger["name"]] = device_trigger
