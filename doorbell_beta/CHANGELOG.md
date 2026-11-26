@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-beta.171 - 2026-11-26
+
+### Fix
+
+- last will, broker retry and command errors with the shared MQTT client
+
 ## 3.0.0-beta.169 - 2026-11-24
 
 ### Added
