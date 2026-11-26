@@ -5,6 +5,7 @@ from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
 from mqtt_input import MQTTInput
 from ha_mqtt_discoverable import DeviceInfo
+from paho.mqtt.client import Client
 
 
 @pytest.fixture
@@ -28,7 +29,8 @@ def test_init(mock_doorbell: Doorbell, mocker: MockerFixture):
     dev_info = DeviceInfo(name="test", identifiers="id")
     extract_device_info.return_value = dev_info
     
-    # Mock the entities so no MQTT connection is made
+    # Mock the client and the entities so no MQTT connection is made
+    mocker.patch("mqtt.get_shared_client", return_value=Client())
     mocker.patch("mqtt_input.Button")
     mocker.patch("mqtt_input.Text")
     mocker.patch("mqtt_input.Image")

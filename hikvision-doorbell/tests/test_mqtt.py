@@ -6,6 +6,7 @@ from config import AppConfig
 from doorbell import DeviceType, Doorbell, Registry
 from mqtt import DEVICE_TRIGGERS_DEFINITIONS, MQTTHandler, extract_device_info
 from ha_mqtt_discoverable import DeviceInfo
+from paho.mqtt.client import Client
 import xml.etree.ElementTree as ET
 
 from sdk.hcnetsdk import NET_DVR_ACS_ALARM_INFO, VIDEO_INTERCOM_ALARM_ALARMTYPE_ZONE_ALARM, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_CLOSED, VIDEO_INTERCOM_ALARM_ALARMTYPE_DOOR_NOT_OPEN, VIDEO_INTERCOM_ALARM_ALARMTYPE_TAMPERING_ALARM, VIDEO_INTERCOM_EVENT_EVENTTYPE_UNLOCK_LOG, UnlockType, VideoInterComAlarmType
@@ -40,7 +41,8 @@ def handler(mocked_doorbell: Doorbell, mocker: MockerFixture) -> MQTTHandler:
     # Fake MQTT settings
     mqtt_config = AppConfig.MQTT(host="localhost")
 
-    # Mock the sensors so no MQTT connection is made
+    # Mock the client and the sensors so no MQTT connection is made
+    mocker.patch("mqtt.get_shared_client", return_value=Client())
     mocker.patch("mqtt.Sensor")
     mocker.patch("mqtt.Switch")
     mocker.patch("mqtt.DeviceTrigger")
@@ -55,6 +57,7 @@ def test_online_sensor_is_created_when_enabled(mocked_doorbell: Doorbell, mocker
     registry = Registry()
     registry[0] = mocked_doorbell
     mocker.patch('mqtt.extract_device_info', return_value=DeviceInfo(name="Outdoor unit", identifiers="id"))
+    mocker.patch("mqtt.get_shared_client", return_value=Client())
     mocker.patch("mqtt.Sensor")
     mocker.patch("mqtt.Switch")
     mocker.patch("mqtt.DeviceTrigger")

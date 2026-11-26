@@ -22,8 +22,8 @@ async def retry_connection(index, doorbell_config, sdk, doorbell_registry, mqtt_
     """Background task that retries connection for a specific doorbell indefinitely"""
     while True:
         await asyncio.sleep(30) # Wait 30 seconds before retrying
-        if index not in doorbell_registry:
-            try:
+        try:
+            if index not in doorbell_registry:
                 logger.info(f"Retrying connection for {doorbell_config.name} (Index {index})...")
                 doorbell = Doorbell(index, doorbell_config, sdk)
                 doorbell.authenticate()
@@ -31,24 +31,23 @@ async def retry_connection(index, doorbell_config, sdk, doorbell_registry, mqtt_
 
                 doorbell_registry[index] = doorbell
 
-                
-                if mqtt_handler:
-                    logger.info(f"Refreshing MQTT discovery for {doorbell_config.name}")
-                    # This triggers the discovery/online message in HA
-                    if hasattr(mqtt_handler, '_call_sensor_tasks'):
-                        for task in mqtt_handler._call_sensor_tasks.values():
-                            task.cancel()
-                        mqtt_handler._call_sensor_tasks.clear()
-                    
-                    mqtt_handler.__init__(mqtt_handler._mqtt_settings, doorbell_registry)
+            if mqtt_handler:
+                logger.info(f"Refreshing MQTT discovery for {doorbell_config.name}")
+                # This triggers the discovery/online message in HA
+                if hasattr(mqtt_handler, '_call_sensor_tasks'):
+                    for task in mqtt_handler._call_sensor_tasks.values():
+                        task.cancel()
+                    mqtt_handler._call_sensor_tasks.clear()
 
-                    from mqtt_input import MQTTInput
-                    MQTTInput(mqtt_handler._mqtt_settings, doorbell_registry)
+                mqtt_handler.__init__(mqtt_handler._mqtt_config, doorbell_registry)
 
-                logger.info(f"Doorbell {doorbell_config.name} is now ONLINE and armed.")
-                break # Exit the loop once connected
-            except Exception as e:
-                logger.warning(f"Retry for {doorbell_config.name} failed: {e}")
+                from mqtt_input import MQTTInput
+                MQTTInput(mqtt_handler._mqtt_config, doorbell_registry)
+
+            logger.info(f"Doorbell {doorbell_config.name} is now ONLINE and armed.")
+            break # Exit the loop once connected
+        except Exception as e:
+            logger.warning(f"Retry for {doorbell_config.name} failed: {e}")
 
 async def main():
     """Main entrypoint of the application"""
